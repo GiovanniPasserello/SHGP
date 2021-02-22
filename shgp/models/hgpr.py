@@ -13,7 +13,7 @@ from gpflow.models.training_mixins import InputData, InternalDataTrainingLossMix
 from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
-from ..likelihoods.heteroscedastic import HeteroscedasticGaussian
+from shgp.likelihoods.heteroscedastic import ParametricHeteroscedastic
 
 
 class HGPR(GPModel, InternalDataTrainingLossMixin):
@@ -53,8 +53,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         X_data, Y_data = data_input_to_tensor(data)
 
-        variance = self.initial_variance(X_data, noise_variance)
-        likelihood = HeteroscedasticGaussian(variance)
+        likelihood = ParametricHeteroscedastic(noise_variance)
         num_latent_gps = Y_data.shape[-1] if num_latent_gps is None else num_latent_gps
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=num_latent_gps)
 
@@ -62,26 +61,6 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         self.num_data = X_data.shape[0]
 
         self.inducing_variable = inducingpoint_wrapper(inducing_variable)
-
-    def initial_variance(self, X_data: InputData, noise_variance: float):
-        """
-        Compute the initial heteroscedastic variance of each data point in X_data.
-        """
-
-        # compute initial matrices
-        Kdiag = self.kernel(X_data, full_cov=False)
-        kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        L = tf.linalg.cholesky(kuu)
-
-        # compute intermediate matrices
-        A = tf.linalg.triangular_solve(L, kuf)
-        nystrom = tf.matmul(A, A, transpose_a=True)
-
-        # compute variance
-        diag_term = Kdiag - nystrom
-
-        return noise_variance + diag_term
 
     def maximum_log_likelihood_objective(self, *args, **kwargs) -> tf.Tensor:
         return self.elbo()
@@ -104,7 +83,8 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
         L = tf.linalg.cholesky(kuu)
-        rlmbda = tf.math.reciprocal(self.likelihood.variance)  # lambda^-1
+        lmbda = self.likelihood.noise_variance(X_data)
+        rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
         rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
 
         # compute intermediate matrices
@@ -118,10 +98,10 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         # compute log marginal bound
         bound = -0.5 * num_data * output_dim * np.log(2 * np.pi)
         bound -= output_dim * tf.reduce_sum(tf.math.log(tf.linalg.diag_part(LB)))
-        bound -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(self.likelihood.variance))
+        bound -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(lmbda))
         bound -= 0.5 * tf.reduce_sum(tf.square(err) * rlmbda)
         bound += 0.5 * tf.reduce_sum(tf.square(c))
-        bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * rlmbda)
+        bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * rlmbda)  # THIS TERM IS HUGE!
         bound += 0.5 * output_dim * tf.reduce_sum(tf.linalg.diag_part(AAT))
 
         return bound
@@ -142,7 +122,8 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
         kus = Kuf(self.inducing_variable, self.kernel, Xnew)
         L = tf.linalg.cholesky(kuu)
-        rlmbda = tf.math.reciprocal(self.likelihood.variance)  # lambda^-1
+        lmbda = self.likelihood.noise_variance(X_data)
+        rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
         rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
 
         # compute intermediate matrices
@@ -168,11 +149,19 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
             var = (
                 self.kernel(Xnew, full_cov=False)
                 + tf.reduce_sum(tf.square(tmp2), 0)
-                - tf.reduce_sum(tf.square(tmp2), 0)
+                - tf.reduce_sum(tf.square(tmp1), 0)
             )
             var = tf.tile(var[:, None], [1, self.num_latent_gps])
 
         return mean + self.mean_function(Xnew), var
+
+    def predict_y(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
+        """
+        Predict the mean and variance for unobserved values at some new points
+        Xnew. For a derivation of the terms in here, see *** TODO.
+        """
+        mean, var = self.predict_f(Xnew)
+        return mean, var + self.likelihood.noise_variance(Xnew)
 
     def compute_qu(self) -> Tuple[tf.Tensor, tf.Tensor]:
         """
@@ -187,7 +176,8 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         # compute initial matrices
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        rlmbda = tf.math.reciprocal(self.likelihood.variance)  # lambda^-1
+        lmbda = self.likelihood.noise_variance(X_data)
+        rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
 
         # compute intermediate matrices
         err = Y_data - self.mean_function(X_data)
