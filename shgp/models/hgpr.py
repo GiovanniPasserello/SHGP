@@ -13,7 +13,7 @@ from gpflow.models.training_mixins import InputData, InternalDataTrainingLossMix
 from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
-from shgp.likelihoods.heteroscedastic import ParametricHeteroscedastic
+from shgp.likelihoods.heteroscedastic import Heteroscedastic
 
 
 class HGPR(GPModel, InternalDataTrainingLossMixin):
@@ -36,10 +36,10 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         data: RegressionData,
         kernel: Kernel,
         inducing_variable: InducingPoints,
+        likelihood: Heteroscedastic,
         *,
         mean_function: Optional[MeanFunction] = None,
-        num_latent_gps: Optional[int] = None,
-        noise_variance: float = 1.0
+        num_latent_gps: Optional[int] = None
     ):
         """
         `data`: a tuple of (X, Y), where the inputs X has shape [N, D]
@@ -53,8 +53,9 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         X_data, Y_data = data_input_to_tensor(data)
 
-        likelihood = ParametricHeteroscedastic(noise_variance)
+        self.likelihood = likelihood
         num_latent_gps = Y_data.shape[-1] if num_latent_gps is None else num_latent_gps
+
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=num_latent_gps)
 
         self.data = X_data, Y_data

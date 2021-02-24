@@ -3,6 +3,7 @@ import numpy as np
 
 import gpflow
 
+from shgp.likelihoods.heteroscedastic import HeteroscedasticPolynomial
 from shgp.models.hgpr import HGPR
 
 
@@ -33,8 +34,8 @@ if __name__ == "__main__":
 
     kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs)
-    model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2)
-
+    likelihood = HeteroscedasticPolynomial(degree=2)
+    model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood)
     gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
     print("model2 trained")
 
@@ -83,6 +84,6 @@ if __name__ == "__main__":
     ax2.legend(loc='upper right')
 
     print(model1.elbo(), model2.elbo())
-    print(model2.likelihood.a, model2.likelihood.b, model2.likelihood.c)
+    print(model2.likelihood.trainable_parameters)
 
     plt.show()
