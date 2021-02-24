@@ -5,6 +5,7 @@ import tensorflow as tf
 import gpflow
 
 from gpflow.utilities import to_default_float
+from shgp.likelihoods.heteroscedastic import HeteroscedasticPolynomial
 from shgp.models.hgpr import HGPR
 
 
@@ -25,8 +26,9 @@ def test_hgpr_qu():
     Z = to_default_float(rng.randn(20, 1))
     Y = to_default_float(np.sin(X * -1.4) + 0.5 * rng.randn(len(X), 1))
 
+    likelihood = HeteroscedasticPolynomial(degree=1)
     model = HGPR(
-        (X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z
+        (X, Y), likelihood=likelihood, kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z
     )
 
     gpflow.optimizers.Scipy().minimize(model.training_loss, variables=model.trainable_variables)
@@ -38,5 +40,6 @@ def test_hgpr_qu():
     np.testing.assert_allclose(tf.reshape(qu_cov, (1, 20, 20)), f_at_Z_cov, rtol=1e-5, atol=1e-5)
 
     print("Test passed.")
+
 
 test_hgpr_qu()
