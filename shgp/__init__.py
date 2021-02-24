@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 
 import gpflow
-from gpflow.ci_utils import ci_niter
 
 from shgp.models.hgpr import HGPR
 
@@ -15,18 +13,9 @@ def generate_data(N=120):
     X = np.random.rand(N)[:, None] * 10 - 5  # Inputs, shape N x 1
     X = np.sort(X.flatten()).reshape(N, 1)
     F = 2.5 * np.sin(6 * X) + np.cos(3 * X)  # Mean function values
-    NoiseVar = np.abs(0.25 * X) + 0.15  # Noise variances
+    NoiseVar = np.abs(0.25 * X**2 + 0.1 * X)  # Quadratic noise variances
     Y = F + np.random.randn(N, 1) * np.sqrt(NoiseVar)  # Noisy data
     return X, Y, NoiseVar
-
-
-def train_model(model, n_iter=100):
-    adam = tf.optimizers.Adam()
-
-    for i in range(ci_niter(n_iter)):
-        adam.minimize(model.training_loss, model.trainable_variables)
-
-    return model
 
 
 if __name__ == "__main__":
@@ -39,13 +28,14 @@ if __name__ == "__main__":
     kernel1 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     inducing_vars1 = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model1 = gpflow.models.SGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1)
-    model1 = train_model(model1, 10)
+    gpflow.optimizers.Scipy().minimize(model1.training_loss, variables=model1.trainable_variables)
     print("model1 trained")
 
     kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2)
-    model2 = train_model(model2, 10)
+
+    gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
     print("model2 trained")
 
     mu1, var1 = model1.predict_f(xx)
@@ -92,6 +82,7 @@ if __name__ == "__main__":
     ax1.legend(loc='upper right')
     ax2.legend(loc='upper right')
 
-    print(model2.elbo())
+    print(model1.elbo(), model2.elbo())
+    print(model2.likelihood.a, model2.likelihood.b, model2.likelihood.c)
 
     plt.show()
