@@ -1,7 +1,6 @@
+import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
-
-import gpflow
 
 from shgp.likelihoods.heteroscedastic import HeteroscedasticGaussian, HeteroscedasticPolynomial
 from shgp.models.hgpr import HGPR
