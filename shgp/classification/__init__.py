@@ -13,12 +13,25 @@ def invlink(f):
 
 
 def classification_demo():
-    # Fit model
-    m = gpflow.models.VGP(
-        (X, Y), likelihood=gpflow.likelihoods.Bernoulli(), kernel=gpflow.kernels.Matern52()
+    # Define model
+    # - Full
+    # m = gpflow.models.VGP(
+    #     (X, Y),
+    #     likelihood=gpflow.likelihoods.Bernoulli(),
+    #     kernel=gpflow.kernels.Matern52()
+    # )
+    # loss = m.training_loss
+    # - Sparse
+    m = gpflow.models.SVGP(
+        kernel=gpflow.kernels.Matern52(),
+        likelihood=gpflow.likelihoods.Bernoulli(),
+        inducing_variable=X[::5].copy()
     )
+    loss = m.training_loss_closure((X, Y))
+
+    # Optimize model
     opt = gpflow.optimizers.Scipy()
-    opt.minimize(m.training_loss, variables=m.trainable_variables)
+    opt.minimize(loss, variables=m.trainable_variables)
 
     # Take predictions
     X_test_mean, X_test_var = m.predict_f(X_test)
