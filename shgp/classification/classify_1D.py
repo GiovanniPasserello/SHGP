@@ -1,15 +1,12 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorflow import sigmoid
 
 
-def logit(x):
-    return np.exp(x) / (1 + np.exp(x))
-
-
-# Polya-Gamma uses logit link, but we can remove this to default to probit
+# Polya-Gamma uses logit link / sigmoid
 def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=logit).invlink(f)
+    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def classification_demo():
@@ -17,17 +14,18 @@ def classification_demo():
     # - Full
     # m = gpflow.models.VGP(
     #     (X, Y),
-    #     likelihood=gpflow.likelihoods.Bernoulli(),
+    #     likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
     #     kernel=gpflow.kernels.Matern52()
     # )
     # loss = m.training_loss
     # - Sparse
     m = gpflow.models.SVGP(
         kernel=gpflow.kernels.Matern52(),
-        likelihood=gpflow.likelihoods.Bernoulli(),
+        likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
         inducing_variable=X[::5].copy()
     )
     loss = m.training_loss_closure((X, Y))
+    gpflow.set_trainable(m.inducing_variable, False)
 
     # Optimize model
     opt = gpflow.optimizers.Scipy()
@@ -49,16 +47,17 @@ def classification_demo():
     )
 
     # Plot linked / 'squashed' predictions
-    p = invlink(X_test_mean)
-    plt.plot(X_test, p, "C1", lw=1)
+    P_test = invlink(X_test_mean)
+    plt.plot(X_test, P_test, "C1", lw=1)
 
     # Plot data classification
-    X_mean = invlink(m.predict_f(X)[0])
-    correct = X_mean.round() == Y
+    X_train_mean, _ = m.predict_f(X)
+    P_train = invlink(X_train_mean)
+    correct = P_train.round() == Y
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
 
-    # plot
+    # Plot
     plt.ylim((-0.5, 1.5))
     plt.legend()
     plt.show()
