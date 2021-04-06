@@ -7,22 +7,25 @@ from shgp.models.hgpr import HGPR
 from tensorflow_probability import distributions
 
 
-np.random.seed(42)  # for reproducibility
+np.random.seed(42)
 
 
-def generate_gaussian_noise_data(N=120):
+def generate_data(N=120):
     X = np.random.rand(N)[:, None] * 10 - 5  # Inputs, shape N x 1
     X = np.sort(X.flatten()).reshape(N, 1)
     F = 2.5 * np.sin(6 * X) + np.cos(3 * X)  # Mean function values
+    return X, F
+
+
+def generate_gaussian_noise_data(N=120):
+    X, F = generate_data(N)
     NoiseVar = distributions.Normal(0.0, 1.0).prob(X)
     Y = F + np.random.randn(N, 1) * np.sqrt(NoiseVar)  # Noisy data
     return X, Y, NoiseVar
 
 
 def generate_polynomial_noise_data(N=120):
-    X = np.random.rand(N)[:, None] * 10 - 5  # Inputs, shape N x 1
-    X = np.sort(X.flatten()).reshape(N, 1)
-    F = 2.5 * np.sin(6 * X) + np.cos(3 * X)  # Mean function values
+    X, F = generate_data(N)
     NoiseVar = np.abs(0.25 * X**2 + 0.1 * X)  # Quadratic noise variances
     Y = F + np.random.randn(N, 1) * np.sqrt(NoiseVar)  # Noisy data
     return X, Y, NoiseVar
@@ -30,10 +33,10 @@ def generate_polynomial_noise_data(N=120):
 
 if __name__ == "__main__":
     # Two example likelihoods
-    # X, Y, NoiseVar = generate_polynomial_noise_data()
-    # likelihood = HeteroscedasticPolynomial(degree=2)
-    X, Y, NoiseVar = generate_gaussian_noise_data()
-    likelihood = HeteroscedasticGaussian()
+    X, Y, NoiseVar = generate_polynomial_noise_data()
+    likelihood = HeteroscedasticPolynomial(degree=2)
+    # X, Y, NoiseVar = generate_gaussian_noise_data()
+    # likelihood = HeteroscedasticGaussian()
     xx = np.linspace(-5, 5, 200)[:, None]
 
     # Shared metadata

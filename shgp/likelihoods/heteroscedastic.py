@@ -9,9 +9,9 @@ from tensorflow_probability import distributions
 DEFAULT_VARIANCE_LOWER_BOUND = 1e-6
 
 
-class Heteroscedastic(Likelihood, metaclass=abc.ABCMeta):
+class HeteroscedasticLikelihood(Likelihood, metaclass=abc.ABCMeta):
     """
-    The Heteroscedastic likelihood is a base class for any heteroscedastic likelihood.
+    HeteroscedasticLikelihood is a base class for any heteroscedastic likelihood.
     We define a new class that inherits this for any heteroscedastic noise model we want to use.
     Very small uncertainties can lead to numerical instability during the optimization process.
     A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
@@ -56,7 +56,7 @@ class Heteroscedastic(Likelihood, metaclass=abc.ABCMeta):
 
 
 # Example noise model
-class HeteroscedasticPolynomial(Heteroscedastic):
+class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
     """
     The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
     a polynomial noise model up to some degree.
@@ -86,7 +86,7 @@ class HeteroscedasticPolynomial(Heteroscedastic):
 
 
 # Example noise model
-class HeteroscedasticGaussian(Heteroscedastic):
+class HeteroscedasticGaussian(HeteroscedasticLikelihood):
     """
     The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
     a Gaussian noise model.

@@ -13,19 +13,17 @@ from gpflow.models.training_mixins import InputData, InternalDataTrainingLossMix
 from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
-from shgp.likelihoods.heteroscedastic import Heteroscedastic
+from shgp.likelihoods.heteroscedastic import HeteroscedasticLikelihood
 
 
 class HGPR(GPModel, InternalDataTrainingLossMixin):
     """
-        Heteroscedastic implementation of SGPR. They key reference is
+        Heteroscedastic implementation of SGPR. The key reference is
 
         @inproceedings{titsias2009variational,
-            title={Variational learning of inducing variables in
-                   sparse Gaussian processes},
+            title={Variational learning of inducing variables in sparse Gaussian processes},
             author={Titsias, Michalis K},
-            booktitle={International Conference on
-                       Artificial Intelligence and Statistics},
+            booktitle={International Conference on Artificial Intelligence and Statistics},
             pages={567--574},
             year={2009}
         }
@@ -36,7 +34,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         data: RegressionData,
         kernel: Kernel,
         inducing_variable: InducingPoints,
-        likelihood: Heteroscedastic,
+        likelihood: HeteroscedasticLikelihood,
         *,
         mean_function: Optional[MeanFunction] = None,
         num_latent_gps: Optional[int] = None

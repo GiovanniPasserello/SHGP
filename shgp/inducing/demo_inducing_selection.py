@@ -9,7 +9,7 @@ from shgp.likelihoods.heteroscedastic import HeteroscedasticPolynomial
 from shgp.models.hgpr import HGPR
 
 
-np.random.seed(42)  # for reproducibility
+np.random.seed(42)
 NUM_DATA = 200
 
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood2)
     gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
-    iter_limit = 10  # two avoid infinite loops
+    iter_limit = 10  # to avoid infinite loops
     while True:
         gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
