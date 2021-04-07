@@ -13,7 +13,7 @@ from gpflow.models.training_mixins import InputData, InternalDataTrainingLossMix
 from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
-from shgp.likelihoods.heteroscedastic import HeteroscedasticLikelihood
+from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
 
 
 class PGPR(GPModel, InternalDataTrainingLossMixin):
@@ -35,7 +35,6 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         data: RegressionData,
         kernel: Kernel,
         inducing_variable: InducingPoints,
-        likelihood: HeteroscedasticLikelihood,
         *,
         mean_function: Optional[MeanFunction] = None,
         num_latent_gps: Optional[int] = None
@@ -46,24 +45,33 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         `inducing_variable`: an InducingPoints instance or a matrix of
             the pseudo inputs Z, of shape [M, D].
         `kernel`, `mean_function` are appropriate GPflow objects
-        This method only works with a Heteroscedastic Gaussian likelihood, its variance is
-        initialized to (`noise_variance`*I + diag[Kff - Kfu*Kuu^-1*Kuf]).
+        This method only works with a HeteroscedasticLikelihood.
         """
 
         X_data, Y_data = data_input_to_tensor(data)
 
-        self.likelihood = likelihood
-        num_latent_gps = Y_data.shape[-1] if num_latent_gps is None else num_latent_gps
-
-        super().__init__(kernel, likelihood, mean_function, num_latent_gps=num_latent_gps)
+        # TODO: Manipulate Y from [0, 1] into [-1, 1] -> correct?
+        Y_data = Y_data * 2 - 1
 
         self.data = X_data, Y_data
         self.num_data = X_data.shape[0]
 
+        self.likelihood = PolyaGammaLikelihood(num_data=self.num_data)
+        num_latent_gps = Y_data.shape[-1] if num_latent_gps is None else num_latent_gps
+
+        super().__init__(kernel, self.likelihood, mean_function, num_latent_gps=num_latent_gps)
+
         self.inducing_variable = inducingpoint_wrapper(inducing_variable)
 
     def maximum_log_likelihood_objective(self, *args, **kwargs) -> tf.Tensor:
+        self.optimise_ci()  # optimise local parameters before every ELBO computation
         return self.elbo()
+
+    # TODO: More sophisticated approach?
+    def optimise_ci(self, num_iters=2):
+        for _ in range(num_iters):
+            Fmu, Fvar = self.predict_f(self.data[0])
+            self.likelihood.update_c_i(Fmu, Fvar)
 
     def elbo(self) -> tf.Tensor:
         """
@@ -71,7 +79,31 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         likelihood. For a derivation of the terms in here, see *** TODO.
         """
 
-        bound = None
+        # TODO: Derivations of cholesky decomp (more efficient)
+
+        # metadata
+        X_data, Y_data = self.data
+
+        num_inducing = tf.cast(self.inducing_variable.num_inducing, tf.float64)
+
+        # compute initial matrices
+        err = Y_data - self.mean_function(X_data)
+        kff = self.kernel(X_data, full_cov=False)
+        kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+        kfu = tf.transpose(kuf)
+        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu_inv = tf.linalg.inv(kuu)
+        k_tilde = kff - tf.linalg.diag_part(kfu @ kuu_inv @ kuf)
+        theta = self.likelihood.compute_theta()
+        sigma = kuu + (kuf * theta) @ kfu
+        sigma_inv = tf.linalg.inv(sigma)
+
+        # compute log marginal bound
+        bound = -0.5 * tf.math.log(tf.linalg.det(kuu_inv @ sigma))
+        bound += 0.125 * tf.transpose(err) @ kfu @ sigma_inv @ kuf @ err
+        bound -= 0.5 * tf.reduce_sum(theta * k_tilde)
+        bound -= 0.5 * num_inducing
+        bound += 0.5 * self.likelihood.kl_term()
 
         return bound
 
@@ -81,7 +113,46 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         Xnew. For a derivation of the terms in here, see *** TODO.
         """
 
-        mean, var = None, None
+        # metadata
+        X_data, Y_data = self.data
+        num_inducing = self.inducing_variable.num_inducing
+
+        # compute initial matrices
+        err = Y_data - self.mean_function(X_data)
+        kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kus = Kuf(self.inducing_variable, self.kernel, Xnew)
+        L = tf.linalg.cholesky(kuu)
+        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+        theta_sqrt = tf.sqrt(theta)
+        theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
+
+        # compute intermediate matrices
+        A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
+        AAT = tf.matmul(A, A, transpose_b=True)
+        B = AAT + tf.eye(num_inducing, dtype=default_float())
+        LB = tf.linalg.cholesky(B)
+        A_theta_sqrt_inv_err = tf.matmul(A * theta_sqrt_inv, err)
+        c = 0.5 * tf.linalg.triangular_solve(LB, A_theta_sqrt_inv_err)
+
+        # compute predictive
+        tmp1 = tf.linalg.triangular_solve(L, kus, lower=True)
+        tmp2 = tf.linalg.triangular_solve(LB, tmp1, lower=True)
+        mean = tf.matmul(tmp2, c, transpose_a=True)
+        if full_cov:
+            var = (
+                self.kernel(Xnew)
+                + tf.matmul(tmp2, tmp2, transpose_a=True)
+                - tf.matmul(tmp1, tmp1, transpose_a=True)
+            )
+            var = tf.tile(var[None, ...], [self.num_latent_gps, 1, 1])  # [P, N, N]
+        else:
+            var = (
+                self.kernel(Xnew, full_cov=False)
+                + tf.reduce_sum(tf.square(tmp2), 0)
+                - tf.reduce_sum(tf.square(tmp1), 0)
+            )
+            var = tf.tile(var[:, None], [1, self.num_latent_gps])
 
         return mean + self.mean_function(Xnew), var
 
@@ -91,7 +162,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         Xnew. For a derivation of the terms in here, see *** TODO.
         """
         mean, var = self.predict_f(Xnew)
-        return mean, var + self.likelihood.noise_variance(Xnew)
+        return mean, var + self.likelihood.noise_variance(mean, var)
 
     def compute_qu(self) -> Tuple[tf.Tensor, tf.Tensor]:
         """
@@ -100,6 +171,30 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         :return: mu, cov
         """
 
-        mu, cov = None, None
+        # metadata
+        X_data, Y_data = self.data
+
+        # compute initial matrices
+        kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+
+        # compute intermediate matrices
+        err = Y_data - self.mean_function(X_data)
+        kuf_theta = kuf * theta
+        sig = kuu + tf.matmul(kuf_theta, kuf, transpose_b=True)
+        sig_sqrt = tf.linalg.cholesky(sig)
+        sig_sqrt_inv_kuu = tf.linalg.triangular_solve(sig_sqrt, kuu)
+        kuf_err = tf.matmul(kuf, err)
+
+        # compute distribution
+        mu = 0.5 * (
+            tf.matmul(
+                sig_sqrt_inv_kuu,
+                tf.linalg.triangular_solve(sig_sqrt, kuf_err),
+                transpose_a=True
+            )
+        )
+        cov = tf.matmul(sig_sqrt_inv_kuu, sig_sqrt_inv_kuu, transpose_a=True)
 
         return mu, cov

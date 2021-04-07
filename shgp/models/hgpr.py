@@ -45,8 +45,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         `inducing_variable`: an InducingPoints instance or a matrix of
             the pseudo inputs Z, of shape [M, D].
         `kernel`, `mean_function` are appropriate GPflow objects
-        This method only works with a Heteroscedastic Gaussian likelihood, its variance is
-        initialized to (`noise_variance`*I + diag[Kff - Kfu*Kuu^-1*Kuf]).
+        This method only works with a HeteroscedasticLikelihood.
         """
 
         X_data, Y_data = data_input_to_tensor(data)
@@ -184,16 +183,16 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         kuf_rlmbda_err = tf.matmul(kuf_rlmbda, err)
         sig = kuu + tf.matmul(kuf_rlmbda, kuf, transpose_b=True)
         sig_sqrt = tf.linalg.cholesky(sig)
-        sig_sqrt_kuu = tf.linalg.triangular_solve(sig_sqrt, kuu)
+        sig_sqrt_inv_kuu = tf.linalg.triangular_solve(sig_sqrt, kuu)
 
         # compute distribution
-        cov = tf.matmul(sig_sqrt_kuu, sig_sqrt_kuu, transpose_a=True)
         mu = (
             tf.matmul(
-                sig_sqrt_kuu,
+                sig_sqrt_inv_kuu,
                 tf.linalg.triangular_solve(sig_sqrt, kuf_rlmbda_err),
                 transpose_a=True
             )
         )
+        cov = tf.matmul(sig_sqrt_inv_kuu, sig_sqrt_inv_kuu, transpose_a=True)
 
         return mu, cov
