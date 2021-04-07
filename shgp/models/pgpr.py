@@ -1,6 +1,5 @@
 from typing import Optional, Tuple
 
-import numpy as np
 import tensorflow as tf
 
 from gpflow.config import default_float, default_jitter
@@ -68,7 +67,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         return self.elbo()
 
     # TODO: More sophisticated approach?
-    def optimise_ci(self, num_iters=2):
+    def optimise_ci(self, num_iters=1):
         for _ in range(num_iters):
             Fmu, Fvar = self.predict_f(self.data[0])
             self.likelihood.update_c_i(Fmu, Fvar)
@@ -79,31 +78,36 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         likelihood. For a derivation of the terms in here, see *** TODO.
         """
 
-        # TODO: Derivations of cholesky decomp (more efficient)
-
         # metadata
         X_data, Y_data = self.data
-
-        num_inducing = tf.cast(self.inducing_variable.num_inducing, tf.float64)
+        num_inducing = to_default_float(self.inducing_variable.num_inducing)
+        output_dim = to_default_float(tf.shape(Y_data)[1])
 
         # compute initial matrices
         err = Y_data - self.mean_function(X_data)
-        kff = self.kernel(X_data, full_cov=False)
+        Kdiag = self.kernel(X_data, full_cov=False)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kfu = tf.transpose(kuf)
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        kuu_inv = tf.linalg.inv(kuu)
-        k_tilde = kff - tf.linalg.diag_part(kfu @ kuu_inv @ kuf)
-        theta = self.likelihood.compute_theta()
-        sigma = kuu + (kuf * theta) @ kfu
-        sigma_inv = tf.linalg.inv(sigma)
+        L = tf.linalg.cholesky(kuu)
+        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+        theta_sqrt = tf.sqrt(theta)
+        theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
+
+        # compute intermediate matrices
+        A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
+        AAT = tf.matmul(A, A, transpose_b=True)
+        B = AAT + tf.eye(num_inducing, dtype=default_float())
+        LB = tf.linalg.cholesky(B)
+        A_theta_sqrt_inv_err = tf.matmul(A * theta_sqrt_inv, err)
+        c = 0.5 * tf.linalg.triangular_solve(LB, A_theta_sqrt_inv_err, lower=True)
 
         # compute log marginal bound
-        bound = -0.5 * tf.math.log(tf.linalg.det(kuu_inv @ sigma))
-        bound += 0.125 * tf.transpose(err) @ kfu @ sigma_inv @ kuf @ err
-        bound -= 0.5 * tf.reduce_sum(theta * k_tilde)
+        bound = -output_dim * tf.reduce_sum(tf.math.log(tf.linalg.diag_part(LB)))
+        bound += 0.5 * tf.reduce_sum(tf.square(c))
+        bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * theta)
+        bound += 0.5 * output_dim * tf.reduce_sum(tf.linalg.diag_part(AAT))
+        bound -= self.likelihood.kl_term()
         bound -= 0.5 * num_inducing
-        bound += 0.5 * self.likelihood.kl_term()
 
         return bound
 

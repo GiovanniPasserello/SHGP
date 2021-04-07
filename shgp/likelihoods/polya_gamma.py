@@ -21,7 +21,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
         super().__init__(latent_dim=1, observation_dim=1)
 
         self.variance_lower_bound = variance_lower_bound
-        self.c_i = tf.zeros(num_data) + 0.1  # TODO: How to initialise?
+        self.c_i = tf.zeros(num_data, dtype=tf.float64) + 0.1  # TODO: How to initialise?
 
     def noise_variance(self, Fmu, Fvar):
         """
@@ -46,8 +46,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
             :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
             :return: array of c_i values.
         """
-        c_i = tf.sqrt(tf.square(Fmu) + Fvar)
-        return tf.cast(c_i, dtype=tf.float64)
+        return tf.sqrt(tf.square(Fmu) + Fvar)
 
     def compute_theta(self, c_i=None):
         """
@@ -58,8 +57,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
         # if c_i not provided, use local variables
         if c_i is None:
             c_i = self.c_i
-        theta = 0.5 * tf.math.reciprocal(c_i) * tf.tanh(0.5 * c_i)
-        return tf.cast(theta, dtype=tf.float64)
+        return 0.5 * tf.math.reciprocal(c_i) * tf.tanh(0.5 * c_i)
 
     def kl_term(self):
         """
