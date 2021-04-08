@@ -22,7 +22,9 @@ def classification_demo():
 
     # Optimize model
     opt = gpflow.optimizers.Scipy()
-    opt.minimize(m.training_loss, variables=m.trainable_variables)
+    for _ in range(10):
+        opt.minimize(m.training_loss, variables=m.trainable_variables)
+        m.optimise_ci()
 
     # Take predictions
     X_test_mean, X_test_var = m.predict_f(X_test)

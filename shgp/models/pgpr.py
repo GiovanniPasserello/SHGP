@@ -50,12 +50,12 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         X_data, Y_data = data_input_to_tensor(data)
 
         # TODO: Manipulate Y from [0, 1] into [-1, 1] -> correct?
-        Y_data = Y_data * 2 - 1
+        # Y_data = Y_data * 2 - 1
 
         self.data = X_data, Y_data
         self.num_data = X_data.shape[0]
 
-        self.likelihood = PolyaGammaLikelihood(num_data=self.num_data)
+        self.likelihood = PolyaGammaLikelihood(num_data=self.num_data, variance=0.1)
         num_latent_gps = Y_data.shape[-1] if num_latent_gps is None else num_latent_gps
 
         super().__init__(kernel, self.likelihood, mean_function, num_latent_gps=num_latent_gps)
@@ -63,11 +63,10 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         self.inducing_variable = inducingpoint_wrapper(inducing_variable)
 
     def maximum_log_likelihood_objective(self, *args, **kwargs) -> tf.Tensor:
-        self.optimise_ci()  # optimise local parameters before every ELBO computation
         return self.elbo()
 
     # TODO: More sophisticated approach?
-    def optimise_ci(self, num_iters=1):
+    def optimise_ci(self, num_iters=10):
         for _ in range(num_iters):
             Fmu, Fvar = self.predict_f(self.data[0])
             self.likelihood.update_c_i(Fmu, Fvar)
@@ -89,7 +88,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
         L = tf.linalg.cholesky(kuu)
-        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+        theta = tf.transpose(self.likelihood.compute_theta())
         theta_sqrt = tf.sqrt(theta)
         theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
 
@@ -127,7 +126,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
         kus = Kuf(self.inducing_variable, self.kernel, Xnew)
         L = tf.linalg.cholesky(kuu)
-        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+        theta = tf.transpose(self.likelihood.compute_theta())
         theta_sqrt = tf.sqrt(theta)
         theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
 
@@ -181,7 +180,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         # compute initial matrices
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        theta = tf.transpose(self.likelihood.compute_theta())  # TODO: May need a transpose!
+        theta = tf.transpose(self.likelihood.compute_theta())
 
         # compute intermediate matrices
         err = Y_data - self.mean_function(X_data)

@@ -1,11 +1,11 @@
-import abc
 import numpy as np
 import tensorflow as tf
 
 from gpflow.likelihoods.base import Likelihood
+from gpflow.utilities import to_default_float
 
 
-class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
+class PolyaGammaLikelihood(Likelihood):
     """
     PolyaGammaLikelihood is a heteroscedastic likelihood based on Polya-Gamma data augmentation.
     This class allows us to directly compute the optimal variance given a set of data.
@@ -13,15 +13,22 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
     A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
     """
 
-    def __init__(self, num_data: int, variance_lower_bound: float = 1e-6):
+    def __init__(self, num_data: int, variance: float, variance_lower_bound: float = 1e-6):
         """
+        :param num_data: The number of training data points.
+        :param variance: The initial variance for each data point
         :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
         """
 
         super().__init__(latent_dim=1, observation_dim=1)
 
+        if variance < variance_lower_bound:
+            raise ValueError(
+                f"Intial variance of the Heteroscedastic likelihood must be strictly greater than {variance_lower_bound}"
+            )
+
         self.variance_lower_bound = variance_lower_bound
-        self.c_i = tf.zeros(num_data, dtype=tf.float64) + 0.1  # TODO: How to initialise?
+        self.c_i = tf.reshape(to_default_float(tf.zeros(num_data) + variance), (-1, 1))  # TODO: How to initialise?
 
     def noise_variance(self, Fmu, Fvar):
         """
@@ -46,7 +53,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
             :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
             :return: array of c_i values.
         """
-        return tf.sqrt(tf.square(Fmu) + Fvar)
+        return tf.math.sqrt(tf.math.square(Fmu) + Fvar)
 
     def compute_theta(self, c_i=None):
         """
@@ -57,7 +64,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
         # if c_i not provided, use local variables
         if c_i is None:
             c_i = self.c_i
-        return 0.5 * tf.math.reciprocal(c_i) * tf.tanh(0.5 * c_i)
+        return 0.5 * tf.math.reciprocal(c_i) * tf.math.tanh(0.5 * c_i)
 
     def kl_term(self):
         """
@@ -65,7 +72,7 @@ class PolyaGammaLikelihood(Likelihood, metaclass=abc.ABCMeta):
             :return: the KL divergence.
         """
         half_c_i = 0.5 * self.c_i
-        return tf.reduce_sum(tf.math.log(tf.cosh(half_c_i)) - 0.5 * half_c_i * tf.tanh(half_c_i))
+        return tf.reduce_sum(tf.math.log(tf.cosh(half_c_i)) - 0.5 * half_c_i * tf.math.tanh(half_c_i))
 
     def _log_prob(self, F, Y):
         raise NotImplementedError

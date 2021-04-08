@@ -8,27 +8,13 @@ from gpflow.utilities import to_default_float
 from shgp.models.pgpr import PGPR
 
 
-@dataclass(frozen=True)
-class Datum:
-    rng: np.random.RandomState = np.random.RandomState(0)
-    X: np.ndarray = rng.randn(100, 1)
-    Y: np.ndarray = rng.randn(100, 1)
-    Z: np.ndarray = rng.randn(10, 1)
-    Xs: np.ndarray = rng.randn(10, 1)
-    lik = gpflow.likelihoods.Gaussian()
-    kernel = gpflow.kernels.Matern32()
-
-
 def test_hgpr_qu():
-    rng = Datum().rng
+    rng = np.random.RandomState(0)
     X = to_default_float(rng.randn(100, 1))
     Z = to_default_float(rng.randn(20, 1))
     Y = to_default_float(np.sin(X * -1.4) + 0.5 * rng.randn(len(X), 1))
 
-    model = PGPR(
-        (X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z
-    )
-
+    model = PGPR((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
     gpflow.optimizers.Scipy().minimize(model.training_loss, variables=model.trainable_variables)
 
     qu_mean, qu_cov = model.compute_qu()
