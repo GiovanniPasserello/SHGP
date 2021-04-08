@@ -15,12 +15,12 @@ def classification_demo():
     # Define model
     m = PGPR(
         data=(X, Y),
-        kernel=gpflow.kernels.Matern52(),
+        kernel=gpflow.kernels.SquaredExponential(),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(m.inducing_variable, False)
 
-    # Optimize model
+    # Optimize model  # TODO: Is this the best way?
     opt = gpflow.optimizers.Scipy()
     for _ in range(10):
         opt.minimize(m.training_loss, variables=m.trainable_variables, options=dict(maxiter=250))

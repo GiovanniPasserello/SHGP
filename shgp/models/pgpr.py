@@ -49,8 +49,10 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
         X_data, Y_data = data_input_to_tensor(data)
 
-        # TODO: Manipulate Y from [0, 1] into [-1, 1] -> correct?
-        # Y_data = Y_data * 2 - 1
+        # Y must be in (-1, +1), not (0, 1)
+        assert_y = tf.Assert(tf.reduce_all((Y_data == 0.0) | (Y_data == 1.0)), [Y_data])
+        with tf.control_dependencies([assert_y]):
+            Y_data = Y_data * 2.0 - 1.0
 
         self.data = X_data, Y_data
         self.num_data = X_data.shape[0]
@@ -65,7 +67,6 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
     def maximum_log_likelihood_objective(self, *args, **kwargs) -> tf.Tensor:
         return self.elbo()
 
-    # TODO: More sophisticated approach?
     def optimise_ci(self, num_iters=10):
         for _ in range(num_iters):
             Fmu, Fvar = self.predict_f(self.data[0])
