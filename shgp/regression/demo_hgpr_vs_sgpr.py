@@ -46,13 +46,13 @@ if __name__ == "__main__":
     inducing_vars1 = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model1 = gpflow.models.SGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1)
     gpflow.optimizers.Scipy().minimize(model1.training_loss, variables=model1.trainable_variables)
-    print("model1 trained")
+    print("sgpr trained")
 
     kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood)
     gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
-    print("model2 trained")
+    print("hgpr trained")
 
     mu1, var1 = model1.predict_f(xx)
     var1_y = var1 + model1.likelihood.variance
