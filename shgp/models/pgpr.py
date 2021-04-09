@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 
+import numpy as np
 import tensorflow as tf
 
 from gpflow.config import default_float, default_jitter
@@ -13,6 +14,8 @@ from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
 from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
+
+tf.config.run_functions_eagerly(True)
 
 
 class PGPR(GPModel, InternalDataTrainingLossMixin):
@@ -44,12 +47,11 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         `inducing_variable`: an InducingPoints instance or a matrix of
             the pseudo inputs Z, of shape [M, D].
         `kernel`, `mean_function` are appropriate GPflow objects
-        This method only works with a HeteroscedasticLikelihood.
         """
 
         X_data, Y_data = data_input_to_tensor(data)
 
-        # Y must be in (-1, +1), not (0, 1)
+        # Y_data must be in (-1, +1), not (0, 1)
         assert_y = tf.Assert(tf.reduce_all((Y_data == 0.0) | (Y_data == 1.0)), [Y_data])
         with tf.control_dependencies([assert_y]):
             Y_data = Y_data * 2.0 - 1.0
@@ -68,6 +70,11 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         return self.elbo()
 
     def optimise_ci(self, num_iters=10):
+        """
+        Iteratively update the local parameters, this forms a cycle between
+        updating c_i and q_u which we iterate a number of times. Typically we
+        can choose num_iters < 10.
+        """
         for _ in range(num_iters):
             Fmu, Fvar = self.predict_f(self.data[0])
             self.likelihood.update_c_i(Fmu, Fvar)
@@ -82,6 +89,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         X_data, Y_data = self.data
         num_inducing = to_default_float(self.inducing_variable.num_inducing)
         output_dim = to_default_float(tf.shape(Y_data)[1])
+        num_data = to_default_float(self.num_data)
 
         # compute initial matrices
         err = Y_data - self.mean_function(X_data)
@@ -106,10 +114,87 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         bound += 0.5 * tf.reduce_sum(tf.square(c))
         bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * theta)
         bound += 0.5 * output_dim * tf.reduce_sum(tf.linalg.diag_part(AAT))
+        bound -= num_data * np.log(2)
         bound -= self.likelihood.kl_term()
-        bound -= 0.5 * num_inducing
 
         return bound
+
+    # For comparison against HGPR
+    # def hgpr_elbo(self) -> tf.Tensor:
+    #     """
+    #     Construct a tensorflow function to compute the bound on the marginal
+    #     likelihood. For a derivation of the terms in here, see *** TODO.
+    #     """
+    #
+    #     # metadata
+    #     X_data, Y_data = self.data
+    #     num_inducing = self.inducing_variable.num_inducing
+    #     num_data = to_default_float(tf.shape(Y_data)[0])
+    #     output_dim = to_default_float(tf.shape(Y_data)[1])
+    #
+    #     # compute initial matrices
+    #     err = Y_data - self.mean_function(X_data)
+    #     Kdiag = self.kernel(X_data, full_cov=False)
+    #     kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+    #     kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+    #     L = tf.linalg.cholesky(kuu)
+    #     theta = tf.transpose(self.likelihood.compute_theta())
+    #     theta_sqrt = tf.sqrt(theta)
+    #
+    #     # compute intermediate matrices
+    #     A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
+    #     AAT = tf.matmul(A, A, transpose_b=True)
+    #     B = AAT + tf.eye(num_inducing, dtype=default_float())
+    #     LB = tf.linalg.cholesky(B)
+    #     A_rsig_err = tf.matmul(A * theta_sqrt, err)
+    #     c = tf.linalg.triangular_solve(LB, A_rsig_err, lower=True)
+    #
+    #     # compute log marginal bound
+    #     bound = -0.5 * num_data * output_dim * np.log(2 * np.pi)
+    #     bound -= output_dim * tf.reduce_sum(tf.math.log(tf.linalg.diag_part(LB)))
+    #     bound -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(tf.math.reciprocal(theta)))
+    #     bound -= 0.5 * tf.reduce_sum(tf.square(err) * tf.transpose(theta))
+    #     bound += 0.5 * tf.reduce_sum(tf.square(c))
+    #     bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * theta)
+    #     bound += 0.5 * output_dim * tf.reduce_sum(tf.linalg.diag_part(AAT))
+    #
+    #     return bound
+    #
+    # def hgpr_elbo_difference(self):
+    #     """
+    #     The difference between HGPR and PGPR ELBOs.
+    #     """
+    #
+    #     # metadata
+    #     X_data, Y_data = self.data
+    #     output_dim = to_default_float(tf.shape(Y_data)[1])
+    #     num_data = to_default_float(tf.shape(Y_data)[0])
+    #
+    #     # compute initial matrices
+    #     err = Y_data - self.mean_function(X_data)
+    #     kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+    #     kfu = tf.transpose(kuf)
+    #     kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+    #     theta = tf.transpose(self.likelihood.compute_theta())
+    #
+    #     theta_mat = tf.squeeze(tf.linalg.diag(theta))
+    #     sig = kuu + tf.matmul(tf.matmul(kuf, theta_mat), kfu)
+    #     sig_inv = tf.linalg.inv(sig)
+    #     mid = tf.matmul(tf.matmul(kfu, sig_inv), kuf)
+    #
+    #     term1 = theta_mat
+    #     term2 = tf.matmul(tf.matmul(theta_mat, mid), theta_mat)
+    #     term3 = mid
+    #     total = term1 - term2 + 0.25 * term3
+    #
+    #     # compute log marginal bound
+    #     diff = 0.5 * num_data * np.log(2 * np.pi)
+    #     diff += 0.5 * tf.matmul(tf.matmul(err, total, transpose_a=True), err)
+    #     diff -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(theta))
+    #     diff -= num_data * np.log(2)
+    #     diff -= self.likelihood.kl_term()
+    #
+    #     return diff
 
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """

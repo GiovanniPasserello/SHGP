@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow import sigmoid
 
-from shgp.models.pgpr import PGPR
+from shgp.models.wenzel import Wenzel
 
 
 # Polya-Gamma uses logit link / sigmoid
@@ -13,10 +13,10 @@ def invlink(f):
 
 def classification_demo():
     # Define model
-    m = PGPR(
+    m = Wenzel(
         data=(X, Y),
         kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=X.copy()
+        inducing_variable=X[::50].copy()
     )
     gpflow.set_trainable(m.inducing_variable, False)
 
@@ -25,6 +25,7 @@ def classification_demo():
     for _ in range(10):
         opt.minimize(m.training_loss, variables=m.trainable_variables, options=dict(maxiter=250))
         m.optimise_ci()
+        print(m.elbo())
 
     # Take predictions
     X_test_mean, _ = m.predict_f(X_test)

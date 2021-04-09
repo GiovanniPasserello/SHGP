@@ -1,18 +1,17 @@
-from dataclasses import dataclass
-
 import numpy as np
 import tensorflow as tf
 import gpflow
 
 from gpflow.utilities import to_default_float
 from shgp.models.pgpr import PGPR
+from shgp.models.wenzel import Wenzel
 
 
-def test_hgpr_qu():
+def test_pgpr_qu():
     rng = np.random.RandomState(0)
     X = to_default_float(rng.randn(100, 1))
     Z = to_default_float(rng.randn(20, 1))
-    Y = to_default_float(np.sin(X * -1.4) + 0.5 * rng.randn(len(X), 1))
+    Y = to_default_float(np.random.rand(100, 1).round())
 
     model = PGPR((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
     gpflow.optimizers.Scipy().minimize(model.training_loss, variables=model.trainable_variables)
@@ -26,4 +25,31 @@ def test_hgpr_qu():
     print("Test passed.")
 
 
-test_hgpr_qu()
+def test_pgpr_is_same_as_wenzel():
+    rng = np.random.RandomState(0)
+    X = to_default_float(rng.randn(100, 1))
+    Z = to_default_float(rng.randn(20, 1))
+    Y = to_default_float(np.random.rand(100, 1).round())
+
+    pgpr = PGPR((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
+    opt = gpflow.optimizers.Scipy()
+    gpflow.set_trainable(pgpr.inducing_variable, False)
+    for _ in range(5):
+        opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=250))
+        pgpr.optimise_ci()
+
+    wenzel = Wenzel((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
+    opt = gpflow.optimizers.Scipy()
+    gpflow.set_trainable(wenzel.inducing_variable, False)
+    for _ in range(5):
+        opt.minimize(wenzel.training_loss, variables=wenzel.trainable_variables, options=dict(maxiter=250))
+        wenzel.optimise_ci()
+
+    np.testing.assert_allclose(pgpr.elbo(), wenzel.elbo(), rtol=1e-3, atol=1e-3)
+
+    print("Test passed.")
+
+
+if __name__ == '__main__':
+    test_pgpr_qu()
+    test_pgpr_is_same_as_wenzel()

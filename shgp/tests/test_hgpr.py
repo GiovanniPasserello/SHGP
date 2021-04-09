@@ -31,4 +31,5 @@ def test_hgpr_qu():
     print("Test passed.")
 
 
-test_hgpr_qu()
+if __name__ == '__main__':
+    test_hgpr_qu()

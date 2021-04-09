@@ -52,6 +52,8 @@ def classification_demo():
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
 
+    print(m.elbo())
+
     # Plot
     plt.ylim((-0.5, 1.5))
     plt.legend()

@@ -4,8 +4,10 @@ import numpy as np
 from tensorflow import sigmoid
 
 from shgp.models.pgpr import PGPR
+from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 
-INDUCING_INTERVAL = 1
+INDUCING_INTERVAL = 20
+# TODO: Try changing PGPR to not need iterative training
 
 
 # Polya-Gamma uses logit link / sigmoid
@@ -18,10 +20,12 @@ def model_comparison():
     # Model Optimisation #
     ######################
 
-    # SVGP
+    # SVGP (choose Bernoulli or PG likelihood)
+    #likelihood = gpflow.likelihoods.Bernoulli(invlink=sigmoid)
+    likelihood = PolyaGammaBernoulli()
     svgp = gpflow.models.SVGP(
-        kernel=gpflow.kernels.Matern52(),
-        likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
+        kernel=gpflow.kernels.SquaredExponential(),
+        likelihood=likelihood,
         inducing_variable=X[::INDUCING_INTERVAL].copy()
     )
     loss = svgp.training_loss_closure((X, Y))
@@ -37,7 +41,7 @@ def model_comparison():
     )
     gpflow.set_trainable(pgpr.inducing_variable, False)
     opt = gpflow.optimizers.Scipy()
-    for _ in range(10):
+    for _ in range(20):
         opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=250))
         pgpr.optimise_ci()
     print("pgpr trained")
