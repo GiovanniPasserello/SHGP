@@ -18,6 +18,7 @@ from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
 tf.config.run_functions_eagerly(True)
 
 
+# TODO: A better method for iterative optimisation of c_i, so we know the number of iterations required
 class PGPR(GPModel, InternalDataTrainingLossMixin):
     """
         Collapsed implementation of Polya-Gamma GPR, based on the heteroscedastic

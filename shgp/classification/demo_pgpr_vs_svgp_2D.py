@@ -7,7 +7,6 @@ from shgp.models.pgpr import PGPR
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 
 INDUCING_INTERVAL = 20
-# TODO: Try changing PGPR to not need iterative training
 
 
 # Polya-Gamma uses logit link / sigmoid
@@ -28,9 +27,8 @@ def model_comparison():
         likelihood=likelihood,
         inducing_variable=X[::INDUCING_INTERVAL].copy()
     )
-    loss = svgp.training_loss_closure((X, Y))
     gpflow.set_trainable(svgp.inducing_variable, False)
-    gpflow.optimizers.Scipy().minimize(loss, variables=svgp.trainable_variables)
+    gpflow.optimizers.Scipy().minimize(svgp.training_loss_closure((X, Y)), variables=svgp.trainable_variables)
     print("svgp trained")
 
     # PGPR
