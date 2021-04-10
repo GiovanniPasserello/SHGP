@@ -37,17 +37,17 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         self,
         data: RegressionData,
         kernel: Kernel,
-        inducing_variable: InducingPoints,
         *,
+        inducing_variable: Optional[InducingPoints] = None,
         mean_function: Optional[MeanFunction] = None,
         num_latent_gps: Optional[int] = None
     ):
         """
         `data`: a tuple of (X, Y), where the inputs X has shape [N, D]
             and the outputs Y has shape [N, R].
+        `kernel`, `mean_function` are appropriate GPflow objects.
         `inducing_variable`: an InducingPoints instance or a matrix of
             the pseudo inputs Z, of shape [M, D].
-        `kernel`, `mean_function` are appropriate GPflow objects
         """
 
         X_data, Y_data = data_input_to_tensor(data)
@@ -65,7 +65,10 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
         super().__init__(kernel, self.likelihood, mean_function, num_latent_gps=num_latent_gps)
 
-        self.inducing_variable = inducingpoint_wrapper(inducing_variable)
+        if inducing_variable is None:
+            self.inducing_variable = inducingpoint_wrapper(data[0].copy())
+        else:
+            self.inducing_variable = inducingpoint_wrapper(inducing_variable)
 
     def maximum_log_likelihood_objective(self, *args, **kwargs) -> tf.Tensor:
         return self.elbo()

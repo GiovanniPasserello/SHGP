@@ -10,7 +10,7 @@ def h_greedy_variance(
     lmbda: np.ndarray,
     M: int,
     kernel: Callable[[np.ndarray, Optional[np.ndarray], Optional[bool]], np.ndarray],
-    threshold: Optional[int] = 0.0
+    threshold: Optional[float] = 0.0
 ):
     """
     Heteroscedastic implementation of the greedy variance inducing point initialisation
@@ -59,10 +59,11 @@ def h_greedy_variance(
         di = np.clip(di, 0, None)
 
         # Nystrom difference from di, heteroscedasticity from lmbda_inv
-        indices[m + 1] = np.argmax(lmbda_inv * di)  # select next point
+        criterion = lmbda_inv * di
+        indices[m + 1] = np.argmax(criterion)  # select next point
 
-        # sum of di is tr(lambda^-1(Kff-Qff)), if this is small things are ok
-        if np.clip(di, 0, None).sum() < threshold:
+        # terminate if tr(lambda^-1(Kff-Qff)) is small (implies posterior KL is small)
+        if np.clip(criterion, 0, None).sum() < threshold:
             indices = indices[:m]
             warnings.warn("ConditionalVariance: Terminating selection of inducing points early.")
             break

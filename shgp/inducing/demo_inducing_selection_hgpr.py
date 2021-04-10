@@ -25,7 +25,7 @@ def generate_polynomial_noise_data(N=NUM_DATA):
 if __name__ == "__main__":
     X, Y, NoiseVar = generate_polynomial_noise_data()
     xx = np.linspace(-5, 5, 200)[:, None]
-    num_inducing = 20
+    num_inducing = NUM_DATA
 
     # Naive random selection and optimisations
     likelihood1 = HeteroscedasticPolynomial(degree=2)
@@ -39,30 +39,32 @@ if __name__ == "__main__":
     elbo1 = model1.elbo()
 
     # Greedy variance selection
+    threshold = 1e-6
     likelihood2 = HeteroscedasticPolynomial(degree=2)
     kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
-    inducing_locs2, inducing_idx2 = h_greedy_variance(X, likelihood2.noise_variance(X), num_inducing, kernel2)
+    inducing_locs2, inducing_idx2 = h_greedy_variance(X, likelihood2.noise_variance(X), num_inducing, kernel2, threshold)
     inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood2)
     gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
-    iter_limit = 10  # to avoid infinite loops
+    #iter_limit = 10  # to avoid infinite loops
     while True:
         gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
         next_elbo = model2.elbo()
         print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
-        if np.abs(next_elbo - prev_elbo) <= 1e-2 or iter_limit == 0:
+        if np.abs(next_elbo - prev_elbo) <= 1e-6:  # or iter_limit == 0:
             break
 
-        inducing_locs2, inducing_idx2 = h_greedy_variance(X, model2.likelihood.noise_variance(X), num_inducing, kernel2)
+        inducing_locs2, inducing_idx2 = h_greedy_variance(X, model2.likelihood.noise_variance(X), num_inducing, kernel2, threshold)
         inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
         model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
         gpflow.set_trainable(model2.inducing_variable, False)
 
-        prev_prev_elbo = prev_elbo
         prev_elbo = next_elbo
-        iter_limit -= 1
+        #iter_limit -= 1
+
+    print("Final number of inducing points:", model2.inducing_variable.num_inducing)
 
     # Optionally optimize at the end
     # gpflow.set_trainable(model2.inducing_variable, True)
