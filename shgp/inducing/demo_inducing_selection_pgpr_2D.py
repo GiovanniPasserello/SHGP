@@ -15,9 +15,8 @@ def invlink(f):
     return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
-# TODO: Verify whether this is the correct way of selecting inducing points for PG
 def inducing_demo():
-    num_inducing = 400
+    num_inducing = 30
     num_iters = 10
 
     # Naive random selection and optimisations
@@ -42,7 +41,7 @@ def inducing_demo():
     model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
     gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
-    # TODO: Come up with better guarantees for convergence
+    # TODO: Better guarantees for convergence
     iter_limit = 10  # to avoid infinite loops
     while True:
         # Optimize model
@@ -66,10 +65,6 @@ def inducing_demo():
         iter_limit -= 1
 
     print("Final number of inducing points:", model2.inducing_variable.num_inducing)
-
-    # Optionally optimize at the end
-    #gpflow.set_trainable(model2.inducing_variable, True)
-    #gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
     elbo2 = model2.elbo()
 
@@ -121,9 +116,13 @@ def inducing_demo():
     # Inducing #
     ############
 
-    # This works as X and Y are sorted, if they aren't make sure to sort them
-    ax1.scatter(X[inducing_idx1, 0], X[inducing_idx1, 1], c="b", label='ind point', zorder=1000)
-    ax2.scatter(X[inducing_idx2, 0], X[inducing_idx2, 1], c="b", label='ind point', zorder=1000)
+    inducing_points = model1.inducing_variable.Z.variables[0]
+    ax1.scatter(inducing_points[:, 0], inducing_points[:, 1], c="b", label='ind point', zorder=1000)
+    ax2.scatter(X[inducing_idx2, 0].squeeze(), X[inducing_idx2, 1].squeeze(), c="b", label='ind point', zorder=1000)
+
+    # Inspect average noise of inducing and non-inducing points
+    print(model2.likelihood.compute_theta().numpy().flatten()[inducing_idx2].mean())
+    print(model2.likelihood.compute_theta().numpy().flatten()[np.where([a not in inducing_idx2 for a in np.arange(50)])].mean())
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')

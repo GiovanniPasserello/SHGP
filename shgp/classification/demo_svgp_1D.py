@@ -14,9 +14,8 @@ def classification_demo():
     m = gpflow.models.SVGP(
         kernel=gpflow.kernels.Matern52(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
-        inducing_variable=X[::5].copy()
+        inducing_variable=X[::10].copy()
     )
-    gpflow.set_trainable(m.inducing_variable, False)
 
     # Optimize model
     gpflow.optimizers.Scipy().minimize(m.training_loss_closure((X, Y)), variables=m.trainable_variables)
@@ -46,6 +45,13 @@ def classification_demo():
     correct = P_train.round() == Y
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
+
+    inducing_inputs = m.inducing_variable.Z.variables[0]
+    inducing_outputs, _ = m.predict_f(inducing_inputs)
+    p_inducing_outputs = invlink(inducing_outputs)
+    plt.scatter(inducing_inputs, p_inducing_outputs, c="b", label='ind point', zorder=1000)
+
+    print(m.elbo((X,Y)))
 
     # Plot
     plt.ylim((-0.5, 1.5))

@@ -14,11 +14,11 @@ def classification_demo():
     m = gpflow.models.SVGP(
         kernel=gpflow.kernels.SquaredExponential(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
-        inducing_variable=X[::5].copy()
+        inducing_variable=X[::20].copy()
     )
 
     # Optimize model
-    gpflow.optimizers.Scipy().minimize(m.training_loss_closure((X, Y)), variables=m.trainable_variables, options=dict(maxiter=250))
+    gpflow.optimizers.Scipy().minimize(m.training_loss_closure((X, Y)), variables=m.trainable_variables)
 
     # Take predictions
     X_test_mean, _ = m.predict_f(X_test)
@@ -38,6 +38,12 @@ def classification_demo():
         zorder=100,
     )
 
+    inducing_points = m.inducing_variable.Z.variables[0]
+    plt.scatter(inducing_points[:, 0], inducing_points[:, 1], c="b", label='ind point', zorder=1000)
+
+    print(m.elbo((X, Y)))
+
+    plt.legend()
     plt.show()
 
 

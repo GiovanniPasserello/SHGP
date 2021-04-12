@@ -15,9 +15,8 @@ def invlink(f):
     return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
-# TODO: Verify whether this is the correct way of selecting inducing points for PG
 def inducing_demo():
-    num_inducing = 50
+    num_inducing = 15
     num_iters = 5
 
     # Naive random selection and optimisations
@@ -66,10 +65,6 @@ def inducing_demo():
 
     print("Final number of inducing points:", model2.inducing_variable.num_inducing)
 
-    # Optionally optimize at the end
-    #gpflow.set_trainable(model2.inducing_variable, True)
-    #gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
-
     elbo2 = model2.elbo()
 
     fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6))
@@ -115,8 +110,15 @@ def inducing_demo():
     ############
 
     # This works as X and Y are sorted, if they aren't make sure to sort them
-    ax1.scatter(X[inducing_idx1].squeeze(), Y[inducing_idx1].squeeze(), c="b", label='ind point', zorder=1000)
+    inducing_inputs = model1.inducing_variable.Z.variables[0]
+    inducing_outputs, _ = model1.predict_f(inducing_inputs)
+    p_inducing_outputs = invlink(inducing_outputs)
+    ax1.scatter(inducing_inputs, p_inducing_outputs, c="b", label='ind point', zorder=1000)
     ax2.scatter(X[inducing_idx2].squeeze(), Y[inducing_idx2].squeeze(), c="b", label='ind point', zorder=1000)
+
+    # Inspect average noise of inducing and non-inducing points
+    print(model2.likelihood.compute_theta().numpy().flatten()[inducing_idx2].mean())
+    print(model2.likelihood.compute_theta().numpy().flatten()[np.where([a not in inducing_idx2 for a in np.arange(50)])].mean())
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')

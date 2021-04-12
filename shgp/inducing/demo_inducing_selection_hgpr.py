@@ -25,7 +25,7 @@ def generate_polynomial_noise_data(N=NUM_DATA):
 if __name__ == "__main__":
     X, Y, NoiseVar = generate_polynomial_noise_data()
     xx = np.linspace(-5, 5, 200)[:, None]
-    num_inducing = NUM_DATA
+    num_inducing = 20
 
     # Naive random selection and optimisations
     likelihood1 = HeteroscedasticPolynomial(degree=2)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood2)
     gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
-    #iter_limit = 10  # to avoid infinite loops
+    # iter_limit = 10  # to avoid infinite loops
     while True:
         gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
@@ -62,13 +62,9 @@ if __name__ == "__main__":
         gpflow.set_trainable(model2.inducing_variable, False)
 
         prev_elbo = next_elbo
-        #iter_limit -= 1
+        # iter_limit -= 1
 
     print("Final number of inducing points:", model2.inducing_variable.num_inducing)
-
-    # Optionally optimize at the end
-    # gpflow.set_trainable(model2.inducing_variable, True)
-    # gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
     mu2, var2 = model2.predict_f(xx)
     _, var2_y = model2.predict_y(xx)
@@ -105,8 +101,14 @@ if __name__ == "__main__":
         color="C1",
     )
 
-    ax1.scatter(X[inducing_idx1].squeeze(), Y[inducing_idx1].squeeze(), c="b", label='ind point', zorder=1000)
+    inducing_inputs = model1.inducing_variable.Z.variables[0]
+    inducing_outputs, _ = model1.predict_f(inducing_inputs)
+    ax1.scatter(inducing_inputs, inducing_outputs, c="b", label='ind point', zorder=1000)
     ax2.scatter(X[inducing_idx2].squeeze(), Y[inducing_idx2].squeeze(), c="b", label='ind point', zorder=1000)
+
+    # Inspect average noise of inducing and non-inducing points
+    print(model2.likelihood.noise_variance(X).numpy().flatten()[inducing_idx2].mean())
+    print(model2.likelihood.noise_variance(X).numpy().flatten()[np.where([a not in inducing_idx2 for a in np.arange(50)])].mean())
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')
