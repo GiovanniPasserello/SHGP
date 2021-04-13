@@ -1,9 +1,14 @@
 import abc
+
 import numpy as np
 import tensorflow as tf
 
 from gpflow.base import Parameter
+from gpflow.inducing_variables import InducingPoints
+from gpflow.kernels import Kernel
 from gpflow.likelihoods.base import Likelihood
+from gpflow.models import SGPR
+from gpflow.models.training_mixins import RegressionData
 from tensorflow_probability import distributions
 
 DEFAULT_VARIANCE_LOWER_BOUND = 1e-6
@@ -17,20 +22,14 @@ class HeteroscedasticLikelihood(Likelihood, metaclass=abc.ABCMeta):
     A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
     """
 
-    def __init__(self, variance: float, variance_lower_bound: float, latent_dim: int, observation_dim: int):
+    def __init__(self, variance_lower_bound: float, latent_dim: int, observation_dim: int):
         """
-        :param variance: Input-dependent noise variance; must be greater than ``variance_lower_bound``.
         :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
         :param latent_dim: the dimension of the vector F of latent functions for a single data point
         :param observation_dim: the dimension of the observation vector Y for a single data point
         """
 
         super().__init__(latent_dim=latent_dim, observation_dim=observation_dim)
-
-        if variance < variance_lower_bound:
-            raise ValueError(
-                f"Intial variance of the Heteroscedastic likelihood must be strictly greater than {variance_lower_bound}"
-            )
 
         self.variance_lower_bound = variance_lower_bound
 
@@ -71,7 +70,7 @@ class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
         :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
         """
 
-        super().__init__(variance, variance_lower_bound, latent_dim=1, observation_dim=1)
+        super().__init__(variance_lower_bound, latent_dim=1, observation_dim=1)
 
         self.degree = degree
         self.degrees = [Parameter(0.0) for _ in range(degree)]
@@ -101,7 +100,7 @@ class HeteroscedasticGaussian(HeteroscedasticLikelihood):
         :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
         """
 
-        super().__init__(variance, variance_lower_bound, latent_dim=1, observation_dim=1)
+        super().__init__(variance_lower_bound, latent_dim=1, observation_dim=1)
 
         self.mu = Parameter(center)
         self.var = Parameter(variance)
@@ -110,3 +109,31 @@ class HeteroscedasticGaussian(HeteroscedasticLikelihood):
         normal = distributions.Normal(self.mu, self.var)
         centered = (X - self.mu) / tf.sqrt(self.var)
         return normal.prob(centered)
+
+
+# Example noise model
+class HeteroscedasticGP(HeteroscedasticLikelihood):
+    """
+    The HeteroscedasticGP likelihood is a heteroscedastic likelihood that models the
+    heteroscedastic noise of a GP using another GP.
+    Very small uncertainties can lead to numerical instability during the optimization process.
+    A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
+    """
+
+    def __init__(
+        self,
+        data: RegressionData,
+        kernel: Kernel,
+        inducing_variable: InducingPoints,
+        variance_lower_bound: float = DEFAULT_VARIANCE_LOWER_BOUND
+    ):
+        """
+        :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
+        """
+
+        super().__init__(variance_lower_bound, latent_dim=1, observation_dim=1)
+
+        self.model = SGPR(data, kernel, inducing_variable)
+
+    def _noise_variance(self, X):
+        return self.model.predict_f(X)[0]

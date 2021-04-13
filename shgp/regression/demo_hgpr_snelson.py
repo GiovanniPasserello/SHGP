@@ -15,8 +15,8 @@ if __name__ == "__main__":
     Y = np.genfromtxt("../data/snelson/train_outputs").reshape(-1, 1)
     xx = np.genfromtxt("../data/snelson/test_inputs").reshape(-1, 1)
 
-    # Two example likelihoods
-    # TODO: Another likelihood, like GP likelihood would be much better
+    # TODO: Another likelihood -> GP likelihood would be much better if we know how to fit it.
+    # Currently we don't have a way to fit without knowing the noise
     likelihood = HeteroscedasticPolynomial(degree=1)
 
     # Shared metadata
