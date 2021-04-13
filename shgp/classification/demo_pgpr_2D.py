@@ -27,17 +27,27 @@ def classification_demo():
         m.optimise_ci()
 
     # Take predictions
-    X_test_mean, _ = m.predict_f(X_test)
+    X_test_mean, X_test_var = m.predict_f(X_test)
     P_test = invlink(X_test_mean)
 
     print(m.elbo())
 
+    fig, (ax1, ax2) = plt.subplots(2, figsize=(9, 12))
+
     # Plot data
-    plt.plot(X[mask, 0], X[mask, 1], "oC0", mew=0, alpha=0.5)
-    plt.plot(X[~mask, 0], X[~mask, 1], "oC1", mew=0, alpha=0.5)
+    ax1.plot(X[mask, 0], X[mask, 1], "oC0", mew=0, alpha=0.5)
+    ax1.plot(X[~mask, 0], X[~mask, 1], "oC1", mew=0, alpha=0.5)
 
     # Plot decision boundary
-    _ = plt.contour(
+    _ = ax1.contour(
+        *X_grid,
+        P_test.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
+        [0.5],  # p=0.5 decision boundary
+        colors="k",
+        linewidths=1.8,
+        zorder=100,
+    )
+    _ = ax2.contour(
         *X_grid,
         P_test.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
         [0.5],  # p=0.5 decision boundary
@@ -46,6 +56,23 @@ def classification_demo():
         zorder=100,
     )
 
+    # Plot contours of the PG variance.
+    # This allows us to inspect how PG variance behaves around boundaries and
+    # how this may influence inducing point selection methods.
+    test_c_i = m.likelihood.compute_c_i(X_test_mean, X_test_var)
+    test_theta = m.likelihood.compute_theta(test_c_i).numpy()
+    polya_gamma_vars = np.reciprocal(test_theta)
+    cf = ax2.contourf(
+        *X_grid,
+        polya_gamma_vars.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
+        zorder=-100,
+        cmap=plt.cm.viridis_r
+    )
+
+    ax1.set_title('PGPR Classification Boundaries')
+    ax2.set_title('Polya-Gamma Variance Contours')
+
+    plt.colorbar(cf)
     plt.show()
 
 
@@ -59,7 +86,5 @@ if __name__ == '__main__':
     X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)
-    # Plot params
-    plt.rcParams["figure.figsize"] = (7, 7)
 
     classification_demo()

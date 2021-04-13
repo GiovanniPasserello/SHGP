@@ -15,6 +15,8 @@ from gpflow.utilities import to_default_float
 
 from shgp.likelihoods.heteroscedastic import HeteroscedasticLikelihood
 
+tf.config.run_functions_eagerly(True)
+
 
 class HGPR(GPModel, InternalDataTrainingLossMixin):
     """
