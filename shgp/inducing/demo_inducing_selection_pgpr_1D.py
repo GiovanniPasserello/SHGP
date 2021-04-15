@@ -116,10 +116,6 @@ def inducing_demo():
     ax1.scatter(inducing_inputs, p_inducing_outputs, c="b", label='ind point', zorder=1000)
     ax2.scatter(X[inducing_idx2].squeeze(), Y[inducing_idx2].squeeze(), c="b", label='ind point', zorder=1000)
 
-    # Inspect average noise of inducing and non-inducing points
-    print(model2.likelihood.compute_theta().numpy().flatten()[inducing_idx2].mean())
-    print(model2.likelihood.compute_theta().numpy().flatten()[np.where([a not in inducing_idx2 for a in np.arange(50)])].mean())
-
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')
     ax2.set_title('Polya-Gamma Greedy Variance')

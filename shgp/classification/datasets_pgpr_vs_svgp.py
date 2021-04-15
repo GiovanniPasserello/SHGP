@@ -6,7 +6,7 @@ from datetime import datetime
 from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.greedy_variance import h_greedy_variance
+from shgp.inducing.greedy_variance import h_greedy_variance, greedy_variance
 from shgp.models.pgpr import PGPR
 
 
@@ -60,7 +60,7 @@ def load_magic():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    NUM_INDUCING = 500
+    NUM_INDUCING = 200
     BERN_ITERS = 100
     PGPR_ITERS = (5, 25, 5)
     GREEDY_THRESHOLD = 100
@@ -98,12 +98,19 @@ def classification_demo():
 
     # Greedy variance selection
     kernel = gpflow.kernels.SquaredExponential()
-    pgpr = PGPR(
-        data=(X, Y),
-        kernel=kernel
-    )
+    pgpr = PGPR(data=(X,Y), kernel=kernel)
 
     pgpr_start = datetime.now()
+
+    # Inducing point selection comparison on MAGIC dataset.
+    # h_greedy vs greedy gives (num_ind,ELBO,time(s)):
+    # The main results are found using thresholds (inducing point selection early stopping)
+    # Times vary largely between runs depending on laptop usage
+    # h_greedy performs better for all equal sizes of inducing points
+    # h_greedy can beat greedy with fewer points
+    # h_greedy - [(200/172,-6606.2547,206.43), (100/61,-6771.3247,92.56), (50,-7054.9747,49.11), (30,-7813.4151,47.04), (10,-8767.7210,10.08)]
+    # greedy - [(200,-6616.7805,279.80), (100,-6724.6128,126.72), (50,-7100.9152,64.38), (30,-8276.1728,47.88), (10,-8778.8325,25.00)]
+    # h_greedy forced number of points for comparison: [(200,-6538.0476,278.66), (100,-6691.8442,159.38)]
 
     theta_inv = tf.math.reciprocal(pgpr.likelihood.compute_theta())
     inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, NUM_INDUCING, kernel, GREEDY_THRESHOLD)

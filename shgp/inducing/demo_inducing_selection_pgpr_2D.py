@@ -6,7 +6,7 @@ import tensorflow as tf
 from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.greedy_variance import h_greedy_variance
+from shgp.inducing.greedy_variance import h_greedy_variance, greedy_variance
 from shgp.models.pgpr import PGPR
 
 
@@ -18,6 +18,17 @@ def invlink(f):
 def inducing_demo():
     num_inducing = 30
     num_iters = 10
+
+    # A comparison of greedy_variance vs h_greedy_variance
+    # greedy is jumpy (plot ELBO over epoch to show stability), h_greedy is stable
+    # greedy spreads mass, h_greedy places at boundaries (our hypothesis)
+    # greedy performs better for very low number of inducing points
+    # h_greedy performs better for larger number of inducing points
+    # h_greedy can beat greedy with fewer points when using larger number of inducing points
+    # The below results are found using threshold=1e-6 (except 200/65 and 200/55 which used 1e-1)
+    # h_greedy=[(200/118,-120.2989),(200/55,-120.3338),(30,-123.8708),(20,-134.7702),(15,-156.7694),(10,-243.0055)]
+    # greedy = [(200/129,-120.2989),(200/65,-120.3027),(30, -123.0022), (20,-136.1941), (15,-149.1684), (10, -220.4174)]
+    # h_greedy vs gradient_optim: (118,-120.2989), (200,-120.2996) but gradient_optim is good for very few points
 
     # Naive random selection and optimisations
     kernel1 = gpflow.kernels.SquaredExponential()
@@ -119,10 +130,6 @@ def inducing_demo():
     inducing_points = model1.inducing_variable.Z.variables[0]
     ax1.scatter(inducing_points[:, 0], inducing_points[:, 1], c="b", label='ind point', zorder=1000)
     ax2.scatter(X[inducing_idx2, 0].squeeze(), X[inducing_idx2, 1].squeeze(), c="b", label='ind point', zorder=1000)
-
-    # Inspect average noise of inducing and non-inducing points
-    print(model2.likelihood.compute_theta().numpy().flatten()[inducing_idx2].mean())
-    print(model2.likelihood.compute_theta().numpy().flatten()[np.where([a not in inducing_idx2 for a in np.arange(50)])].mean())
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')

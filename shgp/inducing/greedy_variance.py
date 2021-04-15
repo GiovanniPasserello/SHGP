@@ -17,10 +17,11 @@ def h_greedy_variance(
     procedure suggested in https://jmlr.org/papers/volume21/19-1015/19-1015.pdf.
     Adapted from https://github.com/markvdw/RobustGP/blob/master/robustgp/init_methods/methods.py.
 
+    Complexity: O(NM) memory, O(NM^2) time
     :param training_inputs: [N,D] np.ndarray, the training data.
     :param lmbda: [N] np.ndarray, diagonal of the likelihood covariance.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
-    :param kernel: kernelwrapper object
+    :param kernel: kernelwrapper object.
     :param threshold: convergence threshold at which to stop selection of inducing points early.
     :return: inducing inputs, indices,
     [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
@@ -63,6 +64,9 @@ def h_greedy_variance(
         indices[m + 1] = np.argmax(criterion)  # select next point
 
         # terminate if tr(lambda^-1(Kff-Qff)) is small (implies posterior KL is small)
+        # TODO: criterion.sum() or di.sum()
+        # criterion.sum() allows fewer points and works well in larger inducing point constraints (20-100s)
+        # di.sum() behaves more sensibly in low inducing point constraints (5-20)
         if np.clip(criterion, 0, None).sum() < threshold:
             indices = indices[:m]
             warnings.warn("ConditionalVariance: Terminating selection of inducing points early.")
@@ -70,3 +74,86 @@ def h_greedy_variance(
 
     # Z, indices of Z in training_inputs
     return training_inputs[indices], perm[indices]
+
+
+def greedy_variance(
+    training_inputs: np.ndarray,
+    M: int,
+    kernel: Callable[[np.ndarray, Optional[np.ndarray], Optional[bool]], np.ndarray],
+    threshold: Optional[float] = 0.0
+):
+    """
+    Default greedy variance inducing point initialisation procedure without noise augmentation.
+
+    Complexity: O(NM) memory, O(NM^2) time
+    :param training_inputs: [N,D] np.ndarray, the training data.
+    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
+    :param kernel: kernelwrapper object
+    :param threshold: convergence threshold at which to stop selection of inducing points early.
+    :return: inducing inputs, indices,
+    [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
+    """
+    lmbda = np.ones(len(training_inputs))
+    return h_greedy_variance(training_inputs, lmbda, M, kernel, threshold)
+
+
+def greedy_bound_increase(
+    training_inputs: np.ndarray,
+    lmbda: np.ndarray,
+    M: int,
+    kernel: Callable[[np.ndarray, Optional[np.ndarray], Optional[bool]], np.ndarray]
+):
+    """
+    Heteroscedastic implementation of an O(MN^2) greedy ELBO inducing point initialisation.
+    This chooses the inducing point that maximises a trace term from the rank-1 difference
+    of the ELBO before and after adding that inducing points.
+    Note that due to being O(MN^2) this is not a preferable method, it is simply for comparisons.
+    However it does generally produce much preferable inducing point locations for a higher ELBO.
+
+    Complexity: O(N^2) memory, O(MN^2) time
+    :param training_inputs: [N,D] np.ndarray, the training data.
+    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
+    :param kernel: kernelwrapper object.
+    :return: inducing inputs, indices,
+    [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
+    """
+
+    N = training_inputs.shape[0]
+    assert M <= N, 'Cannot set M > N'
+
+    perm = np.random.permutation(N)  # permute entries so tie-breaking is random
+    training_inputs = training_inputs[perm]
+    lmbda = tf.gather(lmbda, perm)
+    Kff = tf.reshape(kernel(training_inputs, full_cov=False), (-1, 1))
+
+    indices = np.zeros(M, dtype=int)
+    selected = np.argmax(lmbda * Kff)
+    indices[0] = selected  # select first point, add to index 0
+    Z = np.array([training_inputs[selected]])
+
+    for m in range(1, M):
+        kuf = kernel(Z, training_inputs)
+        kuu = kernel(Z, Z) + 1e-12  # jitter
+        L = tf.linalg.cholesky(kuu)
+
+        ku = kernel(Z, training_inputs)
+        L_ku = tf.linalg.triangular_solve(L, ku)
+        c = tf.squeeze(Kff) - np.einsum('ij,ij->j', L_ku, L_ku)
+        L_kuf = tf.linalg.triangular_solve(L, kuf)
+        # computes full outer product -> expensive!
+        kf = kernel(training_inputs, training_inputs)
+        b = tf.matmul(L_kuf, L_ku, transpose_a=True) - kf
+        scores = (tf.reduce_sum(lmbda * tf.math.square(b), axis=0) / c).numpy()
+
+        # doesn't account for duplicate inputs (can remove these in preprocessing)
+        scores[indices[:m]] = float("-inf")
+
+        # need max across points
+        selected = np.argmax(scores)
+        indices[m] = selected
+        Z = np.append(Z, [training_inputs[selected]], axis=0)
+
+    indices = indices.astype(int)
+    Z = training_inputs[indices]
+    indices = perm[indices]
+    return Z, indices

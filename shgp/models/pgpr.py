@@ -121,6 +121,73 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         bound -= num_data * np.log(2)
         bound -= self.likelihood.kl_term()
 
+        # TODO: remove - Temporary code investigating rank-1 ELBO difference bounds
+        # ###########
+        # z = np.array([0.33283])
+        # k = self.kernel(z, z)
+        # kuu_inv = tf.linalg.inv(kuu)
+        # ku = tf.reshape(self.kernel(self.inducing_variable.Z, z), (-1, 1))
+        # c = k - tf.matmul(tf.matmul(ku, kuu_inv, transpose_a=True), ku)
+        # c = tf.math.reciprocal(tf.math.sqrt(c))
+        # kf = tf.reshape(self.kernel(X_data, z), (-1, 1))
+        # b = tf.matmul(tf.matmul(kuf, kuu_inv, transpose_a=True), ku) - kf
+        # b *= c
+        # bbT = tf.matmul(b, b, transpose_b=True)
+        # Qff = tf.matmul(tf.matmul(kuf, kuu_inv, transpose_a=True), kuf)
+        # ###########
+        # theta_inv_mat = tf.squeeze(tf.linalg.diag(tf.math.reciprocal(theta)))
+        # E = tf.linalg.inv(theta_inv_mat + Qff)
+        # D = tf.matmul(tf.matmul(E, bbT), E)
+        # D /= (1 + tf.matmul(tf.matmul(b, E, transpose_a=True), b))
+        # C = E - D
+        # ###########
+        # # first = tf.matmul(
+        # #     tf.matmul(
+        # #         err,
+        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff) + tf.matmul(tf.matmul(bbT, D), bbT),
+        # #         transpose_a=True
+        # #     ),
+        # #     err)
+        # # second = tf.matmul(
+        # #     tf.matmul(
+        # #         err,
+        # #         tf.matmul(tf.matmul(bbT, D), Qff) + tf.matmul(tf.matmul(Qff, D), bbT) - tf.matmul(tf.matmul(bbT, E), Qff) - tf.matmul(tf.matmul(Qff, E), bbT) - tf.matmul(tf.matmul(bbT, E), bbT),
+        # #         transpose_a=True
+        # #     ),
+        # #     err)
+        # # first = tf.matmul(
+        # #     tf.matmul(
+        # #         err,
+        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff),
+        # #         transpose_a=True
+        # #     ),
+        # #     err)
+        # # second = - tf.matmul(
+        # #     tf.matmul(
+        # #         err,
+        # #         tf.matmul(tf.matmul(bbT, C), Qff) + tf.matmul(tf.matmul(Qff, C), bbT) + tf.matmul(tf.matmul(bbT, C), bbT),
+        # #         transpose_a=True
+        # #     ),
+        # #     err)
+        # if not np.all(tf.cast(tf.linalg.eigvals(C), tf.float64) >= 0):
+        #     print("oof")
+        #
+        # a = tf.matmul(tf.matmul(Qff, C), bbT)
+        # b = tf.matmul(tf.matmul(bbT, C), Qff)
+        # if not np.allclose(a, b):
+        #     print(tf.reduce_sum(a - b))
+
+        # if not np.all(tf.cast(tf.linalg.eigvals(tf.matmul(tf.matmul(bbT, C), bbT)), tf.float64) >= 0):
+        #     print("oofest")
+
+        # eig_vals = tf.cast(tf.linalg.eigvals(tf.matmul(tf.matmul(bbT, C), Qff)), tf.float64).numpy()
+        # valid_vals = np.where(np.abs(eig_vals) >= 1e-20)[0]
+        # if not np.all(eig_vals[valid_vals] >= 0):
+        #     print("oofest")
+        # if second > first:
+        #     print(first, second)
+        ###########
+
         return bound
 
     # For comparison against HGPR
