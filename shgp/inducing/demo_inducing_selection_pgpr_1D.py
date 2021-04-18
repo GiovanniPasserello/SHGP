@@ -6,7 +6,7 @@ import tensorflow as tf
 from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.greedy_variance import h_greedy_variance
+from shgp.inducing.initialisation_methods import h_greedy_variance
 from shgp.models.pgpr import PGPR
 
 

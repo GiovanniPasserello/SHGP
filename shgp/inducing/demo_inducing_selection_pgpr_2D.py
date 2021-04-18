@@ -1,12 +1,9 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
-
-from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.greedy_variance import h_greedy_variance, greedy_variance
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
 
 
@@ -46,15 +43,12 @@ def inducing_demo():
     threshold = 1e-6
     kernel2 = gpflow.kernels.SquaredExponential()
     model2 = PGPR((X, Y), kernel=kernel2)
-    theta_inv = tf.math.reciprocal(model2.likelihood.compute_theta())
-    inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, num_inducing, kernel2, threshold)
-    inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-    model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-    gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
     # TODO: Better guarantees for convergence
     iter_limit = 10  # to avoid infinite loops
     while True:
+        _, inducing_idx2 = h_reinitialise_PGPR(model2, X, num_inducing, threshold)
+
         # Optimize model
         opt = gpflow.optimizers.Scipy()
         for _ in range(num_iters):
@@ -65,12 +59,6 @@ def inducing_demo():
         print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
         if np.abs(next_elbo - prev_elbo) <= 1e-6 or iter_limit == 0:
             break
-
-        theta_inv = tf.math.reciprocal(model2.likelihood.compute_theta())
-        inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, num_inducing, kernel2, threshold)
-        inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-        model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-        gpflow.set_trainable(model2.inducing_variable, False)
 
         prev_elbo = next_elbo
         iter_limit -= 1

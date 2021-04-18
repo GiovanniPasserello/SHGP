@@ -4,7 +4,7 @@ import numpy as np
 
 from gpflow.models.util import inducingpoint_wrapper
 
-from shgp.inducing.greedy_variance import h_greedy_variance
+from shgp.inducing.initialisation_methods import h_greedy_variance
 from shgp.likelihoods.heteroscedastic import HeteroscedasticPolynomial
 from shgp.models.hgpr import HGPR
 

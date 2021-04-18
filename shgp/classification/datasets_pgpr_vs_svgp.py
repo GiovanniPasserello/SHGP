@@ -6,7 +6,7 @@ from datetime import datetime
 from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.greedy_variance import h_greedy_variance, greedy_variance
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
 
 
@@ -112,16 +112,13 @@ def classification_demo():
     # greedy - [(200,-6616.7805,279.80), (100,-6724.6128,126.72), (50,-7100.9152,64.38), (30,-8276.1728,47.88), (10,-8778.8325,25.00)]
     # h_greedy forced number of points for comparison: [(200,-6538.0476,278.66), (100,-6691.8442,159.38)]
 
-    theta_inv = tf.math.reciprocal(pgpr.likelihood.compute_theta())
-    inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, NUM_INDUCING, kernel, GREEDY_THRESHOLD)
-    inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-    pgpr.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-    gpflow.set_trainable(pgpr.inducing_variable, False)
     prev_elbo = pgpr.elbo()
 
     iter_limit = 10  # to avoid infinite loops
     opt = gpflow.optimizers.Scipy()
     while True:
+        h_reinitialise_PGPR(pgpr, X, NUM_INDUCING, GREEDY_THRESHOLD)
+
         # Optimize model
         for _ in range(PGPR_ITERS[0]):
             opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=PGPR_ITERS[1]))
@@ -131,13 +128,6 @@ def classification_demo():
         print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
         if np.abs(next_elbo - prev_elbo) <= 1e-3 or iter_limit == 0:
             break
-
-        theta_inv = tf.math.reciprocal(pgpr.likelihood.compute_theta())
-        inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, NUM_INDUCING, kernel, GREEDY_THRESHOLD)
-        inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-        pgpr.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-        gpflow.set_trainable(pgpr.inducing_variable, False)
-
         prev_elbo = next_elbo
         iter_limit -= 1
 
