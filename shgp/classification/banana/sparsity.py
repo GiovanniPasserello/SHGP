@@ -10,6 +10,8 @@ from shgp.models.pgpr import PGPR
 np.random.seed(42)
 tf.random.set_seed(42)
 
+# TODO: Make other comparisons use ConstrainedSEKernel?
+# TODO: Sparsity investigations on other datasets
 
 """
 A comparison of PGPR with two different inducing point initialisation procedures. Here we investigate
@@ -37,8 +39,6 @@ results_hgv = [-266.         -198.         -146.33333333 -132.66666667 -125.6666
  -122.33333333 -121.         -120.         -120.         -120.        ]
 optimal = -120.29952203029663
 """
-
-# TODO: Make other comparisons use ConstrainedSEKernel?
 
 
 def train_full_model():
