@@ -1,10 +1,15 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+
 from tensorflow import sigmoid
 
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
+
+np.random.seed(0)
+tf.random.set_seed(0)
 
 
 # Polya-Gamma uses logit link / sigmoid

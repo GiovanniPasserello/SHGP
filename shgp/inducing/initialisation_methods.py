@@ -223,3 +223,23 @@ def greedy_bound_increase(
     Z = training_inputs[indices]
     indices = perm[indices]
     return Z, indices
+
+
+def bound_max_reinitialise_PGPR(
+    model: PGPR,
+    training_inputs: np.ndarray,
+    M: int
+):
+    """
+    Reinitialise inducing points of PGPR model using greedy_bound_increase.
+
+    :param model: PGPR, the model to reinitialise.
+    :param training_inputs: [N,D] np.ndarray, the training data.
+    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
+    """
+    theta_inv = tf.math.reciprocal(model.likelihood.compute_theta())
+    inducing_locs, inducing_idx = greedy_bound_increase(training_inputs, theta_inv, M, model.kernel)
+    inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
+    model.inducing_variable = inducingpoint_wrapper(inducing_vars)
+    gpflow.set_trainable(model.inducing_variable, False)
+    return inducing_locs, inducing_idx
