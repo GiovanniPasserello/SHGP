@@ -16,7 +16,8 @@ tf.random.set_seed(0)
 # TODO: Better convergence guarantees of training PGPR
 # TODO: Experiments - each dataset with 100 inducing points, ACCURACY & ELBO.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
-# TODO: Use test sets for evaluation
+# TODO: Use test sets for evaluation.
+# TODO: Quote and describe these datasets in the report.
 
 
 # TODO: Move to utils
@@ -40,6 +41,7 @@ def standardise_features(data):
 
 
 def load_fertility():
+    # https://archive.ics.uci.edu/ml/datasets/Fertility
     dataset = "../data/classification/fertility.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
@@ -65,51 +67,59 @@ def load_fertility():
 
 
 def load_breast_cancer():
-    dataset = "../data/classification/breast_cancer.txt"
+    # https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29
+    dataset = "../data/classification/breast-cancer-diagnostic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, 2:]
-    Y = data[:, 1].reshape(-1, 1) - 1
+    Y = data[:, 1].reshape(-1, 1)
 
-    # TODO: This might be a good example to discuss PG beating Bernoulli with full inducing points.
+    # TODO: This might be a good example to discuss PG sometimes beating Bernoulli.
     # TODO: Add sparsity experiment?
     # The comparison here may be that:
-    # With 194 inducing points fixed for Bernoulli, the ELBO is -116.46. Interestingly,
-    # the PGPR ELBO is -103.88 even though both models receive the same fixed set of data
+    # With 569 inducing points fixed for Bernoulli, the ELBO is -178.680281. Interestingly,
+    # the PGPR ELBO is -74.876002 even though both models receive the same fixed set of data
     # points - the full training set. Why is this? This is very interesting to explore!
-    # With fewer inducing points, Bernoulli is able to reach an ELBO of -100, but is very
-    # slow to converge. On the other hand PGPR is much quicker and the ELBO is only about 3-4
-    # nats lower. To reinforce this, with 59 inducing points Bernoulli takes 23.35
-    # seconds and converges to an ELBO of -100.71, whereas PGPR takes 10.35 seconds for an ELBO
-    # of -104.19. If we reduce the threshold it can converge even quicker though - for example
-    # with a threshold at 2e-1 we converge in 8.79 and get a better ELBO! (perhaps we need a better
-    # convergence setup than the current absolute difference check - the number of cycles matters).
+    # SVGP convergence is very noisy and sometimes converges rapidly, sometimes slowly.
+    # PGPR is quick to converge, but due to my convergence criterion it can cycle for a while.
+    # (perhaps we need a better convergence setup than the current absolute difference check - the number of cycles matters).
 
-    # In a way, the fact that Bernoulli achieves -116.46 (a suboptimal value) with the full training set
+    # In a way, the fact that Bernoulli achieves -178.680281 (a suboptimal value) with the full training set
     # emphasises the unreliability of gradient-based methods (changing the random seed allows Bernoulli
     # to converge). One large benefit of greedy variance is that there is no stochasticity in the
     # selection process. The same points will be chosen no matter the setup. The only thing that does
     # change when using greedy variance is the optimisation of hyperparameters (which is often stochastic).
-    # The added randomness of SVGP Bernoulli makes it quite unreliable - some seeds converge in 2 seconds,
-    # other seeds take 25 seconds. Or is this more to do with the kernel being constrained? see below:
+    # The added randomness of SVGP Bernoulli makes it quite unreliable - some seeds converge in 1 second,
+    # other seeds take 15 seconds. Or is this more to do with the kernel being constrained? see below:
 
     # TODO: The effect of using a constrained SE kernel is large. It makes the difference between
-    # Bernoulli converging to its optimal values or not. The problem of -116.46 Bernoulli is removed
-    # when we use the standard SE kernel with NUM_INDUCING=194. But also when using the unconstrained
-    # kernel we get worse values when NUM_INDUCING=59 for Bernoulli - is one definitely better? For
-    # consistency we should probably use constrained SE kernels everywhere to avoid Cholesky errors
-    # and make sure to mention this in the report. PGPR isn't affected in this example, but Bernoulli
-    # is significantly affected - is this a special case?
+    # Bernoulli converging to its optimal values or not. The problem of -178.680281 Bernoulli is removed
+    # when we use the standard SE kernel with NUM_INDUCING=569. In fact it achieves -59.074076 but also
+    # takes 45.37 seconds. Also when using the unconstrained kernel for NUM_INDUCING=59 for Bernoulli
+    # we get an ELBO of -66.578607.
 
-    NUM_INDUCING = 194  # quicker with 194 than with 59
-    BERN_ITERS = 500  # best with 194: -116.463033 (with 59: -100.710896)
-    PGPR_ITERS = (5, 10, 5)  # best with 194: -103.882682
-    GREEDY_THRESHOLD = 5e-1  # (early stops at 59): -104.194101
+    # TODO: Important thoughts:
+    # So when do we constrain the kernel, and when do we not??? Is one definitely better? For consistency
+    # we should probably use constrained SE kernels everywhere to avoid Cholesky errors and make sure to
+    # mention this in the report. PGPR isn't affected in this example, but Bernoulli is significantly affected.
+
+    # TODO: Other thoughts
+    # if we change the seed to 42 with a constrained kernel however:
+    #       Bernoulli achieves an ELBO of -86.431603 with 54 datapoints and -60.998253 with 569
+    # Interestingly inconsistent performance, and sometimes significantly worse than PGPR - why is this?
+    # Could this perhaps be due to a very noisy dataset - is this an observed downside to SVGP/gradient methods?
+
+    # TODO: These results definitely need to be averaged over many runs (see above)
+    NUM_INDUCING = 54  # quicker with 54 than with 569
+    BERN_ITERS = 200  # best with 569: -178.680281 (with 54): -253.199324)  # why such catastrophic performance?
+    PGPR_ITERS = (5, 25, 5)  # best with 569: -74.876002
+    GREEDY_THRESHOLD = 1  # (early stops at 54): -75.173682
 
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
 def load_ionosphere():
+    # https://archive.ics.uci.edu/ml/datasets/ionosphere
     dataset = "../data/classification/ionosphere.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
@@ -120,7 +130,7 @@ def load_ionosphere():
     # In this case, Bernoulli GO seems to perform much better than PGPR.
     # This is likely because of the small dataset size.
 
-    NUM_INDUCING = 156  # quicker with 156 than with 351
+    NUM_INDUCING = 351  # quicker with 156 than with 351
     BERN_ITERS = 100  # best with 351: -100.021138 (with 156: -107.370414)
     PGPR_ITERS = (5, 25, 5)  # best with 351: -126.962021
     GREEDY_THRESHOLD = 1  # (early stops at 156): -127.549833
@@ -129,6 +139,7 @@ def load_ionosphere():
 
 
 def load_pima():
+    # http://networkrepository.com/pima-indians-diabetes.php
     dataset = "../data/classification/pima-diabetes.csv"
 
     data = np.loadtxt(dataset, delimiter=",")
@@ -154,6 +165,7 @@ def load_pima():
 
 
 def load_magic():
+    # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
     dataset = "../data/classification/magic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
@@ -166,7 +178,7 @@ def load_magic():
     # difference check is not good enough. Perhaps we can check if the ELBO increases, but
     # is that reliable - what if we reach a local minimum which we might leave later?
 
-    # TODO: Could we just prune the dataset?
+    # TODO: We can prune the dataset if needed (in sparsity experiments we use N//4)
 
     NUM_INDUCING = 100  # 200
     BERN_ITERS = 200  # 100
@@ -252,7 +264,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_ionosphere()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_breast_cancer()
     X = standardise_features(X)
 
     run_experiment()
