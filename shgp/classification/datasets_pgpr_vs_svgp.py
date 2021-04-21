@@ -66,7 +66,7 @@ def load_breast_cancer():
     dataset = "../data/classification/breast_cancer.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, 2:]  # the kernel goes to identity matrix unless we take logs
+    X = data[:, 2:]
     Y = data[:, 1].reshape(-1, 1) - 1
 
     # TODO: This might be a good example to discuss PG beating Bernoulli with full inducing points.
@@ -114,10 +114,15 @@ def load_magic():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    # TODO: Large comparison
+    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
+    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
+    # Here it is very important to have good convergence guarantees - the current absolute
+    # difference check is not good enough. Perhaps we can check if the ELBO increases, but
+    # is that reliable - what if we reach a local minimum which we might leave later?
+
     NUM_INDUCING = 100  # 200
-    BERN_ITERS = 100  # 100
-    PGPR_ITERS = (5, 25, 5)
+    BERN_ITERS = 200  # 100
+    PGPR_ITERS = (5, 25, 10)  # This benefits from being larger than this, but becomes slow
     GREEDY_THRESHOLD = 0  # 100
 
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
@@ -136,16 +141,15 @@ def compute_nll(Y, F):
 
 def run_experiment():
     initial_inducing_inputs, _ = uniform_subsample(X, NUM_INDUCING)
+
     ########
     # SVGP #
     ########
-
     svgp = gpflow.models.SVGP(
         kernel=ConstrainedSEKernel(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
         inducing_variable=initial_inducing_inputs.copy()
     )
-
     svgp_start = datetime.now()
     gpflow.optimizers.Scipy().minimize(
         svgp.training_loss_closure((X, Y)),
@@ -153,7 +157,6 @@ def run_experiment():
         options=dict(maxiter=SVGP_ITERS)
     )
     svgp_time = datetime.now() - svgp_start
-
     print("svgp trained in {:.2f} seconds".format(svgp_time.total_seconds()))
     print("ELBO = {:.6f}".format(svgp.elbo((X,Y))))
     print("Accuracy = {:.6f}".format(compute_accuracy(Y, svgp.predict_f(X)[0])))
@@ -162,7 +165,6 @@ def run_experiment():
     ########
     # PGPR #
     ########
-
     # Inducing point selection comparison on MAGIC dataset.
     # h_greedy vs greedy gives (num_ind,ELBO,time(s)):
     # The main results are found using thresholds (inducing point selection early stopping)
@@ -212,7 +214,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_breast_cancer()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_magic()
     X = standardise_features(X)
 
     run_experiment()

@@ -10,9 +10,12 @@ class ConstrainedSEKernel(SquaredExponential):
     """"
     An implementation of the SquaredExponential kernel, wherein the kernel
     parameters are constrained. This means that they cannot grow too large
-    or too small and helps to avoid Cholesky errors.
+    or too small and helps to avoid Cholesky errors. This sometimes does come
+    at the sacrifice of a small change in ELBO, but is better than errors!
+    It also generally helps models to converge slightly faster.
     """
 
+    # TODO: Constraints should be set depending on number of dimensions - could this be more robust than a naive limit?
     def __init__(self, max_lengthscale=2000.0, max_variance=2000.0):
         super().__init__()
 

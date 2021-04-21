@@ -177,6 +177,9 @@ def greedy_bound_increase(
     Note that due to being O(MN^2) this is not a preferable method, it is simply for comparisons,
     however it does generally produce superior inducing point locations which yield a higher ELBO.
 
+    TODO: Could this be changed to O(NM) memory, O(NM^2) time by only operating on a randomly
+          chosen candidate set of size M? Would this still beat greedy variance?
+
     Complexity: O(N^2) memory, O(MN^2) time
     :param training_inputs: [N,D] np.ndarray, the training data.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
@@ -207,9 +210,9 @@ def greedy_bound_increase(
         L_ku = tf.linalg.triangular_solve(L, ku)
         c = tf.squeeze(Kff) - np.einsum('ij,ij->j', L_ku, L_ku)
         L_kuf = tf.linalg.triangular_solve(L, kuf)
-        kf = kernel(training_inputs, training_inputs)  # computes full outer product -> expensive!
+        kf = kernel(training_inputs, training_inputs)  # computes full NxN matrix -> expensive!
         b = tf.matmul(L_kuf, L_ku, transpose_a=True) - kf
-        scores = (tf.reduce_sum(lmbda * tf.math.square(b), axis=0) / c).numpy()
+        scores = (tf.reduce_sum(lmbda * tf.math.square(b), axis=0) / c).numpy()  # inner products per row
 
         # doesn't account for duplicate inputs (can remove in preprocessing)
         scores[indices[:m]] = float("-inf")

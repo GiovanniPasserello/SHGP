@@ -10,8 +10,6 @@ from shgp.models.pgpr import PGPR
 np.random.seed(42)
 tf.random.set_seed(42)
 
-# TODO: Make other comparisons use ConstrainedSEKernel? What is the benefit/loss of this constraint?
-# TODO: Sparsity investigations on other datasets
 
 """
 A comparison of PGPR with two different inducing point initialisation procedures. Here we investigate
@@ -23,26 +21,39 @@ selection (at what point does the ELBO converge). For comparisons against Bernou
 Note also that this is a very small-scale problem and so the benefits are less visible. For a more concrete 
 analysis, compare and constrast the results from other dataset.
 
-M = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-results_gv = [-264.66666667 -198.33333333 -145.66666667 -132.33333333 -125.66666667
- -122.         -121.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.        ]
-results_hgv = [-265.66666667 -203.         -145.66666667 -133.33333333 -125.66666667
- -122.33333333 -121.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.        ]
-optimal = -120.29952203029663
-
-M = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-results_gv = [-265.         -215.         -146.         -131.33333333 -125.33333333
- -122.         -121.         -120.         -120.         -120.        ]
-results_hgv = [-266.         -198.         -146.33333333 -132.66666667 -125.66666667
- -122.33333333 -121.         -120.         -120.         -120.        ]
-optimal = -120.29952203029663
+M = [1...30]
+results_gv = [-39.35468916 -39.35466383 -39.3546598  -39.35465601 -39.35465262
+ -39.35465383 -39.35465009 -39.35465064 -39.35464906 -39.35464906
+ -39.3546483  -39.35464857 -39.35465128 -39.35464744 -39.35464725
+ -39.35464665 -39.35464743 -39.35464755 -39.35464867 -39.35464871
+ -39.3546472  -39.354646   -39.35464609 -39.35464577 -39.35464597
+ -39.35464575 -39.35464578 -39.35464784 -39.35464561 -39.35464615]
+results_hgv = [-39.35469343 -39.35466487 -39.35466136 -39.35465743 -39.35465314
+ -39.35465078 -39.35465207 -39.35465045 -39.35464854 -39.35464787
+ -39.35464769 -39.35464721 -39.35464693 -39.35464723 -39.35464695
+ -39.3546474  -39.35464833 -39.35464691 -39.3546475  -39.35465055
+ -39.35464638 -39.35464629 -39.35464583 -39.35464599 -39.35464592
+ -39.3546458  -39.35464564 -39.35464764 -39.35464556 -39.35464551]
+optimal = -39.35464404913119
 """
 
 
+# TODO: Move to utilities
+def standardise_features(data):
+    """
+    Standardise all features to 0 mean and unit variance.
+
+    :param: data - the input data.
+    :return: the normalised data.
+    """
+    data_means = data.mean(axis=0)  # mean value per feature
+    data_stds = data.std(axis=0)  # standard deviation per feature
+
+    # standardise each feature
+    return (data - data_means) / data_stds
+
+
+# TODO: Move to train utilities
 def train_full_model():
     pgpr = PGPR(
         data=(X, Y),
@@ -57,6 +68,7 @@ def train_full_model():
     return pgpr.elbo()
 
 
+# TODO: Move to train utilities
 def train_reinit_model(initialisation_method, m):
     pgpr = PGPR(
         data=(X, Y),
@@ -110,11 +122,10 @@ def plot_results(M, results, optimal):
     plt.tick_params(labelright=True)
 
     # Axis labels
-    plt.title('Comparison of Inducing Point Methods - Banana Dataset')
+    plt.title('Comparison of Inducing Point Methods - Fertility Dataset')
     plt.ylabel('ELBO')
     plt.xlabel('Number of Inducing Points')
     # Axis limits
-    plt.ylim(-285, -110)
     plt.xlim(M[0], M[-1])
     plt.xticks(M)
 
@@ -129,11 +140,13 @@ def plot_results(M, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../data/banana_Y.csv").reshape(-1, 1)
+    dataset = "../data/classification/fertility.txt"
+    data = np.loadtxt(dataset, delimiter=",")
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1)
 
     # Test different numbers of inducing points
-    M = np.arange(5, 51, 5)  # np.arange(5, 101, 5)
+    M = np.arange(1, 31)
 
     NUM_CYCLES = 3
     NUM_LOCAL_ITERS = 10
@@ -143,8 +156,8 @@ if __name__ == '__main__':
     ################################################
     # PGPR with Different Reinitialisation Methods #
     ################################################
-    results_gv = np.zeros_like(M)
-    results_hgv = np.zeros_like(M)
+    results_gv = np.zeros_like(M, dtype=np.float)
+    results_hgv = np.zeros_like(M, dtype=np.float)
     for c in range(NUM_CYCLES):  # run 3 times and take an average
         print("Beginning cycle {}...".format(c + 1))
         for i, m in enumerate(M):
