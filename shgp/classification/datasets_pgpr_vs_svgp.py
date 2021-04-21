@@ -14,6 +14,8 @@ tf.random.set_seed(0)
 
 
 # TODO: Better convergence guarantees of training PGPR
+# TODO: Experiments - each dataset with 100 inducing points, ACCURACY & ELBO.
+#       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 
 
 # TODO: Move to utils
@@ -44,7 +46,6 @@ def load_fertility():
     Y = data[:, -1].reshape(-1, 1)
 
     # TODO: This might be a good example to discuss sparsity (9 inducing points PGPR at 1e-6)
-    # TODO: Add sparsity experiment
     # The comparison here may be that:
     # Yes, we can use 100 inducing points and Bernoulli is almost as quick as PGPR,
     # but why use 100 when we can use 9? A large downside is that if we use 9 points
@@ -70,7 +71,7 @@ def load_breast_cancer():
     Y = data[:, 1].reshape(-1, 1) - 1
 
     # TODO: This might be a good example to discuss PG beating Bernoulli with full inducing points.
-    # TODO: Add sparsity experiment
+    # TODO: Add sparsity experiment?
     # The comparison here may be that:
     # With 194 inducing points fixed for Bernoulli, the ELBO is -116.46. Interestingly,
     # the PGPR ELBO is -103.88 even though both models receive the same fixed set of data
@@ -107,6 +108,31 @@ def load_breast_cancer():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
+def load_pima():
+    dataset = "../data/classification/pima-diabetes.csv"
+
+    data = np.loadtxt(dataset, delimiter=",")
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1)
+
+    # As the size of the datasets grow, we begin to see the benefits of PGPR. Where Bernoulli becomes
+    # infeasible, PGPR is able to find sparser and more efficient solutions.
+
+    # with 768 bern took 43.24 seconds, with 123 bern took 5.67
+    # with 768 PGPR took 26.59 seconds, with 123 PGPR took 9.85 seconds
+    # (accounting for looping convergence, PGPR 768 took 18.48 seconds and 123 took 2.63 seconds)
+    # TODO: Sort out the convergece criterion: Perhaps it's better to just check if the ELBO increases?
+    #       Perhaps this doesn't matter as speed is not the focus on this project.
+    #       It would be an interesing point for future work to look into.
+
+    NUM_INDUCING = 768  # quicker with 123 than with 768
+    BERN_ITERS = 100  # best with 768: -372.840412 (with 123: -374.059495)
+    PGPR_ITERS = (5, 25, 5)  # best with 768: -377.604798
+    GREEDY_THRESHOLD = 1  # (early stops at 123): -378.048993
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
 def load_magic():
     dataset = "../data/classification/magic.txt"
 
@@ -119,6 +145,8 @@ def load_magic():
     # Here it is very important to have good convergence guarantees - the current absolute
     # difference check is not good enough. Perhaps we can check if the ELBO increases, but
     # is that reliable - what if we reach a local minimum which we might leave later?
+
+    # TODO: Could we just prune the dataset?
 
     NUM_INDUCING = 100  # 200
     BERN_ITERS = 200  # 100
@@ -165,16 +193,6 @@ def run_experiment():
     ########
     # PGPR #
     ########
-    # Inducing point selection comparison on MAGIC dataset.
-    # h_greedy vs greedy gives (num_ind,ELBO,time(s)):
-    # The main results are found using thresholds (inducing point selection early stopping)
-    # Times vary largely between runs depending on laptop usage
-    # h_greedy performs better for all equal sizes of inducing points
-    # h_greedy can beat greedy with fewer points
-    # h_greedy - [(200/172,-6606.2547,206.43), (100/61,-6771.3247,92.56), (50,-7054.9747,49.11), (30,-7813.4151,47.04), (10,-8767.7210,10.08)]
-    # greedy - [(200,-6616.7805,279.80), (100,-6724.6128,126.72), (50,-7100.9152,64.38), (30,-8276.1728,47.88), (10,-8778.8325,25.00)]
-    # h_greedy forced number of points for comparison: [(200,-6538.0476,278.66), (100,-6691.8442,159.38)]
-
     # Define model
     pgpr = PGPR(
         data=(X, Y),
@@ -214,7 +232,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_magic()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_pima()
     X = standardise_features(X)
 
     run_experiment()
