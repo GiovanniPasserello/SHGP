@@ -16,6 +16,7 @@ tf.random.set_seed(0)
 # TODO: Better convergence guarantees of training PGPR
 # TODO: Experiments - each dataset with 100 inducing points, ACCURACY & ELBO.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
+# TODO: Use test sets for evaluation
 
 
 # TODO: Move to utils
@@ -108,6 +109,25 @@ def load_breast_cancer():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
+def load_ionosphere():
+    dataset = "../data/classification/ionosphere.txt"
+
+    data = np.loadtxt(dataset, delimiter=",")
+    X = data[:, :-1]
+    X = np.delete(X, 1, axis=1)  # remove a column of zeros (33 dimensions)
+    Y = data[:, -1].reshape(-1, 1)
+
+    # In this case, Bernoulli GO seems to perform much better than PGPR.
+    # This is likely because of the small dataset size.
+
+    NUM_INDUCING = 156  # quicker with 156 than with 351
+    BERN_ITERS = 100  # best with 351: -100.021138 (with 156: -107.370414)
+    PGPR_ITERS = (5, 25, 5)  # best with 351: -126.962021
+    GREEDY_THRESHOLD = 1  # (early stops at 156): -127.549833
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
 def load_pima():
     dataset = "../data/classification/pima-diabetes.csv"
 
@@ -118,10 +138,10 @@ def load_pima():
     # As the size of the datasets grow, we begin to see the benefits of PGPR. Where Bernoulli becomes
     # infeasible, PGPR is able to find sparser and more efficient solutions.
 
-    # with 768 bern took 43.24 seconds, with 123 bern took 5.67
+    # with 768 bern took 43.24 seconds, with 123 bern took 5.67 seconds
     # with 768 PGPR took 26.59 seconds, with 123 PGPR took 9.85 seconds
     # (accounting for looping convergence, PGPR 768 took 18.48 seconds and 123 took 2.63 seconds)
-    # TODO: Sort out the convergece criterion: Perhaps it's better to just check if the ELBO increases?
+    # TODO: Sort out the convergence criterion: Perhaps it's better to just check if the ELBO increases?
     #       Perhaps this doesn't matter as speed is not the focus on this project.
     #       It would be an interesing point for future work to look into.
 
@@ -232,7 +252,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_pima()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_ionosphere()
     X = standardise_features(X)
 
     run_experiment()
