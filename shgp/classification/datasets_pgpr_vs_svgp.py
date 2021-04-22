@@ -85,7 +85,7 @@ def load_crabs():
 
     # TODO: Important
     # This is one of the key datasets where PGPR completely outperforms SVGP!
-    # Even with different seeds or more optimisation setps, PGPR always outperforms
+    # Even with different seeds or more optimisation steps, PGPR always outperforms
     # SVGP with Bern. Why is this?
 
     NUM_INDUCING = 28  # quicker with 28 than with 200
@@ -214,6 +214,47 @@ def load_pima():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
+def load_ringnorm():
+    # https://www.openml.org/d/1496
+    dataset = "../data/classification/ringnorm.csv"
+
+    data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1) - 1
+
+    # TODO: Reiteration from 'magic'
+    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
+    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
+
+    # TODO: We can prune the dataset if needed
+    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
+    #       Probably possible for small-scale tests, e.g. 100 inducing points
+
+    # TODO: Only computationally feasible to try a small number of inducing points.
+    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
+    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
+
+    # TODO: Important
+    # This is one of the key datasets where PGPR almost always outperforms SVGP!
+    # Training of SVGP is very unstable and depends on the random seed
+    # - Bern often barely gets above 50% accuracy and sometimes unconstraining the kernel doesn't make a difference!
+    # - This is another downside showing the inconsistency/fragility of grad optim Bern & SVGP
+    # - When Bernoulli works, it works very well!
+    NUM_INDUCING = 20
+    BERN_ITERS = 200  # best with 100: -4539.416618, accuracy: 0.504865  # catastophic failure again?
+    PGPR_ITERS = (5, 25, 10)  # best with 100: -2716.269190, accuracy: 0.919459 (but one iteration was -2284.628780 - better convergence criterion, or just report max?)
+    GREEDY_THRESHOLD = 0
+
+    # 200 - far superior performance
+    # bernoulli: ELBO=-4872.606096, ACC=0.505946, NLL=0.656005, TIME=3.84 (with different seed: ELBO=-853.335810, ACC=0.984730)
+    # pgpr: ELBO=-1421.169011, ACC=0.978108, NLL=0.076769, TIME=170.78 (but it cycled for a long time)
+    # 20 - far superior performance
+    # bernoulli: ELBO=-5000.689376, ACC=0.505270, NLL=0.674485, TIME=0.81
+    # pgpr: ELBO=-4176.587485, ACC=0.736216, NLL=0.551947, TIME=25.40 (but it cycled for a long time)
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
 def load_magic():
     # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
     dataset = "../data/classification/magic.txt"
@@ -263,7 +304,7 @@ def load_electricity():
     # This means that we cannot realistically do a sparsity experiment, but perhaps we can
     # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
     NUM_INDUCING = 100  # 100
-    BERN_ITERS = 200  # best with 100: -20891.910067, accuracy: 0.789217 (with _: _)
+    BERN_ITERS = 200  # best with 100: -20891.910067, accuracy: 0.789217
     PGPR_ITERS = (5, 25, 10)  # best with 100: -21090.760171, accuracy: 0.784936
     GREEDY_THRESHOLD = 0
 
@@ -353,7 +394,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_heart()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_ringnorm()
     X = standardise_features(X)
 
     run_experiment()
