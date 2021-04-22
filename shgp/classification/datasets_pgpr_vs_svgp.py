@@ -18,6 +18,8 @@ tf.random.set_seed(0)
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 # TODO: Use test sets for evaluation.
 # TODO: Quote and describe these datasets in the report.
+# TODO: Important to note that all SVGP experiments are full-batch.
+#       This doesn't matter as all we care about is ELBO/ACC, not time.
 
 
 # TODO: Move to utils
@@ -110,7 +112,7 @@ def load_breast_cancer():
     # Could this perhaps be due to a very noisy dataset - is this an observed downside to SVGP/gradient methods?
 
     # TODO: These results definitely need to be averaged over many runs (see above)
-    NUM_INDUCING = 54  # quicker with 54 than with 569
+    NUM_INDUCING = 569  # quicker with 54 than with 569
     BERN_ITERS = 200  # best with 569: -178.680281 (with 54): -253.199324)  # why such catastrophic performance?
     PGPR_ITERS = (5, 25, 5)  # best with 569: -74.876002
     GREEDY_THRESHOLD = 1  # (early stops at 54): -75.173682
@@ -178,12 +180,51 @@ def load_magic():
     # difference check is not good enough. Perhaps we can check if the ELBO increases, but
     # is that reliable - what if we reach a local minimum which we might leave later?
 
-    # TODO: We can prune the dataset if needed (in sparsity experiments we use N//4)
+    # TODO: We can prune the dataset if needed
+    # TODO: Maybe we should do full runs if possible - but the compute is not possible?
+    #       Probably possible for small-scale tests, e.g. 100 inducing points
 
+    # TODO: Only computationally feasible to try a small number of inducing points.
+    # This means that we cannot realistically do a sparsity experiment (unless we prune).
+    # We can do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
     NUM_INDUCING = 100  # 200
     BERN_ITERS = 200  # 100
-    PGPR_ITERS = (5, 25, 10)  # This benefits from being larger than this, but becomes slow
+    PGPR_ITERS = (5, 25, 10)  # This slightly benefits from being larger than this, but becomes slow
     GREEDY_THRESHOLD = 0  # 100
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
+def load_electricity():
+    # https://datahub.io/machine-learning/electricity
+    dataset = "../data/classification/electricity.csv"
+
+    data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1)
+
+    # TODO: Reiteration from 'magic'
+    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
+    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
+
+    # TODO: We can prune the dataset if needed
+    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
+    #       Probably possible for small-scale tests, e.g. 100 inducing points
+
+    # TODO: Only computationally feasible to try a small number of inducing points.
+    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
+    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
+    NUM_INDUCING = 100  # 100
+    BERN_ITERS = 200  # best with 100: -20891.910067, accuracy: 0.789217 (with _: _)
+    PGPR_ITERS = (5, 25, 10)  # best with 100: -21090.760171, accuracy: 0.784936
+    GREEDY_THRESHOLD = 0
+
+    # 200 - very close performance
+    # bernoulli: ELBO=-20638.401637, ACC=0.795043, NLL=0.441826, TIME=213.12
+    # pgpr: ELBO=-20646.108759, ACC=0.791159, NLL=0.444059, TIME=764.12 (but this cycled - converged ~150 seconds)
+    # 10 - worse performance
+    # bernoulli: ELBO=-21872.580557, ACC=0.778469, NLL=0.467994, TIME=25.71
+    # pgpr: ELBO=-22990.888027, ACC=0.755032, NLL=0.505194, TIME=51.28 (this cycled - converged ~15 seconds)
 
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
@@ -264,7 +305,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_breast_cancer()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_electricity()
     X = standardise_features(X)
 
     run_experiment()
