@@ -214,6 +214,49 @@ def load_pima():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
+def load_twonorm():
+    # https://www.openml.org/d/1507
+    dataset = "../data/classification/twonorm.csv"
+
+    data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1) - 1
+
+    # TODO: Reiteration from 'magic'
+    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
+    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
+
+    # TODO: We can prune the dataset if needed
+    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
+    #       Probably possible for small-scale tests, e.g. 100 inducing points
+
+    # TODO: Only computationally feasible to try a small number of inducing points.
+    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
+    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
+
+    # TODO: Important
+    # This is a very interesting comparison of Bern vs PGPR.
+    # It seems that in general, especially for small M, Bern outperforms PGPR (especially M=10)
+    # The ELBO of SVGP however is far lower than the ELBO of PGPR for M=200. Why is it in this case
+    # that the accuracy is almost identical, but the ELBO is so wildly different. In general we would
+    # expect similar or worse ELBOs from PGPR.
+    NUM_INDUCING = 100
+    BERN_ITERS = 200  # best with 100: -5031.590838, accuracy: 0.971757 (in 1.79 seconds)
+    PGPR_ITERS = (5, 25, 10)  # best with 100: -5129.289144, accuracy: 0.961081 (in 10.85 seconds)
+    GREEDY_THRESHOLD = 0
+
+    # TODO: This might be a good dataset for small-scale sparsity experiments
+
+    # 200 - mixed performance - far better ELBO, slightly better ACC, far better NLL, worse time
+    # bernoulli: ELBO=-5062.441466, ACC=0.975000, NLL=0.683428, TIME=3.50
+    # pgpr: ELBO=-505.188846, ACC=0.979459, NLL=0.056077, TIME=90.51 (but it cycled and converged ~25 seconds)
+    # 10 - worse performance
+    # bernoulli: ELBO=-5128.682356, ACC=0.918784, NLL=0.693055, TIME=1.12
+    # pgpr: ELBO=-5129.289144, ACC=0.778649, NLL=0.693147, TIME=3.20
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
 def load_ringnorm():
     # https://www.openml.org/d/1496
     dataset = "../data/classification/ringnorm.csv"
@@ -240,7 +283,7 @@ def load_ringnorm():
     # - Bern often barely gets above 50% accuracy and sometimes unconstraining the kernel doesn't make a difference!
     # - This is another downside showing the inconsistency/fragility of grad optim Bern & SVGP
     # - When Bernoulli works, it works very well!
-    NUM_INDUCING = 20
+    NUM_INDUCING = 100
     BERN_ITERS = 200  # best with 100: -4539.416618, accuracy: 0.504865  # catastophic failure again?
     PGPR_ITERS = (5, 25, 10)  # best with 100: -2716.269190, accuracy: 0.919459 (but one iteration was -2284.628780 - better convergence criterion, or just report max?)
     GREEDY_THRESHOLD = 0
@@ -248,7 +291,7 @@ def load_ringnorm():
     # 200 - far superior performance
     # bernoulli: ELBO=-4872.606096, ACC=0.505946, NLL=0.656005, TIME=3.84 (with different seed: ELBO=-853.335810, ACC=0.984730)
     # pgpr: ELBO=-1421.169011, ACC=0.978108, NLL=0.076769, TIME=170.78 (but it cycled for a long time)
-    # 20 - far superior performance
+    # 20 - far superior performance (10 had inversion errors for Bernoulli)
     # bernoulli: ELBO=-5000.689376, ACC=0.505270, NLL=0.674485, TIME=0.81
     # pgpr: ELBO=-4176.587485, ACC=0.736216, NLL=0.551947, TIME=25.40 (but it cycled for a long time)
 
@@ -394,7 +437,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_ringnorm()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_twonorm()
     X = standardise_features(X)
 
     run_experiment()
