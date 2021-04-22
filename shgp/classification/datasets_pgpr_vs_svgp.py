@@ -96,6 +96,24 @@ def load_crabs():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
+def load_heart():
+    # https://www.openml.org/d/53
+    dataset = "../data/classification/heart.csv"
+
+    data = np.loadtxt(dataset, delimiter=",", skiprows=1)
+    X = data[:, :-1]
+    Y = data[:, -1].reshape(-1, 1)
+
+    # TODO: Sparisity experiment?
+
+    NUM_INDUCING = 270  # quicker with 58 than with 270
+    BERN_ITERS = 100  # best with 270: -112.617769, acc: 0.855556 (with 58: -113.003773, acc: 0.851852)
+    PGPR_ITERS = (5, 25, 5)  # best with 270: -116.390483, acc: 0.851852
+    GREEDY_THRESHOLD = 5e-1  # (early stops at 58): -116.563723, acc: 0.851852 (but first iteration is better)
+
+    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
+
+
 def load_ionosphere():
     # https://archive.ics.uci.edu/ml/datasets/ionosphere
     dataset = "../data/classification/ionosphere.txt"
@@ -335,7 +353,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_crabs()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_heart()
     X = standardise_features(X)
 
     run_experiment()
