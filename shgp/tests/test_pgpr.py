@@ -33,7 +33,7 @@ def test_pgpr_qu():
     print("Test passed.")
 
 
-def test_pgpr_is_same_as_wenzel():
+def test_wenzel_converges_to_pgpr():
     """
     Test that the Wenzel ELBO converges to the PGPR ELBO.
     """
@@ -62,6 +62,34 @@ def test_pgpr_is_same_as_wenzel():
     print("Test passed.")
 
 
+def test_optimal_wenzel_is_same_as_pgpr():
+    """
+    Test that the Wenzel ELBO is the same as the PGPR ELBO if given the optimal q(u).
+    """
+
+    rng = np.random.RandomState(0)
+    X = to_default_float(rng.randn(100, 1))
+    Z = to_default_float(rng.randn(20, 1))
+    Y = to_default_float(np.random.rand(100, 1).round())
+
+    pgpr = PGPR((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
+    q_mu, q_var = pgpr.compute_qu()
+    q_sqrt = tf.expand_dims(tf.linalg.cholesky(q_var), axis=0)
+
+    wenzel = Wenzel(
+        (X, Y),
+        kernel=gpflow.kernels.SquaredExponential(),
+        inducing_variable=Z,
+        q_mu=q_mu,
+        q_sqrt=q_sqrt
+    )
+
+    np.testing.assert_allclose(pgpr.elbo(), wenzel.elbo(), rtol=1e-3, atol=1e-3)
+
+    print("Test passed.")
+
+
 if __name__ == '__main__':
     test_pgpr_qu()
-    test_pgpr_is_same_as_wenzel()
+    test_wenzel_converges_to_pgpr()
+    test_optimal_wenzel_is_same_as_pgpr()
