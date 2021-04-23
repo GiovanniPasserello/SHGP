@@ -1,9 +1,13 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorflow import sigmoid
+import tensorflow as tf
 
+from tensorflow import sigmoid
 from shgp.models.wenzel import Wenzel
+
+np.random.seed(42)
+tf.random.set_seed(42)
 
 
 # Polya-Gamma uses logit link / sigmoid
@@ -16,7 +20,7 @@ def classification_demo():
     m = Wenzel(
         data=(X, Y),
         kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=X[::50].copy()
+        inducing_variable=X[::10].copy()
     )
     gpflow.set_trainable(m.inducing_variable, False)
 
@@ -52,8 +56,8 @@ def classification_demo():
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     NUM_TEST_INDICES = 40

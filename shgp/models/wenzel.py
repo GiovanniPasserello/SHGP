@@ -31,6 +31,9 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
             pages={5417-5424},
             year={2019},
         }
+
+        This is for comparison against the novel PGPR model. It is expected
+        that Wenzel will converge in the limit to PGPR.
     """
 
     def __init__(
@@ -96,8 +99,9 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
 
     def elbo(self) -> tf.Tensor:
         """
-        Construct a tensorflow function to compute the bound on the marginal likelihood.
+        Computes a lower bound on the marginal likelihood of the Wenzel GP.
         This is not an efficient implementation, it is simply for direct comparison.
+        If this were to be used in practice, we would want to compute a Cholesky solution for stability.
         """
 
         m, S = self.compute_qu()
@@ -193,7 +197,6 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
     def compute_qu(self) -> Tuple[tf.Tensor, tf.Tensor]:
         """
         Computes the mean and variance of q(u) = N(mu, cov), the variational distribution on inducing outputs.
-        :return: mu, cov
         """
 
         q_sqrt = tf.squeeze(self.q_sqrt)

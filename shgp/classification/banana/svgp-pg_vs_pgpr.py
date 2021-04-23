@@ -146,8 +146,8 @@ def plot_results(M, results):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     X_range = np.linspace(-3, 3, 40)

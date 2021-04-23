@@ -67,8 +67,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
     def elbo(self) -> tf.Tensor:
         """
-        Construct a tensorflow function to compute the bound on the marginal
-        likelihood. For a derivation of the terms in here, see *** TODO.
+        Computes a lower bound on the marginal likelihood of the heteroscedastic GP.
         """
 
         # metadata
@@ -108,8 +107,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
-        Compute the mean and variance of the latent function at some new points
-        Xnew. For a derivation of the terms in here, see *** TODO.
+        Computes the mean and variance of the latent function at some new points Xnew.
         """
 
         # metadata
@@ -157,17 +155,14 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
     def predict_y(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
-        Predict the mean and variance for unobserved values at some new points
-        Xnew. For a derivation of the terms in here, see *** TODO.
+        Predicts the mean and variance for unobserved values at some new points Xnew.
         """
         mean, var = self.predict_f(Xnew)
         return mean, var + self.likelihood.noise_variance(Xnew)
 
     def compute_qu(self) -> Tuple[tf.Tensor, tf.Tensor]:
         """
-        Computes the mean and variance of q(u) = N(mu, cov), the variational distribution on
-        inducing outputs.
-        :return: mu, cov
+        Computes the mean and variance of q(u) = N(m,S), the variational distribution on inducing outputs.
         """
 
         # metadata

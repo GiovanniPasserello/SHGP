@@ -44,7 +44,7 @@ def standardise_features(data):
 
 def load_fertility():
     # https://archive.ics.uci.edu/ml/datasets/Fertility
-    dataset = "../data/classification/fertility.txt"
+    dataset = "../data/fertility.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -70,7 +70,7 @@ def load_fertility():
 
 def load_crabs():
     # https://datarepository.wolframcloud.com/resources/Sample-Data-Crab-Measures
-    dataset = "../data/classification/crabs.csv"
+    dataset = "../data/crabs.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, 1:]
@@ -98,7 +98,7 @@ def load_crabs():
 
 def load_heart():
     # https://www.openml.org/d/53
-    dataset = "../data/classification/heart.csv"
+    dataset = "../data/heart.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, :-1]
@@ -116,7 +116,7 @@ def load_heart():
 
 def load_ionosphere():
     # https://archive.ics.uci.edu/ml/datasets/ionosphere
-    dataset = "../data/classification/ionosphere.txt"
+    dataset = "../data/ionosphere.txt"
 
     # TODO: Sparisity experiment?
     data = np.loadtxt(dataset, delimiter=",")
@@ -137,7 +137,7 @@ def load_ionosphere():
 
 def load_breast_cancer():
     # https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29
-    dataset = "../data/classification/breast-cancer-diagnostic.txt"
+    dataset = "../data/breast-cancer-diagnostic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, 2:]
@@ -189,7 +189,7 @@ def load_breast_cancer():
 
 def load_pima():
     # http://networkrepository.com/pima-indians-diabetes.php
-    dataset = "../data/classification/pima-diabetes.csv"
+    dataset = "../data/pima-diabetes.csv"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -216,7 +216,7 @@ def load_pima():
 
 def load_twonorm():
     # https://www.openml.org/d/1507
-    dataset = "../data/classification/twonorm.csv"
+    dataset = "../data/twonorm.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]
@@ -259,7 +259,7 @@ def load_twonorm():
 
 def load_ringnorm():
     # https://www.openml.org/d/1496
-    dataset = "../data/classification/ringnorm.csv"
+    dataset = "../data/ringnorm.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]
@@ -300,7 +300,7 @@ def load_ringnorm():
 
 def load_magic():
     # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
-    dataset = "../data/classification/magic.txt"
+    dataset = "../data/magic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -329,7 +329,7 @@ def load_magic():
 
 def load_electricity():
     # https://datahub.io/machine-learning/electricity
-    dataset = "../data/classification/electricity.csv"
+    dataset = "../data/electricity.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]

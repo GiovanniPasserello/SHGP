@@ -3,11 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from gpflow.models.util import inducingpoint_wrapper
 from tensorflow import sigmoid
 
-from shgp.inducing.initialisation_methods import h_greedy_variance
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
+
+np.random.seed(0)
+tf.random.set_seed(0)
 
 
 # Polya-Gamma uses logit link / sigmoid
@@ -35,14 +37,10 @@ def inducing_demo():
     threshold = 1e-1
     kernel2 = gpflow.kernels.Matern52()
     model2 = PGPR((X, Y), kernel=kernel2)
-    theta_inv = tf.math.reciprocal(model2.likelihood.compute_theta())
-    inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, num_inducing, kernel2, threshold)
-    inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-    model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-    gpflow.set_trainable(model2.inducing_variable, False)
     prev_elbo = model2.elbo()
-    # iter_limit = 10  # to avoid infinite loops
     while True:
+        _, inducing_idx2 = h_reinitialise_PGPR(model2, X, num_inducing, threshold)
+
         # Optimize model
         opt = gpflow.optimizers.Scipy()
         for _ in range(num_iters):
@@ -51,17 +49,9 @@ def inducing_demo():
 
         next_elbo = model2.elbo()
         print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
-        if np.abs(next_elbo - prev_elbo) <= 1e-6:  # or iter_limit == 0:
+        if np.abs(next_elbo - prev_elbo) <= 1e-6:
             break
-
-        theta_inv = tf.math.reciprocal(model2.likelihood.compute_theta())
-        inducing_locs2, inducing_idx2 = h_greedy_variance(X, theta_inv, num_inducing, kernel2, threshold)
-        inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-        model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-        gpflow.set_trainable(model2.inducing_variable, False)
-
         prev_elbo = next_elbo
-        # iter_limit -= 1
 
     print("Final number of inducing points:", model2.inducing_variable.num_inducing)
 
@@ -131,8 +121,8 @@ def inducing_demo():
 
 if __name__ == "__main__":
     # Load data
-    X = np.genfromtxt("../classification/data/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("../classification/data/classif_1D_Y.csv").reshape(-1, 1)
+    X = np.genfromtxt("../data/toy/classif_1D_X.csv").reshape(-1, 1)
+    Y = np.genfromtxt("../data/toy/classif_1D_Y.csv").reshape(-1, 1)
     X_test = np.linspace(0, 6, 200).reshape(-1, 1)
 
     inducing_demo()

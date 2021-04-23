@@ -10,8 +10,6 @@ from shgp.models.pgpr import PGPR
 np.random.seed(42)
 tf.random.set_seed(42)
 
-# TODO: Make other comparisons use ConstrainedSEKernel? What is the benefit/loss of this constraint?
-# TODO: Sparsity investigations on other datasets
 
 """
 A comparison of PGPR with two different inducing point initialisation procedures. Here we investigate
@@ -129,8 +127,8 @@ def plot_results(M, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
 
     # Test different numbers of inducing points
     M = np.arange(5, 51, 5)  # np.arange(5, 101, 5)

@@ -58,9 +58,7 @@ class HeteroscedasticLikelihood(Likelihood, metaclass=abc.ABCMeta):
 class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
     """
     The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
-    a polynomial noise model up to some degree.
-    Very small uncertainties can lead to numerical instability during the optimization process.
-    A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
+    a polynomial noise model up to some defined degree.
     """
 
     def __init__(self, degree: int, variance: float = 1.0, variance_lower_bound: float = DEFAULT_VARIANCE_LOWER_BOUND):
@@ -89,8 +87,6 @@ class HeteroscedasticGaussian(HeteroscedasticLikelihood):
     """
     The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
     a Gaussian noise model.
-    Very small uncertainties can lead to numerical instability during the optimization process.
-    A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
     """
 
     def __init__(self, center: float = 0.0, variance: float = 1.0, variance_lower_bound: float = DEFAULT_VARIANCE_LOWER_BOUND):
@@ -115,9 +111,8 @@ class HeteroscedasticGaussian(HeteroscedasticLikelihood):
 class HeteroscedasticGP(HeteroscedasticLikelihood):
     """
     The HeteroscedasticGP likelihood is a heteroscedastic likelihood that models the
-    heteroscedastic noise of a GP using another GP.
-    Very small uncertainties can lead to numerical instability during the optimization process.
-    A lower bound of 1e-6 is therefore imposed on the likelihood variance by default.
+    heteroscedastic noise of a GP using another GP. Currently this only works if the
+    noise is known as is passed as the label variable in 'data'.
     """
 
     def __init__(

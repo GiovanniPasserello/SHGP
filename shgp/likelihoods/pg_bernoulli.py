@@ -9,6 +9,13 @@ class PolyaGammaBernoulli(Bernoulli):
         Bernoulli.__init__(self, invlink=tf.sigmoid)
 
     def variational_expectations(self, Fmu, Fvar, Y):
+        """
+        Calculates the variational expectations used by an SVGP model.
+        :param Fmu: a 1D NumPy array containing the mean values of q(f).
+        :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
+        :param Y: array of ground truth labels.
+        :return: the variational expectations.
+        """
         # Y must be in (-1, +1), not (0, 1)
         assert_01 = tf.Assert(tf.reduce_all((Y == 0.0) | (Y == 1.0)), [Y])
         with tf.control_dependencies([assert_01]):

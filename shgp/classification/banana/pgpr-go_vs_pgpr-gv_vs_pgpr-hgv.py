@@ -12,7 +12,6 @@ np.random.seed(42)
 tf.random.set_seed(42)
 
 
-# TODO: A robust experimental setup with convergence guarantees
 """
 A comparison of PGPR with three different inducing point initialisation procedures. The inducing points 
 of the first model are uniformly subsampled and then optimised using gradient-based optimisation. 
@@ -247,8 +246,8 @@ def plot_results(M, results):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     X_range = np.linspace(-3, 3, 40)

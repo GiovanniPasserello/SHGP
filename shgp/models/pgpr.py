@@ -18,7 +18,7 @@ from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
 tf.config.run_functions_eagerly(True)
 
 
-# TODO: A better method for iterative optimisation of c_i, so we know the number of iterations required
+# TODO: Future work might consider superior methods for iterative optimisation of c_i.
 class PGPR(GPModel, InternalDataTrainingLossMixin):
     """
         Collapsed implementation of Polya-Gamma GPR, based on the heteroscedastic
@@ -31,6 +31,9 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
             pages={5417-5424},
             year={2019},
         }
+
+        which is the SVGP building block for this work. This model is one of the key contributions
+        of this thesis.
     """
 
     def __init__(
@@ -85,8 +88,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
     def elbo(self) -> tf.Tensor:
         """
-        Construct a tensorflow function to compute the bound on the marginal
-        likelihood. For a derivation of the terms in here, see *** TODO.
+        Computes a lower bound on the marginal likelihood of the PGPR model.
         """
 
         # metadata
@@ -121,9 +123,13 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         bound -= num_data * np.log(2)
         bound -= self.likelihood.kl_term()
 
-        # TODO: remove - Temporary code investigating rank-1 ELBO difference bounds
+        # TODO: This was expected to be constant (with fixed c_i)?
+        #print(self.hgpr_elbo() - bound, self.hgpr_elbo_difference())
+
+        # # TODO: remove - Temporary code investigating rank-1 ELBO difference bounds
         # ###########
-        # z = np.array([0.33283])
+        # Y = np.round(np.random.randn(len(Y_data)).reshape(-1, 1))
+        # z = np.random.randn(1).reshape(-1, 1)
         # k = self.kernel(z, z)
         # kuu_inv = tf.linalg.inv(kuu)
         # ku = tf.reshape(self.kernel(self.inducing_variable.Z, z), (-1, 1))
@@ -135,7 +141,9 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         # bbT = tf.matmul(b, b, transpose_b=True)
         # Qff = tf.matmul(tf.matmul(kuf, kuu_inv, transpose_a=True), kuf)
         # ###########
+        # theta_mat = tf.squeeze(tf.linalg.diag(theta))
         # theta_inv_mat = tf.squeeze(tf.linalg.diag(tf.math.reciprocal(theta)))
+        # A = tf.linalg.inv(theta_inv_mat + Qff + bbT)
         # E = tf.linalg.inv(theta_inv_mat + Qff)
         # D = tf.matmul(tf.matmul(E, bbT), E)
         # D /= (1 + tf.matmul(tf.matmul(b, E, transpose_a=True), b))
@@ -143,53 +151,88 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         # ###########
         # # first = tf.matmul(
         # #     tf.matmul(
-        # #         err,
-        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff) + tf.matmul(tf.matmul(bbT, D), bbT),
+        # #         Y,
+        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff) + tf.matmul(tf.matmul(bbT, D), bbT) + tf.matmul(tf.matmul(bbT, D), Qff) + tf.matmul(tf.matmul(Qff, D), bbT),
         # #         transpose_a=True
         # #     ),
-        # #     err)
+        # #     Y)
         # # second = tf.matmul(
         # #     tf.matmul(
-        # #         err,
-        # #         tf.matmul(tf.matmul(bbT, D), Qff) + tf.matmul(tf.matmul(Qff, D), bbT) - tf.matmul(tf.matmul(bbT, E), Qff) - tf.matmul(tf.matmul(Qff, E), bbT) - tf.matmul(tf.matmul(bbT, E), bbT),
+        # #         Y,
+        # #         tf.matmul(tf.matmul(bbT, E), Qff) + tf.matmul(tf.matmul(Qff, E), bbT) + tf.matmul(tf.matmul(bbT, E), bbT),
         # #         transpose_a=True
         # #     ),
-        # #     err)
+        # #     Y)
         # # first = tf.matmul(
         # #     tf.matmul(
-        # #         err,
+        # #         Y,
         # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff),
         # #         transpose_a=True
         # #     ),
-        # #     err)
-        # # second = - tf.matmul(
+        # #     Y)
+        # # second = tf.matmul(
         # #     tf.matmul(
-        # #         err,
+        # #         Y,
         # #         tf.matmul(tf.matmul(bbT, C), Qff) + tf.matmul(tf.matmul(Qff, C), bbT) + tf.matmul(tf.matmul(bbT, C), bbT),
         # #         transpose_a=True
         # #     ),
-        # #     err)
-        # if not np.all(tf.cast(tf.linalg.eigvals(C), tf.float64) >= 0):
-        #     print("oof")
+        # #     Y)
+        # Qff_plus = Qff + bbT
+        # Sigma = kuu + tf.matmul(tf.matmul(kuf, theta_mat), kuf, transpose_b=True)
+        # Sigma_sqrt = tf.linalg.cholesky(Sigma)
+        # s_inv_kuf = tf.linalg.triangular_solve(Sigma_sqrt, kuf)
+        # mid = tf.matmul(tf.matmul(tf.matmul(theta_mat, s_inv_kuf, transpose_b=True), s_inv_kuf), theta_mat)
         #
-        # a = tf.matmul(tf.matmul(Qff, C), bbT)
-        # b = tf.matmul(tf.matmul(bbT, C), Qff)
-        # if not np.allclose(a, b):
-        #     print(tf.reduce_sum(a - b))
-
-        # if not np.all(tf.cast(tf.linalg.eigvals(tf.matmul(tf.matmul(bbT, C), bbT)), tf.float64) >= 0):
-        #     print("oofest")
-
-        # eig_vals = tf.cast(tf.linalg.eigvals(tf.matmul(tf.matmul(bbT, C), Qff)), tf.float64).numpy()
-        # valid_vals = np.where(np.abs(eig_vals) >= 1e-20)[0]
-        # if not np.all(eig_vals[valid_vals] >= 0):
-        #     print("oofest")
-        # if second > first:
-        #     print(first, second)
-        ###########
+        # # first = tf.matmul(
+        # #     tf.matmul(
+        # #         Y,
+        # #         bbT + tf.matmul(tf.matmul(Qff, E), Qff) + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus) + tf.matmul(tf.matmul(Qff_plus, mid), Qff_plus),
+        # #         transpose_a=True
+        # #     ),
+        # #     Y)
+        # # second = tf.matmul(
+        # #     tf.matmul(
+        # #         Y,
+        # #         tf.matmul(tf.matmul(Qff_plus, theta_mat), Qff_plus),
+        # #         transpose_a=True
+        # #     ),
+        # #     Y)
+        # # first = tf.matmul(
+        # #     tf.matmul(
+        # #         Y,
+        # #         bbT + tf.matmul(tf.matmul(Qff, E), Qff) + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus),
+        # #         transpose_a=True
+        # #     ),
+        # #     Y)
+        # # second = tf.matmul(
+        # #     tf.matmul(
+        # #         Y,
+        # #         tf.matmul(tf.matmul(Qff_plus, E), Qff_plus),
+        # #         transpose_a=True
+        # #     ),
+        # #     Y)
+        # first = tf.matmul(
+        #     tf.matmul(
+        #         Y,
+        #         bbT + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus),
+        #         transpose_a=True
+        #     ),
+        #     Y)
+        # second = tf.matmul(
+        #     tf.matmul(
+        #         Y,
+        #         tf.matmul(tf.matmul(Qff, E), bbT) + tf.matmul(tf.matmul(bbT, E), Qff) + tf.matmul(tf.matmul(bbT, E), bbT),
+        #         transpose_a=True
+        #     ),
+        #     Y)
+        #
+        # if first - second < 0:
+        #     print(first - second)
+        # ##########
 
         return bound
 
+    # TODO: Remove
     # For comparison against HGPR
     # def hgpr_elbo(self) -> tf.Tensor:
     #     """
@@ -250,8 +293,9 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
     #
     #     theta_mat = tf.squeeze(tf.linalg.diag(theta))
     #     sig = kuu + tf.matmul(tf.matmul(kuf, theta_mat), kfu)
-    #     sig_inv = tf.linalg.inv(sig)
-    #     mid = tf.matmul(tf.matmul(kfu, sig_inv), kuf)
+    #     sig_sqrt = tf.linalg.cholesky(sig)
+    #     sig_sqrt_inv_kuf = tf.linalg.triangular_solve(sig_sqrt, kuf)
+    #     mid = tf.matmul(sig_sqrt_inv_kuf, sig_sqrt_inv_kuf, transpose_a=True)
     #
     #     term1 = theta_mat
     #     term2 = tf.matmul(tf.matmul(theta_mat, mid), theta_mat)
@@ -269,8 +313,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
-        Compute the mean and variance of the latent function at some new points
-        Xnew. For a derivation of the terms in here, see *** TODO.
+        Compute the mean and variance of the latent function at some new points Xnew.
         """
 
         # metadata
@@ -318,17 +361,14 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
     def predict_y(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
-        Predict the mean and variance for unobserved values at some new points
-        Xnew. For a derivation of the terms in here, see *** TODO.
+        Predict the mean and variance for unobserved values at some new points Xnew.
         """
         mean, var = self.predict_f(Xnew)
         return mean, var + self.likelihood.noise_variance(mean, var)
 
     def compute_qu(self) -> Tuple[tf.Tensor, tf.Tensor]:
         """
-        Computes the mean and variance of q(u) = N(mu, cov), the variational distribution on
-        inducing outputs.
-        :return: mu, cov
+        Computes the mean and variance of q(u) = N(m,S), the variational distribution on inducing outputs.
         """
 
         # metadata

@@ -62,8 +62,8 @@ def classification_demo():
 
 if __name__ == '__main__':
     # Load data
-    X = np.genfromtxt("data/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("data/classif_1D_Y.csv").reshape(-1, 1)
+    X = np.genfromtxt("../data/toy/classif_1D_X.csv").reshape(-1, 1)
+    Y = np.genfromtxt("../data/toy/classif_1D_Y.csv").reshape(-1, 1)
     X_test = np.linspace(0, 6, 200).reshape(-1, 1)
     # Plot params
     plt.rcParams["figure.figsize"] = (8, 4)

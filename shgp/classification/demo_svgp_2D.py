@@ -14,8 +14,9 @@ def classification_demo():
     m = gpflow.models.SVGP(
         kernel=gpflow.kernels.SquaredExponential(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
-        inducing_variable=X[::20].copy()
+        inducing_variable=X.copy()
     )
+    gpflow.set_trainable(m.inducing_variable, False)
 
     # Optimize model
     gpflow.optimizers.Scipy().minimize(m.training_loss_closure((X, Y)), variables=m.trainable_variables)
@@ -49,8 +50,8 @@ def classification_demo():
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     NUM_TEST_INDICES = 40

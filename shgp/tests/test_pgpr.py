@@ -6,8 +6,16 @@ from gpflow.utilities import to_default_float
 from shgp.models.pgpr import PGPR
 from shgp.models.wenzel import Wenzel
 
+np.random.seed(42)
+tf.random.set_seed(42)
+
 
 def test_pgpr_qu():
+    """
+    Test if the closed form q(u) is the same as the predictive distribution of the
+    GP when evaluated at the inducing points.
+    """
+
     rng = np.random.RandomState(0)
     X = to_default_float(rng.randn(100, 1))
     Z = to_default_float(rng.randn(20, 1))
@@ -26,6 +34,10 @@ def test_pgpr_qu():
 
 
 def test_pgpr_is_same_as_wenzel():
+    """
+    Test that the Wenzel ELBO converges to the PGPR ELBO.
+    """
+
     rng = np.random.RandomState(0)
     X = to_default_float(rng.randn(100, 1))
     Z = to_default_float(rng.randn(20, 1))

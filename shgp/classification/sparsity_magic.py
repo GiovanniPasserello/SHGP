@@ -141,7 +141,7 @@ def plot_results(M, results, optimal=None):
 
 if __name__ == '__main__':
     # Load data
-    dataset = "../data/classification/magic.txt"
+    dataset = "../data/magic.txt"
     data = np.loadtxt(dataset, delimiter=",")
     X = standardise_features(data[:, :-1])
     Y = data[:, -1].reshape(-1, 1)

@@ -50,7 +50,6 @@ def inducing_demo():
     kernel2 = ConstrainedSEKernel()
     model2 = PGPR((X, Y), kernel=kernel2)
     prev_elbo = model2.elbo()
-    # TODO: Better guarantees for convergence
     iter_limit = 10  # to avoid infinite loops
     while True:
         _, inducing_idx2 = h_reinitialise_PGPR(model2, X, num_inducing, threshold)
@@ -138,8 +137,8 @@ def inducing_demo():
 
 if __name__ == "__main__":
     # Load data
-    X = np.loadtxt("../classification/data/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../classification/data/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     NUM_TEST_INDICES = 40

@@ -23,8 +23,8 @@ def uniform_subsample(training_inputs: np.ndarray, M: int):
     N = training_inputs.shape[0]
     if M is None:
         M = N
-
-    assert M <= N, 'Cannot set M > N'
+    else:
+        assert M <= N, 'Cannot set M > N'
 
     indices = np.random.choice(N, M, replace=False)
     return training_inputs[indices], indices
@@ -107,7 +107,7 @@ def h_reinitialise_PGPR(
     threshold: Optional[float] = 0.0
 ):
     """
-    Reinitialise inducing points of PGPR model using h_greedy_variance.
+    Reinitialise the inducing points of a PGPR model using h_greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
     :param training_inputs: [N,D] np.ndarray, the training data.
@@ -130,6 +130,7 @@ def greedy_variance(
 ):
     """
     Homoscedastic greedy variance inducing point initialisation procedure without noise augmentation.
+    This is the original procedure suggested in https://jmlr.org/papers/volume21/19-1015/19-1015.pdf.
 
     Complexity: O(NM) memory, O(NM^2) time
     :param training_inputs: [N,D] np.ndarray, the training data.
@@ -150,7 +151,7 @@ def reinitialise_PGPR(
     threshold: Optional[float] = 0.0
 ):
     """
-    Reinitialise inducing points of PGPR model using greedy_variance.
+    Reinitialise the inducing points of a PGPR model using greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
     :param training_inputs: [N,D] np.ndarray, the training data.
@@ -177,8 +178,8 @@ def greedy_bound_increase(
     Note that due to being O(MN^2) this is not a preferable method, it is simply for comparisons,
     however it does generally produce superior inducing point locations which yield a higher ELBO.
 
-    TODO: Could this be changed to O(NM) memory, O(NM^2) time by only operating on a randomly
-          chosen candidate set of size M? Would this still beat greedy variance?
+    TODO: This could be changed to O(NM) memory, O(NM^2) time by only operating on a randomly
+          chosen candidate set of size M - would this still beat greedy variance, and is it worth it?
 
     Complexity: O(N^2) memory, O(MN^2) time
     :param training_inputs: [N,D] np.ndarray, the training data.
@@ -234,7 +235,7 @@ def bound_max_reinitialise_PGPR(
     M: int
 ):
     """
-    Reinitialise inducing points of PGPR model using greedy_bound_increase.
+    Reinitialise the inducing points of a PGPR model using greedy_bound_increase.
 
     :param model: PGPR, the model to reinitialise.
     :param training_inputs: [N,D] np.ndarray, the training data.
