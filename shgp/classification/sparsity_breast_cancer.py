@@ -7,8 +7,8 @@ from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitiali
 from shgp.kernels.ConstrainedSEKernel import ConstrainedSEKernel
 from shgp.models.pgpr import PGPR
 
-np.random.seed(42)
-tf.random.set_seed(42)
+np.random.seed(0)
+tf.random.set_seed(0)
 
 
 """
@@ -18,23 +18,16 @@ which is afforded to us by the use of greedy variance / heteroscedastic greedy v
 note that we do not compare to SVGP Bernoulli, here - what we care about is the sparsity of inducing point 
 selection (at what point does the ELBO converge). For comparisons against Bernoulli, see other experiments.
 
-Note also that this is a very small-scale problem and so the benefits are less visible. For a more concrete 
-analysis, compare and constrast the results from other dataset.
-
-M = [1...30]
-results_gv = [-39.35468916 -39.35466383 -39.3546598  -39.35465601 -39.35465262
- -39.35465383 -39.35465009 -39.35465064 -39.35464906 -39.35464906
- -39.3546483  -39.35464857 -39.35465128 -39.35464744 -39.35464725
- -39.35464665 -39.35464743 -39.35464755 -39.35464867 -39.35464871
- -39.3546472  -39.354646   -39.35464609 -39.35464577 -39.35464597
- -39.35464575 -39.35464578 -39.35464784 -39.35464561 -39.35464615]
-results_hgv = [-39.35469343 -39.35466487 -39.35466136 -39.35465743 -39.35465314
- -39.35465078 -39.35465207 -39.35465045 -39.35464854 -39.35464787
- -39.35464769 -39.35464721 -39.35464693 -39.35464723 -39.35464695
- -39.3546474  -39.35464833 -39.35464691 -39.3546475  -39.35465055
- -39.35464638 -39.35464629 -39.35464583 -39.35464599 -39.35464592
- -39.3546458  -39.35464564 -39.35464764 -39.35464556 -39.35464551]
-optimal = -39.35464404913119
+M = np.arange(5, 101, 5)
+results_gv = [-217.88657076  -96.73570866  -87.8114045   -82.66026768  -79.86418064
+  -78.34576833  -77.62225389  -77.01309174  -76.54907791  -76.2119282
+  -75.97489667  -75.87565941  -75.76426664  -75.68699773  -75.60315725
+  -75.55829306  -75.52519887  -75.49966281  -75.46643782  -75.44281655]
+results_hgv = [-213.54499313  -98.33300655  -86.97868378  -82.22728811  -79.00359283
+  -77.55862879  -76.87227229  -76.43349924  -76.13059877  -75.87849282
+  -75.7657115   -75.69325919  -75.60631159  -75.53840403  -75.51047344
+  -75.4812239   -75.45382388  -75.43568348  -75.42589175  -75.40969307]
+optimal = -75.52529596850775
 """
 
 
@@ -57,7 +50,7 @@ def standardise_features(data):
 def train_full_model():
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSEKernel(),
+        kernel=ConstrainedSEKernel(max_lengthscale=1000.0, max_variance=1000.0),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(pgpr.inducing_variable, False)
@@ -72,7 +65,7 @@ def train_full_model():
 def train_reinit_model(initialisation_method, m):
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSEKernel()
+        kernel=ConstrainedSEKernel(max_lengthscale=1000.0, max_variance=1000.0)
     )
     opt = gpflow.optimizers.Scipy()
 
@@ -110,11 +103,17 @@ def train_reinit_model(initialisation_method, m):
 
 
 def run_experiment(M):
-    elbo_pgpr_gv = train_reinit_model(reinitialise_PGPR, M)
-    print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
-    elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
-    print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
-    return elbo_pgpr_gv, elbo_pgpr_hgv
+    try:
+        elbo_pgpr_gv = train_reinit_model(reinitialise_PGPR, M)
+        print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
+        elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
+        print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
+        return elbo_pgpr_gv, elbo_pgpr_hgv
+    except Exception:
+        # The exception is due to a rare/random inversion error.
+        # We want to keep retrying until it succeeds.
+        print("Exception caught, retrying!")
+        return run_experiment(M)
 
 
 def plot_results(M, results, optimal):
@@ -122,7 +121,7 @@ def plot_results(M, results, optimal):
     plt.tick_params(labelright=True)
 
     # Axis labels
-    plt.title('Comparison of Inducing Point Methods - Fertility Dataset')
+    plt.title('Comparison of Inducing Point Methods - Breast Cancer Dataset')
     plt.ylabel('ELBO')
     plt.xlabel('Number of Inducing Points')
     # Axis limits
@@ -140,17 +139,17 @@ def plot_results(M, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = "../data/fertility.txt"
+    dataset = "../data/breast-cancer-diagnostic.txt"
     data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, :-1]  # TODO: Standardise?
-    Y = data[:, -1].reshape(-1, 1)
+    X = standardise_features(data[:, 2:])
+    Y = data[:, 1].reshape(-1, 1)
 
     # Test different numbers of inducing points
-    M = np.arange(1, 31)
+    M = np.arange(5, 101, 5)
 
     NUM_CYCLES = 3
     NUM_LOCAL_ITERS = 10
-    NUM_OPT_ITERS = 250
+    NUM_OPT_ITERS = 100
     NUM_CI_ITERS = 10
 
     ################################################
