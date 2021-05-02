@@ -58,11 +58,13 @@ if __name__ == "__main__":
     # Model definitions
     kernel1 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     model1 = gpflow.models.SGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1)
+    gpflow.set_trainable(model1.inducing_variable, False)
     gpflow.optimizers.Scipy().minimize(model1.training_loss, variables=model1.trainable_variables)
     print("sgpr trained")
 
     kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood)
+    gpflow.set_trainable(model2.inducing_variable, False)
     gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
     print("hgpr trained")
 

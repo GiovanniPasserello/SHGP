@@ -105,6 +105,64 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         return bound
 
+    def upper_bound(self) -> tf.Tensor:
+        """
+        Computes an upper bound on the marginal likelihood of the heteroscedastic GP.
+
+        The key reference (for the homoscedastic case) is
+        ::
+          @misc{titsias_2014,
+            title={Variational Inference for Gaussian and Determinantal Point Processes},
+            url={http://www2.aueb.gr/users/mtitsias/papers/titsiasNipsVar14.pdf},
+            publisher={Workshop on Advances in Variational Inference (NIPS 2014)},
+            author={Titsias, Michalis K.},
+            year={2014},
+            month={Dec}
+          }
+        """
+        X_data, Y_data = self.data
+
+        # compute initial matrices
+        Kdiag = self.kernel(X_data, full_cov=False)
+        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuf = Kuf(self.inducing_variable, self.kernel, X_data)
+        I = tf.eye(tf.shape(kuu)[0], dtype=default_float())
+        lmbda = tf.transpose(self.likelihood.noise_variance(X_data))
+        rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
+        rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
+
+        # compute intermediate matrices
+        L = tf.linalg.cholesky(kuu)
+        A = tf.linalg.triangular_solve(L, kuf, lower=True)
+        A_rsigma = A * rsigma
+        AAT = tf.linalg.matmul(A_rsigma, A_rsigma, transpose_b=True)
+        LB = tf.linalg.cholesky(I + AAT)
+
+        # using the trace bound, from Titsias' presentation
+        c = tf.reduce_sum(Kdiag) - tf.reduce_sum(tf.square(A))
+
+        # alternative heteroscedastic bound on the maximum eigenvalue
+        corrected_lmbda = lmbda + c
+        corrected_rlmbda = tf.math.reciprocal(corrected_lmbda)
+        corrected_rsigma = tf.math.sqrt(corrected_rlmbda)
+
+        # correct with the upper bound variance
+        A_corrected = A * corrected_rsigma
+        AAT_corrected = tf.linalg.matmul(A_corrected, A_corrected, transpose_b=True)
+
+        # the normalising terms
+        const = -0.5 * tf.math.reduce_sum(tf.math.log(2 * np.pi * lmbda))
+        logdet = -tf.reduce_sum(tf.math.log(tf.linalg.diag_part(LB)))
+
+        # the quadratic term
+        err = Y_data - self.mean_function(X_data)
+        LC = tf.linalg.cholesky(I + AAT_corrected)
+        v = tf.linalg.triangular_solve(LC, tf.linalg.matmul(A_corrected * corrected_rsigma, err), lower=True)
+        quad = -0.5 * tf.reduce_sum(tf.square(err) * tf.transpose(corrected_rlmbda))
+        quad += 0.5 * tf.reduce_sum(tf.square(v))
+
+        return const + logdet + quad
+
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
         Computes the mean and variance of the latent function at some new points Xnew.
