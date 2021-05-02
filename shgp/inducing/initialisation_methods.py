@@ -86,6 +86,10 @@ def h_greedy_variance(
 
         # Nystrom difference from di, heteroscedasticity from lmbda_inv
         criterion = lmbda_inv * di
+
+        # We could either select the next inducing point if the below convergence
+        # check fails, or we can accept it now.
+        # We might as well take one extra point with the knowledge we have.
         indices[m + 1] = np.argmax(criterion)  # select next point
 
         # terminate if tr(lambda^-1(Kff-Qff)) is small (implies posterior KL is small)

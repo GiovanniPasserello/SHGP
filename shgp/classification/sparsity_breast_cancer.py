@@ -155,8 +155,8 @@ if __name__ == '__main__':
     ################################################
     # PGPR with Different Reinitialisation Methods #
     ################################################
-    results_gv = np.zeros_like(M, dtype=np.float)
-    results_hgv = np.zeros_like(M, dtype=np.float)
+    results_gv = np.zeros_like(M, dtype=float)
+    results_hgv = np.zeros_like(M, dtype=float)
     for c in range(NUM_CYCLES):  # run 3 times and take an average
         print("Beginning cycle {}...".format(c + 1))
         for i, m in enumerate(M):
