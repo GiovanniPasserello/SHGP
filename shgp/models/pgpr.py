@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import numpy as np
 import tensorflow as tf
 
-from gpflow.config import default_float, default_jitter
+from gpflow.config import default_float
 from gpflow.covariances.dispatch import Kuf, Kuu
 from gpflow.inducing_variables import InducingPoints
 from gpflow.kernels import Kernel
@@ -14,11 +14,11 @@ from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
 from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
+from shgp.robustness.linalg import robust_cholesky
 
 tf.config.run_functions_eagerly(True)
 
 
-# TODO: Future work might consider superior methods for iterative optimisation of c_i.
 class PGPR(GPModel, InternalDataTrainingLossMixin):
     """
         Collapsed implementation of Polya-Gamma GPR, based on the heteroscedastic
@@ -101,8 +101,8 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         err = Y_data - self.mean_function(X_data)
         Kdiag = self.kernel(X_data, full_cov=False)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        L = tf.linalg.cholesky(kuu)
+        kuu = Kuu(self.inducing_variable, self.kernel)
+        L = robust_cholesky(kuu)
         theta = tf.transpose(self.likelihood.compute_theta())
         theta_sqrt = tf.sqrt(theta)
         theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
@@ -123,193 +123,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         bound -= num_data * np.log(2)
         bound -= self.likelihood.kl_term()
 
-        # TODO: This was expected to be constant (with fixed c_i)?
-        #print(self.hgpr_elbo() - bound, self.hgpr_elbo_difference())
-
-        # # TODO: remove - Temporary code investigating rank-1 ELBO difference bounds
-        # ###########
-        # Y = np.round(np.random.randn(len(Y_data)).reshape(-1, 1))
-        # z = np.random.randn(1).reshape(-1, 1)
-        # k = self.kernel(z, z)
-        # kuu_inv = tf.linalg.inv(kuu)
-        # ku = tf.reshape(self.kernel(self.inducing_variable.Z, z), (-1, 1))
-        # c = k - tf.matmul(tf.matmul(ku, kuu_inv, transpose_a=True), ku)
-        # c = tf.math.reciprocal(tf.math.sqrt(c))
-        # kf = tf.reshape(self.kernel(X_data, z), (-1, 1))
-        # b = tf.matmul(tf.matmul(kuf, kuu_inv, transpose_a=True), ku) - kf
-        # b *= c
-        # bbT = tf.matmul(b, b, transpose_b=True)
-        # Qff = tf.matmul(tf.matmul(kuf, kuu_inv, transpose_a=True), kuf)
-        # ###########
-        # theta_mat = tf.squeeze(tf.linalg.diag(theta))
-        # theta_inv_mat = tf.squeeze(tf.linalg.diag(tf.math.reciprocal(theta)))
-        # A = tf.linalg.inv(theta_inv_mat + Qff + bbT)
-        # E = tf.linalg.inv(theta_inv_mat + Qff)
-        # D = tf.matmul(tf.matmul(E, bbT), E)
-        # D /= (1 + tf.matmul(tf.matmul(b, E, transpose_a=True), b))
-        # C = E - D
-        # ###########
-        # # first = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff) + tf.matmul(tf.matmul(bbT, D), bbT) + tf.matmul(tf.matmul(bbT, D), Qff) + tf.matmul(tf.matmul(Qff, D), bbT),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # second = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         tf.matmul(tf.matmul(bbT, E), Qff) + tf.matmul(tf.matmul(Qff, E), bbT) + tf.matmul(tf.matmul(bbT, E), bbT),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # first = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         bbT + tf.matmul(tf.matmul(Qff, D), Qff),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # second = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         tf.matmul(tf.matmul(bbT, C), Qff) + tf.matmul(tf.matmul(Qff, C), bbT) + tf.matmul(tf.matmul(bbT, C), bbT),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # Qff_plus = Qff + bbT
-        # Sigma = kuu + tf.matmul(tf.matmul(kuf, theta_mat), kuf, transpose_b=True)
-        # Sigma_sqrt = tf.linalg.cholesky(Sigma)
-        # s_inv_kuf = tf.linalg.triangular_solve(Sigma_sqrt, kuf)
-        # mid = tf.matmul(tf.matmul(tf.matmul(theta_mat, s_inv_kuf, transpose_b=True), s_inv_kuf), theta_mat)
-        #
-        # # first = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         bbT + tf.matmul(tf.matmul(Qff, E), Qff) + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus) + tf.matmul(tf.matmul(Qff_plus, mid), Qff_plus),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # second = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         tf.matmul(tf.matmul(Qff_plus, theta_mat), Qff_plus),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # first = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         bbT + tf.matmul(tf.matmul(Qff, E), Qff) + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # # second = tf.matmul(
-        # #     tf.matmul(
-        # #         Y,
-        # #         tf.matmul(tf.matmul(Qff_plus, E), Qff_plus),
-        # #         transpose_a=True
-        # #     ),
-        # #     Y)
-        # first = tf.matmul(
-        #     tf.matmul(
-        #         Y,
-        #         bbT + tf.matmul(tf.matmul(Qff_plus, D), Qff_plus),
-        #         transpose_a=True
-        #     ),
-        #     Y)
-        # second = tf.matmul(
-        #     tf.matmul(
-        #         Y,
-        #         tf.matmul(tf.matmul(Qff, E), bbT) + tf.matmul(tf.matmul(bbT, E), Qff) + tf.matmul(tf.matmul(bbT, E), bbT),
-        #         transpose_a=True
-        #     ),
-        #     Y)
-        #
-        # if first - second < 0:
-        #     print(first - second)
-        # ##########
-
         return bound
-
-    # TODO: Remove
-    # For comparison against HGPR
-    # def hgpr_elbo(self) -> tf.Tensor:
-    #     """
-    #     Construct a tensorflow function to compute the bound on the marginal
-    #     likelihood. For a derivation of the terms in here, see *** TODO.
-    #     """
-    #
-    #     # metadata
-    #     X_data, Y_data = self.data
-    #     num_inducing = self.inducing_variable.num_inducing
-    #     num_data = to_default_float(tf.shape(Y_data)[0])
-    #     output_dim = to_default_float(tf.shape(Y_data)[1])
-    #
-    #     # compute initial matrices
-    #     err = Y_data - self.mean_function(X_data)
-    #     Kdiag = self.kernel(X_data, full_cov=False)
-    #     kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-    #     kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-    #     L = tf.linalg.cholesky(kuu)
-    #     theta = tf.transpose(self.likelihood.compute_theta())
-    #     theta_sqrt = tf.sqrt(theta)
-    #
-    #     # compute intermediate matrices
-    #     A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
-    #     AAT = tf.matmul(A, A, transpose_b=True)
-    #     B = AAT + tf.eye(num_inducing, dtype=default_float())
-    #     LB = tf.linalg.cholesky(B)
-    #     A_rsig_err = tf.matmul(A * theta_sqrt, err)
-    #     c = tf.linalg.triangular_solve(LB, A_rsig_err, lower=True)
-    #
-    #     # compute log marginal bound
-    #     bound = -0.5 * num_data * output_dim * np.log(2 * np.pi)
-    #     bound -= output_dim * tf.reduce_sum(tf.math.log(tf.linalg.diag_part(LB)))
-    #     bound -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(tf.math.reciprocal(theta)))
-    #     bound -= 0.5 * tf.reduce_sum(tf.square(err) * tf.transpose(theta))
-    #     bound += 0.5 * tf.reduce_sum(tf.square(c))
-    #     bound -= 0.5 * output_dim * tf.reduce_sum(Kdiag * theta)
-    #     bound += 0.5 * output_dim * tf.reduce_sum(tf.linalg.diag_part(AAT))
-    #
-    #     return bound
-    #
-    # def hgpr_elbo_difference(self):
-    #     """
-    #     The difference between HGPR and PGPR ELBOs.
-    #     """
-    #
-    #     # metadata
-    #     X_data, Y_data = self.data
-    #     output_dim = to_default_float(tf.shape(Y_data)[1])
-    #     num_data = to_default_float(tf.shape(Y_data)[0])
-    #
-    #     # compute initial matrices
-    #     err = Y_data - self.mean_function(X_data)
-    #     kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-    #     kfu = tf.transpose(kuf)
-    #     kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-    #     theta = tf.transpose(self.likelihood.compute_theta())
-    #
-    #     theta_mat = tf.squeeze(tf.linalg.diag(theta))
-    #     sig = kuu + tf.matmul(tf.matmul(kuf, theta_mat), kfu)
-    #     sig_sqrt = tf.linalg.cholesky(sig)
-    #     sig_sqrt_inv_kuf = tf.linalg.triangular_solve(sig_sqrt, kuf)
-    #     mid = tf.matmul(sig_sqrt_inv_kuf, sig_sqrt_inv_kuf, transpose_a=True)
-    #
-    #     term1 = theta_mat
-    #     term2 = tf.matmul(tf.matmul(theta_mat, mid), theta_mat)
-    #     term3 = mid
-    #     total = term1 - term2 + 0.25 * term3
-    #
-    #     # compute log marginal bound
-    #     diff = 0.5 * num_data * np.log(2 * np.pi)
-    #     diff += 0.5 * tf.matmul(tf.matmul(err, total, transpose_a=True), err)
-    #     diff -= 0.5 * output_dim * tf.reduce_sum(tf.math.log(theta))
-    #     diff -= num_data * np.log(2)
-    #     diff -= self.likelihood.kl_term()
-    #
-    #     return diff
 
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         """
@@ -323,9 +137,9 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         # compute initial matrices
         err = Y_data - self.mean_function(X_data)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         kus = Kuf(self.inducing_variable, self.kernel, Xnew)
-        L = tf.linalg.cholesky(kuu)
+        L = robust_cholesky(kuu)
         theta = tf.transpose(self.likelihood.compute_theta())
         theta_sqrt = tf.sqrt(theta)
         theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)
@@ -376,14 +190,14 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
 
         # compute initial matrices
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         theta = tf.transpose(self.likelihood.compute_theta())
 
         # compute intermediate matrices
         err = Y_data - self.mean_function(X_data)
         kuf_theta = kuf * theta
         sig = kuu + tf.matmul(kuf_theta, kuf, transpose_b=True)
-        sig_sqrt = tf.linalg.cholesky(sig)
+        sig_sqrt = robust_cholesky(sig)
         sig_sqrt_inv_kuu = tf.linalg.triangular_solve(sig_sqrt, kuu)
         kuf_err = tf.matmul(kuf, err)
 

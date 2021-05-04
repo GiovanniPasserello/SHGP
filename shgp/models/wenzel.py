@@ -3,7 +3,8 @@ from typing import Optional, Tuple
 import numpy as np
 import tensorflow as tf
 
-from gpflow.config import default_float, default_jitter
+from gpflow.base import Parameter
+from gpflow.config import default_float
 from gpflow.covariances.dispatch import Kuf, Kuu
 from gpflow.inducing_variables import InducingPoints
 from gpflow.kernels import Kernel
@@ -11,11 +12,10 @@ from gpflow.mean_functions import MeanFunction
 from gpflow.models.model import GPModel, MeanAndVariance
 from gpflow.models.training_mixins import InputData, InternalDataTrainingLossMixin, RegressionData
 from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
-from gpflow.utilities import to_default_float
+from gpflow.utilities import to_default_float, triangular
 
 from shgp.likelihoods.polya_gamma import PolyaGammaLikelihood
-from gpflow.base import Parameter
-from gpflow.utilities import triangular
+from shgp.robustness.linalg import robust_cholesky
 
 tf.config.run_functions_eagerly(True)
 
@@ -100,7 +100,7 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
     def elbo(self) -> tf.Tensor:
         """
         Computes a lower bound on the marginal likelihood of the Wenzel GP.
-        This is not an efficient implementation, it is simply for direct comparison.
+        This is not an efficient or stable implementation, it is simply for direct comparison.
         If this were to be used in practice, we would want to compute a Cholesky solution for stability.
         """
 
@@ -116,8 +116,8 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
         K = self.kernel(X_data, full_cov=True)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         kfu = tf.transpose(kuf)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        kuu_inv = tf.linalg.inv(kuu)
+        kuu = Kuu(self.inducing_variable, self.kernel, jitter=1e-9)
+        kuu_inv = tf.linalg.inv(kuu)  # unstable, in practice use Cholesky
         theta = tf.transpose(self.likelihood.compute_theta())
         theta_mat = tf.squeeze(tf.linalg.diag(theta))
         qnn = tf.matmul(tf.matmul(kfu, kuu_inv), kuf)
@@ -151,9 +151,9 @@ class Wenzel(GPModel, InternalDataTrainingLossMixin):
         # compute initial matrices
         err = Y_data - self.mean_function(X_data)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         kus = Kuf(self.inducing_variable, self.kernel, Xnew)
-        L = tf.linalg.cholesky(kuu)
+        L = robust_cholesky(kuu)
         theta = tf.transpose(self.likelihood.compute_theta())
         theta_sqrt = tf.sqrt(theta)
         theta_sqrt_inv = tf.math.reciprocal(theta_sqrt)

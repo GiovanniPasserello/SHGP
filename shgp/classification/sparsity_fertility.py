@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
-from shgp.kernels.ConstrainedSEKernel import ConstrainedSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
 from shgp.models.pgpr import PGPR
 
 np.random.seed(42)
@@ -57,7 +57,7 @@ def standardise_features(data):
 def train_full_model():
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSEKernel(),
+        kernel=ConstrainedSigmoidSEKernel(),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(pgpr.inducing_variable, False)
@@ -72,7 +72,7 @@ def train_full_model():
 def train_reinit_model(initialisation_method, m):
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSEKernel()
+        kernel=ConstrainedSigmoidSEKernel()
     )
     opt = gpflow.optimizers.Scipy()
 

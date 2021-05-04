@@ -5,6 +5,7 @@ import gpflow
 from gpflow.utilities import to_default_float
 from shgp.models.pgpr import PGPR
 from shgp.models.wenzel import Wenzel
+from shgp.robustness.linalg import robust_cholesky
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -74,7 +75,7 @@ def test_optimal_wenzel_is_same_as_pgpr():
 
     pgpr = PGPR((X, Y), kernel=gpflow.kernels.SquaredExponential(), inducing_variable=Z)
     q_mu, q_var = pgpr.compute_qu()
-    q_sqrt = tf.expand_dims(tf.linalg.cholesky(q_var), axis=0)
+    q_sqrt = tf.expand_dims(robust_cholesky(q_var), axis=0)
 
     wenzel = Wenzel(
         (X, Y),

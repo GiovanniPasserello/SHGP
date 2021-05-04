@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import numpy as np
 import tensorflow as tf
 
-from gpflow.config import default_float, default_jitter
+from gpflow.config import default_float
 from gpflow.covariances.dispatch import Kuf, Kuu
 from gpflow.inducing_variables import InducingPoints
 from gpflow.kernels import Kernel
@@ -14,6 +14,7 @@ from gpflow.models.util import data_input_to_tensor, inducingpoint_wrapper
 from gpflow.utilities import to_default_float
 
 from shgp.likelihoods.heteroscedastic import HeteroscedasticLikelihood
+from shgp.robustness.linalg import robust_cholesky
 
 tf.config.run_functions_eagerly(True)
 
@@ -80,8 +81,8 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         err = Y_data - self.mean_function(X_data)
         Kdiag = self.kernel(X_data, full_cov=False)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
-        L = tf.linalg.cholesky(kuu)
+        kuu = Kuu(self.inducing_variable, self.kernel)
+        L = robust_cholesky(kuu)
         lmbda = tf.transpose(self.likelihood.noise_variance(X_data))
         rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
         rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
@@ -124,7 +125,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         # compute initial matrices
         Kdiag = self.kernel(X_data, full_cov=False)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
         I = tf.eye(tf.shape(kuu)[0], dtype=default_float())
         lmbda = tf.transpose(self.likelihood.noise_variance(X_data))
@@ -132,7 +133,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
 
         # compute intermediate matrices
-        L = tf.linalg.cholesky(kuu)
+        L = robust_cholesky(kuu)
         A = tf.linalg.triangular_solve(L, kuf, lower=True)
         A_rsigma = A * rsigma
         AAT = tf.linalg.matmul(A_rsigma, A_rsigma, transpose_b=True)
@@ -175,9 +176,9 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         # compute initial matrices
         err = Y_data - self.mean_function(X_data)
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         kus = Kuf(self.inducing_variable, self.kernel, Xnew)
-        L = tf.linalg.cholesky(kuu)
+        L = robust_cholesky(kuu)
         lmbda = tf.transpose(self.likelihood.noise_variance(X_data))
         rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
         rsigma = tf.sqrt(rlmbda)  # lambda^-1/2
@@ -228,7 +229,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         # compute initial matrices
         kuf = Kuf(self.inducing_variable, self.kernel, X_data)
-        kuu = Kuu(self.inducing_variable, self.kernel, jitter=default_jitter())
+        kuu = Kuu(self.inducing_variable, self.kernel)
         lmbda = tf.transpose(self.likelihood.noise_variance(X_data))
         rlmbda = tf.math.reciprocal(lmbda)  # lambda^-1
 
@@ -237,7 +238,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         kuf_rlmbda = kuf * rlmbda
         kuf_rlmbda_err = tf.matmul(kuf_rlmbda, err)
         sig = kuu + tf.matmul(kuf_rlmbda, kuf, transpose_b=True)
-        sig_sqrt = tf.linalg.cholesky(sig)
+        sig_sqrt = robust_cholesky(sig)
         sig_sqrt_inv_kuu = tf.linalg.triangular_solve(sig_sqrt, kuu)
 
         # compute distribution

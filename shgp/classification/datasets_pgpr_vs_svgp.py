@@ -6,7 +6,7 @@ from datetime import datetime
 from tensorflow import sigmoid
 
 from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
-from shgp.kernels.ConstrainedSEKernel import ConstrainedSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
 from shgp.models.pgpr import PGPR
 
 np.random.seed(0)
@@ -379,7 +379,7 @@ def run_experiment():
     # SVGP #
     ########
     svgp = gpflow.models.SVGP(
-        kernel=ConstrainedSEKernel(),
+        kernel=ConstrainedSigmoidSEKernel(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
         inducing_variable=initial_inducing_inputs.copy()
     )
@@ -401,7 +401,7 @@ def run_experiment():
     # Define model
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSEKernel(),
+        kernel=ConstrainedSigmoidSEKernel(),
         inducing_variable=initial_inducing_inputs.copy()
     )
 

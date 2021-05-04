@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow import sigmoid
 
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
-from shgp.kernels.ConstrainedSEKernel import ConstrainedSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
 from shgp.models.pgpr import PGPR
 
 np.random.seed(0)
@@ -34,7 +34,7 @@ def inducing_demo():
     # h_greedy vs gradient_optim: (118,-120.2989), (200,-120.2996) but gradient_optim is good for very few points
 
     # Naive random selection and optimisations
-    kernel1 = ConstrainedSEKernel()
+    kernel1 = ConstrainedSigmoidSEKernel()
     inducing_idx1 = np.random.choice(np.arange(X.shape[0]), size=num_inducing, replace=False)
     inducing_vars1 = gpflow.inducing_variables.InducingPoints(X[inducing_idx1])
     model1 = PGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1)
@@ -47,7 +47,7 @@ def inducing_demo():
 
     # Greedy variance selection
     threshold = 1e-6
-    kernel2 = ConstrainedSEKernel()
+    kernel2 = ConstrainedSigmoidSEKernel()
     model2 = PGPR((X, Y), kernel=kernel2)
     prev_elbo = model2.elbo()
     iter_limit = 10  # to avoid infinite loops
