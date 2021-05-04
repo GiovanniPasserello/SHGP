@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     # Model definitions
     kernel1 = gpflow.kernels.SquaredExponential(lengthscales=0.5)
-    model1 = gpflow.models.GPR((X,np.zeros_like(X)), kernel=kernel1)
+    model1 = gpflow.models.GPR((X, np.zeros_like(X)), kernel=kernel1)
 
     # Make predictions
     mu1, var1 = np.zeros_like(X_test), np.full_like(X_test, 0.3)

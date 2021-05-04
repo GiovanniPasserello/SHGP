@@ -9,7 +9,6 @@ from gpflow.kernels import Kernel
 from gpflow.likelihoods.base import Likelihood
 from gpflow.models import SGPR
 from gpflow.models.training_mixins import RegressionData
-from tensorflow_probability import distributions
 
 DEFAULT_VARIANCE_LOWER_BOUND = 1e-6
 
@@ -80,31 +79,6 @@ class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
             var += scalar * X ** (degree + 1)
         var += self.bias
         return tf.abs(var)
-
-
-# Example noise model
-class HeteroscedasticGaussian(HeteroscedasticLikelihood):
-    """
-    The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
-    a Gaussian noise model.
-    """
-
-    def __init__(self, center: float = 0.0, variance: float = 1.0, variance_lower_bound: float = DEFAULT_VARIANCE_LOWER_BOUND):
-        """
-        :param center: The center of the Gaussian noise distribution.
-        :param variance: The noise variance of the Gaussian noise distribution; must be greater than ``variance_lower_bound``.
-        :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
-        """
-
-        super().__init__(variance_lower_bound, latent_dim=1, observation_dim=1)
-
-        self.mu = Parameter(center)
-        self.var = Parameter(variance)
-
-    def _noise_variance(self, X):
-        normal = distributions.Normal(self.mu, self.var)
-        centered = (X - self.mu) / tf.sqrt(self.var)
-        return normal.prob(centered)
 
 
 # Example noise model
