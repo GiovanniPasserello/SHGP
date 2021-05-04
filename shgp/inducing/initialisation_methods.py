@@ -96,8 +96,9 @@ def h_greedy_variance(
         # criterion.sum() allows fewer points and works well in larger inducing point constraints (20-100s)
         # di.sum() behaves more sensibly in low inducing point constraints (5-20)
         if np.clip(criterion, 0, None).sum() < threshold:
-            indices = indices[:m+2]
-            warnings.warn("ConditionalVariance: Terminating selection of inducing points early.")
+            index_M = m + 2
+            indices = indices[:index_M]
+            print("Terminating inducing point selection with {}/{} points.".format(index_M, N))
             break
 
     # Z, indices of Z in training_inputs
