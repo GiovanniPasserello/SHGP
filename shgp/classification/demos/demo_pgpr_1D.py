@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow import sigmoid
 
+from shgp.models.pgpr import PGPR
+
 
 # Polya-Gamma uses logit link / sigmoid
 def invlink(f):
@@ -11,15 +13,18 @@ def invlink(f):
 
 def classification_demo():
     # Define model
-    m = gpflow.models.SVGP(
+    m = PGPR(
+        data=(X, Y),
         kernel=gpflow.kernels.Matern52(),
-        likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(m.inducing_variable, False)
 
     # Optimize model
-    gpflow.optimizers.Scipy().minimize(m.training_loss_closure((X, Y)), variables=m.trainable_variables)
+    opt = gpflow.optimizers.Scipy()
+    for _ in range(10):
+        opt.minimize(m.training_loss, variables=m.trainable_variables)
+        m.optimise_ci()
 
     # Take predictions
     X_test_mean, X_test_var = m.predict_f(X_test)
@@ -47,12 +52,7 @@ def classification_demo():
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
 
-    inducing_inputs = m.inducing_variable.Z.variables[0]
-    inducing_outputs, _ = m.predict_f(inducing_inputs)
-    p_inducing_outputs = invlink(inducing_outputs)
-    plt.scatter(inducing_inputs, p_inducing_outputs, c="b", label='ind point', zorder=1000)
-
-    print(m.elbo((X,Y)))
+    print(m.elbo())
 
     # Plot
     plt.ylim((-0.5, 1.5))
@@ -62,8 +62,8 @@ def classification_demo():
 
 if __name__ == '__main__':
     # Load data
-    X = np.genfromtxt("../data/toy/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("../data/toy/classif_1D_Y.csv").reshape(-1, 1)
+    X = np.genfromtxt("../../data/toy/classif_1D_X.csv").reshape(-1, 1)
+    Y = np.genfromtxt("../../data/toy/classif_1D_Y.csv").reshape(-1, 1)
     X_test = np.linspace(0, 6, 200).reshape(-1, 1)
     # Plot params
     plt.rcParams["figure.figsize"] = (8, 4)

@@ -1,7 +1,6 @@
 import gpflow
 import numpy as np
 import tensorflow as tf
-import warnings
 
 from gpflow.models.util import inducingpoint_wrapper
 from typing import Callable, Optional
