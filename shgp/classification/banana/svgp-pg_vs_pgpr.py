@@ -18,8 +18,10 @@ optimisation of both models will converge to the same results.
 
 ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
+These results slightly differ because of the differing amounts of jitter.
+As I added robust_cholesky to pgpr, it only uses jitter if needed and often attains a better ELBO.
 svgp_pg = [-234.8614, -229.7986, -174.8937, -125.2562, -120.9208, -120.2989]
-pgpr    = [-234.8614, -229.7986, -173.8717, -125.2562, -120.9208, -120.2990]
+pgpr    = [-234.8613, -229.7983, -173.5446, -125.2301, -120.8549, -120.2990]
 """
 
 

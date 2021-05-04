@@ -91,7 +91,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         A = tf.linalg.triangular_solve(L, kuf, lower=True) * rsigma
         AAT = tf.matmul(A, A, transpose_b=True)
         B = AAT + tf.eye(num_inducing, dtype=default_float())
-        LB = tf.linalg.cholesky(B)
+        LB = robust_cholesky(B)
         A_rsig_err = tf.matmul(A * rsigma, err)
         c = tf.linalg.triangular_solve(LB, A_rsig_err, lower=True)
 
@@ -137,7 +137,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         A = tf.linalg.triangular_solve(L, kuf, lower=True)
         A_rsigma = A * rsigma
         AAT = tf.linalg.matmul(A_rsigma, A_rsigma, transpose_b=True)
-        LB = tf.linalg.cholesky(I + AAT)
+        LB = robust_cholesky(I + AAT)
 
         # using the trace bound, from Titsias' presentation
         c = tf.reduce_sum(Kdiag) - tf.reduce_sum(tf.square(A))
@@ -157,7 +157,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
 
         # the quadratic term
         err = Y_data - self.mean_function(X_data)
-        LC = tf.linalg.cholesky(I + AAT_corrected)
+        LC = robust_cholesky(I + AAT_corrected)
         v = tf.linalg.triangular_solve(LC, tf.linalg.matmul(A_corrected * corrected_rsigma, err), lower=True)
         quad = -0.5 * tf.reduce_sum(tf.square(err) * tf.transpose(corrected_rlmbda))
         quad += 0.5 * tf.reduce_sum(tf.square(v))
@@ -187,7 +187,7 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
         A = tf.linalg.triangular_solve(L, kuf, lower=True) * rsigma
         AAT = tf.matmul(A, A, transpose_b=True)
         B = AAT + tf.eye(num_inducing, dtype=default_float())
-        LB = tf.linalg.cholesky(B)
+        LB = robust_cholesky(B)
         A_rsig_err = tf.matmul(A * rsigma, err)
         c = tf.linalg.triangular_solve(LB, A_rsig_err)
 

@@ -111,7 +111,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
         AAT = tf.matmul(A, A, transpose_b=True)
         B = AAT + tf.eye(num_inducing, dtype=default_float())
-        LB = tf.linalg.cholesky(B)
+        LB = robust_cholesky(B)
         A_theta_sqrt_inv_err = tf.matmul(A * theta_sqrt_inv, err)
         c = 0.5 * tf.linalg.triangular_solve(LB, A_theta_sqrt_inv_err, lower=True)
 
@@ -148,7 +148,7 @@ class PGPR(GPModel, InternalDataTrainingLossMixin):
         A = tf.linalg.triangular_solve(L, kuf, lower=True) * theta_sqrt
         AAT = tf.matmul(A, A, transpose_b=True)
         B = AAT + tf.eye(num_inducing, dtype=default_float())
-        LB = tf.linalg.cholesky(B)
+        LB = robust_cholesky(B)
         A_theta_sqrt_inv_err = tf.matmul(A * theta_sqrt_inv, err)
         c = 0.5 * tf.linalg.triangular_solve(LB, A_theta_sqrt_inv_err)
 

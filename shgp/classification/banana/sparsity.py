@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
-from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.models.pgpr import PGPR
 
 np.random.seed(42)
@@ -19,46 +19,44 @@ note that we do not compare to SVGP Bernoulli, here - what we care about is the 
 selection (at what point does the ELBO converge). For comparisons against Bernoulli, see other experiments.
 
 Note also that this is a very small-scale problem and so the benefits are less visible. For a more concrete 
-analysis, compare and constrast the results from other dataset.
-
-M = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-results_gv = [-264.66666667 -198.33333333 -145.66666667 -132.33333333 -125.66666667
- -122.         -121.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.        ]
-results_hgv = [-265.66666667 -203.         -145.66666667 -133.33333333 -125.66666667
- -122.33333333 -121.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.
- -120.         -120.         -120.         -120.         -120.        ]
-optimal = -120.29952203029663
+analysis, compare and contrast the results from other dataset.
 
 M = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-results_gv = [-265.         -215.         -146.         -131.33333333 -125.33333333
- -122.         -121.         -120.         -120.         -120.        ]
-results_hgv = [-266.         -198.         -146.33333333 -132.66666667 -125.66666667
+results_gv = [-265.         -200.         -145.66666667 -131.33333333 -125.33333333
  -122.33333333 -121.         -120.         -120.         -120.        ]
-optimal = -120.29952203029663
+results_hgv = [-266.         -211.         -145.66666667 -132.33333333 -126.
+ -123.         -121.         -120.         -120.         -120.        ]
+optimal = -120.29951799625849
 """
 
 
 def train_full_model():
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel(),
+        kernel=ConstrainedExpSEKernel(),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(pgpr.inducing_variable, False)
     opt = gpflow.optimizers.Scipy()
-    for _ in range(NUM_LOCAL_ITERS):
-        opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
-        pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
+    try:
+        for _ in range(NUM_LOCAL_ITERS):
+            opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
+            pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
+    except tf.errors.InvalidArgumentError as error:
+        msg = error.message
+        if "Cholesky" not in msg and "invertible" not in msg:
+            raise error
+        else:
+            print("Cholesky error caught, retrying...")
+            return train_full_model()  # we failed due to a spurious Cholesky error, restart
+
     return pgpr.elbo()
 
 
 def train_reinit_model(initialisation_method, m):
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel()
+        kernel=ConstrainedExpSEKernel()
     )
     opt = gpflow.optimizers.Scipy()
 
@@ -96,10 +94,18 @@ def train_reinit_model(initialisation_method, m):
 
 
 def run_experiment(M):
-    elbo_pgpr_gv = train_reinit_model(reinitialise_PGPR, M)
-    print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
-    elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
-    print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
+    try:
+        elbo_pgpr_gv = train_reinit_model(reinitialise_PGPR, M)
+        print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
+        elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
+        print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
+    except tf.errors.InvalidArgumentError as error:
+        msg = error.message
+        if "Cholesky" not in msg and "invertible" not in msg:
+            raise error
+        else:
+            print("Cholesky error caught, retrying...")
+            return run_experiment(M)  # we failed due to a spurious Cholesky error, restart
     return elbo_pgpr_gv, elbo_pgpr_hgv
 
 
@@ -131,9 +137,9 @@ if __name__ == '__main__':
     Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
 
     # Test different numbers of inducing points
-    M = np.arange(5, 51, 5)  # np.arange(5, 101, 5)
+    M = np.arange(5, 51, 5)
 
-    NUM_CYCLES = 3
+    NUM_CYCLES = 5
     NUM_LOCAL_ITERS = 10
     NUM_OPT_ITERS = 250
     NUM_CI_ITERS = 10
@@ -141,8 +147,8 @@ if __name__ == '__main__':
     ################################################
     # PGPR with Different Reinitialisation Methods #
     ################################################
-    results_gv = np.zeros_like(M)
-    results_hgv = np.zeros_like(M)
+    results_gv = np.zeros_like(M, dtype=float)
+    results_hgv = np.zeros_like(M, dtype=float)
     for c in range(NUM_CYCLES):  # run 3 times and take an average
         print("Beginning cycle {}...".format(c + 1))
         for i, m in enumerate(M):
