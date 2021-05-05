@@ -4,12 +4,13 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
-from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.models.pgpr import PGPR
 
 np.random.seed(0)
 tf.random.set_seed(0)
 
+# TODO: Move duplicate sparsity experiments to a common file
 
 """
 A comparison of PGPR with two different inducing point initialisation procedures. Here we investigate
@@ -18,6 +19,7 @@ which is afforded to us by the use of greedy variance / heteroscedastic greedy v
 note that we do not compare to SVGP Bernoulli, here - what we care about is the sparsity of inducing point 
 selection (at what point does the ELBO converge). For comparisons against Bernoulli, see other experiments.
 
+Average over 3 runs with Sigmoid kernel:
 M = np.arange(5, 101, 5)
 results_gv = [-217.88657076  -96.73570866  -87.8114045   -82.66026768  -79.86418064
   -78.34576833  -77.62225389  -77.01309174  -76.54907791  -76.2119282
@@ -28,6 +30,17 @@ results_hgv = [-213.54499313  -98.33300655  -86.97868378  -82.22728811  -79.0035
   -75.7657115   -75.69325919  -75.60631159  -75.53840403  -75.51047344
   -75.4812239   -75.45382388  -75.43568348  -75.42589175  -75.40969307]
 optimal = -75.52529596850775
+
+Average over 5 runs with Exp kernel:
+results_gv = [-130.22956909  -98.45589806  -86.72260874  -80.46782369  -76.716973
+  -75.55670327  -75.31185702  -75.10336947  -74.97549006  -74.90682751
+  -74.84245045  -74.80137592  -74.76943013  -74.75166719  -74.72767932
+  -74.7136058   -74.70275634  -74.69287453  -74.6853426   -74.67759243]
+results_hgv = [-139.56282149  -99.58917371  -86.86939456  -80.67553816  -76.16629887
+  -75.40867314  -75.11433029  -74.95148554  -74.87154145  -74.79757262
+  -74.7759053   -74.74274939  -74.73493773  -74.71050661  -74.69445391
+  -74.68535592  -74.6780934   -74.67292411  -74.66851262  -74.66450918]
+optimal = -75.029016277001
 """
 
 
@@ -50,14 +63,23 @@ def standardise_features(data):
 def train_full_model():
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel(max_lengthscale=1000.0, max_variance=1000.0),
+        kernel=ConstrainedExpSEKernel(),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(pgpr.inducing_variable, False)
     opt = gpflow.optimizers.Scipy()
-    for _ in range(NUM_LOCAL_ITERS):
-        opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
-        pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
+    try:
+        for _ in range(NUM_LOCAL_ITERS):
+            opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
+            pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
+    except tf.errors.InvalidArgumentError as error:
+        msg = error.message
+        if "Cholesky" not in msg and "invertible" not in msg:
+            raise error
+        else:
+            print("Cholesky error caught, retrying...")
+            return train_full_model()  # we failed due to a spurious Cholesky error, restart
+
     return pgpr.elbo()
 
 
@@ -65,7 +87,7 @@ def train_full_model():
 def train_reinit_model(initialisation_method, m):
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel(max_lengthscale=1000.0, max_variance=1000.0)
+        kernel=ConstrainedExpSEKernel()
     )
     opt = gpflow.optimizers.Scipy()
 
@@ -108,12 +130,14 @@ def run_experiment(M):
         print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
         elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
         print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
-        return elbo_pgpr_gv, elbo_pgpr_hgv
-    except Exception:
-        # The exception is due to a rare/random inversion error.
-        # We want to keep retrying until it succeeds.
-        print("Exception caught, retrying!")
-        return run_experiment(M)
+    except tf.errors.InvalidArgumentError as error:
+        msg = error.message
+        if "Cholesky" not in msg and "invertible" not in msg:
+            raise error
+        else:
+            print("Cholesky error caught, retrying...")
+            return run_experiment(M)  # we failed due to a spurious Cholesky error, restart
+    return elbo_pgpr_gv, elbo_pgpr_hgv
 
 
 def plot_results(M, results, optimal):
@@ -147,7 +171,7 @@ if __name__ == '__main__':
     # Test different numbers of inducing points
     M = np.arange(5, 101, 5)
 
-    NUM_CYCLES = 3
+    NUM_CYCLES = 5
     NUM_LOCAL_ITERS = 10
     NUM_OPT_ITERS = 100
     NUM_CI_ITERS = 10
