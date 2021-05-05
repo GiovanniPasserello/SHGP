@@ -97,8 +97,8 @@ def model_comparison():
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../data/toy/banana_Y.csv").reshape(-1, 1)
+    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
+    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
     mask = Y[:, 0] == 1
     # Test data
     NUM_TEST_INDICES = 40

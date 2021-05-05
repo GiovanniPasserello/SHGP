@@ -140,7 +140,7 @@ def plot_results(M, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = "../data/fertility.txt"
+    dataset = "../../data/fertility.txt"
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]  # TODO: Standardise?
     Y = data[:, -1].reshape(-1, 1)

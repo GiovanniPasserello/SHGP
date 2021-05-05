@@ -44,7 +44,7 @@ def standardise_features(data):
 
 def load_fertility():
     # https://archive.ics.uci.edu/ml/datasets/Fertility
-    dataset = "../data/fertility.txt"
+    dataset = "../../data/fertility.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -70,14 +70,14 @@ def load_fertility():
 
 def load_crabs():
     # https://datarepository.wolframcloud.com/resources/Sample-Data-Crab-Measures
-    dataset = "../data/crabs.csv"
+    dataset = "../../data/crabs.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, 1:]
     X = np.delete(X, 1, axis=1)  # remove a column of indices (6 dimensions)
     Y = data[:, 0].reshape(-1, 1)
 
-    # TODO: Sparisity experiment?
+    # TODO: Sparsity experiment?
     # Interesting that Bernoulli GO has a significantly worse ELBO than PGPR. With
     # an unconstrained kernel Bernoulli GO gets -43.075003 and 1.00 accuracy, which
     # is still a lower ELBO than PGPR - why is this?
@@ -98,7 +98,7 @@ def load_crabs():
 
 def load_heart():
     # https://www.openml.org/d/53
-    dataset = "../data/heart.csv"
+    dataset = "../../data/heart.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, :-1]
@@ -116,7 +116,7 @@ def load_heart():
 
 def load_ionosphere():
     # https://archive.ics.uci.edu/ml/datasets/ionosphere
-    dataset = "../data/ionosphere.txt"
+    dataset = "../../data/ionosphere.txt"
 
     # TODO: Sparisity experiment?
     data = np.loadtxt(dataset, delimiter=",")
@@ -137,7 +137,7 @@ def load_ionosphere():
 
 def load_breast_cancer():
     # https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29
-    dataset = "../data/breast-cancer-diagnostic.txt"
+    dataset = "../../data/breast-cancer-diagnostic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, 2:]
@@ -189,7 +189,7 @@ def load_breast_cancer():
 
 def load_pima():
     # http://networkrepository.com/pima-indians-diabetes.php
-    dataset = "../data/pima-diabetes.csv"
+    dataset = "../../data/pima-diabetes.csv"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -216,7 +216,7 @@ def load_pima():
 
 def load_twonorm():
     # https://www.openml.org/d/1507
-    dataset = "../data/twonorm.csv"
+    dataset = "../../data/twonorm.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]
@@ -259,7 +259,7 @@ def load_twonorm():
 
 def load_ringnorm():
     # https://www.openml.org/d/1496
-    dataset = "../data/ringnorm.csv"
+    dataset = "../../data/ringnorm.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]
@@ -300,7 +300,7 @@ def load_ringnorm():
 
 def load_magic():
     # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
-    dataset = "../data/magic.txt"
+    dataset = "../../data/magic.txt"
 
     data = np.loadtxt(dataset, delimiter=",")
     X = data[:, :-1]
@@ -329,7 +329,7 @@ def load_magic():
 
 def load_electricity():
     # https://datahub.io/machine-learning/electricity
-    dataset = "../data/electricity.csv"
+    dataset = "../../data/electricity.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
     X = data[:, :-1]
@@ -401,7 +401,7 @@ def run_experiment():
     # Define model
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel(),
+        kernel=ConstrainedSigmoidSEKernel(),  # TODO: Change to Exp
         inducing_variable=initial_inducing_inputs.copy()
     )
 
@@ -437,7 +437,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_twonorm()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_fertility()
     X = standardise_features(X)
 
     run_experiment()
