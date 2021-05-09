@@ -4,7 +4,7 @@ import numpy as np
 
 from shgp.models.pgpr import PGPR
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 INDUCING_INTERVAL = 1
 

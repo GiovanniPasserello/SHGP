@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from shgp.models.pgpr import PGPR
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 
 def classification_demo():

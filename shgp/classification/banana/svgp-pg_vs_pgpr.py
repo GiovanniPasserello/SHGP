@@ -6,7 +6,7 @@ import tensorflow as tf
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.models.pgpr import PGPR
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 np.random.seed(42)
 tf.random.set_seed(42)

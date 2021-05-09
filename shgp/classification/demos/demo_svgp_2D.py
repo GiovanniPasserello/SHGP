@@ -4,7 +4,7 @@ import numpy as np
 
 from tensorflow import sigmoid
 
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 
 def classification_demo():

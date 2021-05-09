@@ -1,6 +1,8 @@
 from typing import List, Optional
 
 import numpy as np
+import os
+import re
 
 from shgp.data.utils import standardise_features
 
@@ -26,7 +28,8 @@ class Dataset:
         x_delete_columns: Optional[List[int]] = None
     ):
         self.name = name
-        self.path = './datasets/{}'.format(filename)
+        absolute_path = re.findall('.*/shgp/', os.getcwd())[0]
+        self.path = absolute_path + 'data/datasets/{}'.format(filename)
         self.delimiter = delimiter
         self.skiprows = skiprows
         self.x_slice = x_slice

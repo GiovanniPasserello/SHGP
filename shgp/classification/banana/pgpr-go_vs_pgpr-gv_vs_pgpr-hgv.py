@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from shgp.inducing.initialisation_methods import uniform_subsample, reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 np.random.seed(42)
 tf.random.set_seed(42)

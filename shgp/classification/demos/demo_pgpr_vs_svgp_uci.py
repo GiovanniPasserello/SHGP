@@ -8,7 +8,7 @@ from tensorflow import sigmoid
 from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
 from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
-from shgp.utilities.utils import invlink
+from shgp.utilities.general import invlink
 
 
 np.random.seed(0)

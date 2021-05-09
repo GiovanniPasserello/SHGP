@@ -1,11 +1,11 @@
-import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import FertilityDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
-from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
-from shgp.models.pgpr import PGPR
+from shgp.utilities.train_pgpr import train_pgpr
+
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -56,99 +56,11 @@ optimal = -39.35464385423624
 """
 
 
-# TODO: Move to utilities
-def standardise_features(data):
-    """
-    Standardise all features to 0 mean and unit variance.
-
-    :param: data - the input data.
-    :return: the normalised data.
-    """
-    data_means = data.mean(axis=0)  # mean value per feature
-    data_stds = data.std(axis=0)  # standard deviation per feature
-
-    # standardise each feature
-    return (data - data_means) / data_stds
-
-
-# TODO: Move to train utilities
-def train_full_model():
-    pgpr = PGPR(
-        data=(X, Y),
-        kernel=ConstrainedExpSEKernel(),
-        inducing_variable=X.copy()
-    )
-    gpflow.set_trainable(pgpr.inducing_variable, False)
-    opt = gpflow.optimizers.Scipy()
-    try:
-        for _ in range(NUM_LOCAL_ITERS):
-            opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
-            pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
-    except tf.errors.InvalidArgumentError as error:
-        msg = error.message
-        if "Cholesky" not in msg and "invertible" not in msg:
-            raise error
-        else:
-            print("Cholesky error caught, retrying...")
-            return train_full_model()  # we failed due to a spurious Cholesky error, restart
-
-    return pgpr.elbo()
-
-
-# TODO: Move to train utilities
-def train_reinit_model(initialisation_method, m):
-    pgpr = PGPR(
-        data=(X, Y),
-        kernel=ConstrainedExpSEKernel()
-    )
-    opt = gpflow.optimizers.Scipy()
-
-    if m == len(Y):  # if we use full dataset, don't use inducing point selection
-        gpflow.set_trainable(pgpr.inducing_variable, False)
-
-        # Optimize model
-        for _ in range(NUM_LOCAL_ITERS):
-            opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
-            pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
-
-        return pgpr.elbo()
-    else:
-        prev_elbo = pgpr.elbo()
-        iter_limit = 10
-        elbos = []
-        while True:
-            # Reinitialise inducing points
-            initialisation_method(pgpr, X, m)
-
-            # Optimize model
-            for _ in range(NUM_LOCAL_ITERS):
-                opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables, options=dict(maxiter=NUM_OPT_ITERS))
-                pgpr.optimise_ci(num_iters=NUM_CI_ITERS)
-
-            # Check convergence
-            next_elbo = pgpr.elbo()
-            elbos.append(next_elbo)
-            if np.abs(next_elbo - prev_elbo) <= 1e-3 or iter_limit == 0:
-                break
-            prev_elbo = next_elbo
-            iter_limit -= 1
-
-        return np.max(elbos)
-
-
-def run_experiment(M):
-    try:
-        elbo_pgpr_gv = train_reinit_model(reinitialise_PGPR, M)
-        print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
-        elbo_pgpr_hgv = train_reinit_model(h_reinitialise_PGPR, M)
-        print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
-    except tf.errors.InvalidArgumentError as error:
-        msg = error.message
-        if "Cholesky" not in msg and "invertible" not in msg:
-            raise error
-        else:
-            print("Cholesky error caught, retrying...")
-            return run_experiment(M)  # we failed due to a spurious Cholesky error, restart
+def run_experiment(M, inner_iters=10, opt_iters=250, ci_iters=10):
+    elbo_pgpr_gv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method=reinitialise_PGPR, M=M)
+    print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
+    elbo_pgpr_hgv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method=h_reinitialise_PGPR, M=M)
+    print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
     return elbo_pgpr_gv, elbo_pgpr_hgv
 
 
@@ -156,6 +68,7 @@ def plot_results(M, results, optimal):
     plt.rcParams["figure.figsize"] = (12, 6)
     plt.tick_params(labelright=True)
 
+    # TODO: Abstract, and add template for dataset name
     # Axis labels
     plt.title('Comparison of Inducing Point Methods - Fertility Dataset')
     plt.ylabel('ELBO')
@@ -175,25 +88,20 @@ def plot_results(M, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = "../../data/fertility.txt"
-    data = np.loadtxt(dataset, delimiter=",")
-    X = standardise_features(data[:, :-1])
-    Y = data[:, -1].reshape(-1, 1)
+    # TODO: Add SparsityMetaDataset class to abstract away training params and M array
+    X, Y = FertilityDataset().load_data()
 
     # Test different numbers of inducing points
     M = np.arange(1, 31)
 
     NUM_CYCLES = 10
-    NUM_LOCAL_ITERS = 10
-    NUM_OPT_ITERS = 250
-    NUM_CI_ITERS = 10
 
     ################################################
     # PGPR with Different Reinitialisation Methods #
     ################################################
     results_gv = np.zeros_like(M, dtype=float)
     results_hgv = np.zeros_like(M, dtype=float)
-    for c in range(NUM_CYCLES):  # run 3 times and take an average
+    for c in range(NUM_CYCLES):  # run NUM_CYCLES times and take an average
         print("Beginning cycle {}...".format(c + 1))
         for i, m in enumerate(M):
             print("Beginning training for", m, "inducing points...")
@@ -208,7 +116,7 @@ if __name__ == '__main__':
     ##############################################
     # PGPR with Full Inducing Points ('Optimal') #
     ##############################################
-    elbo_pgpr = train_full_model()
+    elbo_pgpr = train_pgpr(X, Y, 10, 250, 10)
     print("pgpr trained: ELBO = {}".format(elbo_pgpr))
     optimal = np.full(len(results), elbo_pgpr)
 
