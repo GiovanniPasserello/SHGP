@@ -2,11 +2,11 @@ import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
 
+from tensorflow import sigmoid
+
 from shgp.models.pgpr import PGPR
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
-
-INDUCING_INTERVAL = 1
 
 
 def model_comparison():
@@ -14,6 +14,10 @@ def model_comparison():
     # Model Optimisation #
     ######################
 
+    # To test uniform sparsity
+    INDUCING_INTERVAL = 5
+
+    # TODO: This comparison of Bernoulli vs PG is worth showing in `Evaluation'.
     # SVGP (choose Bernoulli or PG likelihood for comparison)
     # likelihood = gpflow.likelihoods.Bernoulli(invlink=sigmoid)
     likelihood = PolyaGammaBernoulli()

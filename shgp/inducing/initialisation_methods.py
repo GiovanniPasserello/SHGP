@@ -7,6 +7,9 @@ from typing import Callable, Optional
 
 from shgp.models.pgpr import PGPR
 
+# TODO: Add KMeans initialiations
+#       Then add sparsity test: GV vs. HGV vs. (non-grad-optim) US vs. (non-grad-optim) KM.
+
 
 def uniform_subsample(training_inputs: np.ndarray, M: int):
     """

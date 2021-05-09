@@ -4,10 +4,6 @@ from gpflow import Parameter
 from gpflow.kernels import SquaredExponential
 from gpflow.utilities import to_default_float
 
-# TODO: Experiments should ensure that both SVGP and SGPR use a constrained kernel
-#       Mention this constraint in the report.
-# TODO: Experiments should use Exp kernel if possible
-
 
 class ConstrainedExpSEKernel(SquaredExponential):
     """"

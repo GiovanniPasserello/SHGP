@@ -2,6 +2,7 @@ import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
 
+from shgp.data.utils import generate_polynomial_noise_data
 from shgp.likelihoods.heteroscedastic import HeteroscedasticPolynomial, HeteroscedasticGP
 from shgp.models.hgpr import HGPR
 
@@ -9,22 +10,9 @@ from shgp.models.hgpr import HGPR
 np.random.seed(42)
 
 
-def generate_data(N=120):
-    X = np.random.rand(N)[:, None] * 10 - 5  # Inputs, shape N x 1
-    X = np.sort(X.flatten()).reshape(N, 1)
-    F = 2.5 * np.sin(6 * X) + np.cos(3 * X)  # Mean function values
-    return X, F
-
-
-def generate_polynomial_noise_data(N=120):
-    X, F = generate_data(N)
-    NoiseVar = np.abs(0.25 * X**2 + 0.1 * X)  # Quadratic noise variances
-    Y = F + np.random.randn(N, 1) * np.sqrt(NoiseVar)  # Noisy data
-    return X, Y, NoiseVar
-
-
 if __name__ == "__main__":
-    X, Y, NoiseVar = generate_polynomial_noise_data()
+    NUM_DATA = 120
+    X, Y, NoiseVar = generate_polynomial_noise_data(NUM_DATA)
     X_test = np.linspace(-5, 5, 200)[:, None]
 
     # Inducing points
@@ -32,10 +20,8 @@ if __name__ == "__main__":
     inducing_vars1 = gpflow.inducing_variables.InducingPoints(inducing_locs.copy())
     inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs.copy())
 
-    # Simple heteroscedastic likelihood
+    # Simple heteroscedastic likelihood or more complex GP likelihood (choose either)
     # likelihood = HeteroscedasticPolynomial(degree=2)
-
-    # GP heteroscedastic likelihood
     # Requires knowledge of NoiseVar.
     likelihood_kernel = gpflow.kernels.Matern52()
     likelihood = HeteroscedasticGP((X, NoiseVar), likelihood_kernel, inducing_vars2)

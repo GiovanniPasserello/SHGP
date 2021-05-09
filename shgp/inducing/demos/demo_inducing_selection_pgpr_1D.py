@@ -93,12 +93,14 @@ def inducing_demo():
     # Inducing #
     ############
 
-    # This works as X and Y are sorted, if they aren't make sure to sort them
-    inducing_inputs = model1.inducing_variable.Z.variables[0]
-    inducing_outputs, _ = model1.predict_f(inducing_inputs)
-    p_inducing_outputs = invlink(inducing_outputs)
-    ax1.scatter(inducing_inputs, p_inducing_outputs, c="b", label='ind point', zorder=1000)
-    ax2.scatter(X[inducing_idx2].squeeze(), Y[inducing_idx2].squeeze(), c="b", label='ind point', zorder=1000)
+    # Plot the inducing points on the mean line - only the x-coordinate really matters
+    inducing_inputs1 = model1.inducing_variable.Z.variables[0]
+    inducing_outputs1, _ = model1.predict_f(inducing_inputs1)
+    p_inducing_outputs1 = invlink(inducing_outputs1)
+    inducing_outputs2, _ = model1.predict_f(X[inducing_idx2])
+    p_inducing_outputs2 = invlink(inducing_outputs2)
+    ax1.scatter(inducing_inputs1, p_inducing_outputs1, c="b", label='ind point', zorder=1000)
+    ax2.scatter(X[inducing_idx2].squeeze(), p_inducing_outputs2, c="b", label='ind point', zorder=1000)
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')

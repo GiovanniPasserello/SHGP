@@ -19,7 +19,6 @@ tf.random.set_seed(0)
 # TODO: Experiments - each dataset with 100 inducing points, ACCURACY & ELBO.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 # TODO: Use test sets for evaluation.
-# TODO: Quote and describe these datasets in the report.
 # TODO: Important to note that all SVGP experiments are full-batch.
 #       This doesn't matter as all we care about is ELBO/ACC, not time.
 

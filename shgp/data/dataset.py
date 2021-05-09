@@ -210,6 +210,7 @@ class ElectricityDataset(Dataset):
         )
 
 
+# Test
 if __name__ == '__main__':
     ds = ElectricityDataset()
     X, Y = ds.load_data()

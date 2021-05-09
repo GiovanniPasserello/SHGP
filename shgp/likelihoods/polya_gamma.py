@@ -28,7 +28,7 @@ class PolyaGammaLikelihood(Likelihood):
             )
 
         self.variance_lower_bound = variance_lower_bound
-        self.c_i = tf.reshape(to_default_float(tf.zeros(num_data) + variance), (-1, 1))  # TODO: How to initialise?
+        self.c_i = tf.reshape(to_default_float(tf.zeros(num_data) + variance), (-1, 1))
 
     def noise_variance(self, Fmu, Fvar):
         """

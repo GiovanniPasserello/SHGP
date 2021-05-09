@@ -27,7 +27,7 @@ def classification_demo():
 
     print(m.elbo())
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(9, 12))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
     # Plot data
     ax1.plot(X[mask, 0], X[mask, 1], "oC0", mew=0, alpha=0.5)
@@ -67,7 +67,8 @@ def classification_demo():
     ax1.set_title('PGPR Classification Boundaries')
     ax2.set_title('Polya-Gamma Variance Contours')
 
-    plt.colorbar(cf)
+    # Optional sidebar (yellow is low variance)
+    # plt.colorbar(cf)
     plt.show()
 
 

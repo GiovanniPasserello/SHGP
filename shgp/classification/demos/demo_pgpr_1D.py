@@ -27,14 +27,15 @@ def classification_demo():
     # Plot mean prediction
     plt.plot(X_test, X_test_mean, "C0", lw=1)
 
-    # Plot uncertainty bars
-    plt.fill_between(
-        X_test.flatten(),
-        np.ravel(X_test_mean + 2 * np.sqrt(X_test_var)),
-        np.ravel(X_test_mean - 2 * np.sqrt(X_test_var)),
-        alpha=0.3,
-        color="C0",
-    )
+    # To inspect Polya-Gamma variance at boundaries
+    # from matplotlib import cm
+    # test_c_i = m.likelihood.compute_c_i(X_test_mean, X_test_var)
+    # test_theta = m.likelihood.compute_theta(test_c_i).numpy()
+    # polya_gamma_vars = np.reciprocal(test_theta).flatten()
+    # color_map = cm.hot(polya_gamma_vars / polya_gamma_vars.max())
+    # # Plot linked / 'squashed' predictions
+    # P_test = invlink(X_test_mean)
+    # plt.scatter(X_test, P_test, c=color_map)
 
     # Plot linked / 'squashed' predictions
     P_test = invlink(X_test_mean)
@@ -49,8 +50,10 @@ def classification_demo():
 
     print(m.elbo())
 
-    # Plot
+    plt.title("PGPR 1D Toy Dataset")
     plt.ylim((-0.5, 1.5))
+
+    # Plot
     plt.legend()
     plt.show()
 
