@@ -40,9 +40,7 @@ if __name__ == "__main__":
 
     # Make predictions
     gpr_mu, gpr_var = gpr_model.predict_f(X_test)
-    samples2 = gpr_model.predict_f_samples(X_test, 5)
     ax1.plot(X_test, gpr_mu, "C0", linewidth=3, zorder=101)
-    ax1.plot(X_test, samples2[:, :, 0].numpy().T, "g", alpha=0.8, linewidth=2)
     ax1.plot(X.squeeze(), Y.squeeze(), "kx", zorder=1000, markersize=10, linewidth=3)
     ax1.fill_between(
         X_test.flatten(),
@@ -71,9 +69,7 @@ if __name__ == "__main__":
 
     # Make predictions
     sgpr_mu, sgpr_var = sgpr_model.predict_f(X_test)
-    samples2 = sgpr_model.predict_f_samples(X_test, 5)
     ax2.plot(X_test, sgpr_mu, "C0", linewidth=3, zorder=101)
-    ax2.plot(X_test, samples2[:, :, 0].numpy().T, "g", alpha=0.8, linewidth=2)
     ax2.plot(X.squeeze(), Y.squeeze(), "kx", zorder=1000, markersize=10, linewidth=3)
     ax2.fill_between(
         X_test.flatten(),
