@@ -53,13 +53,13 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, oute
     # Try to run the full optimisation cycle.
     try:
         if M is None or M == len(X):
-            _train_full_pgpr(model, inner_iters, opt_iters, ci_iters)
+            return _train_full_pgpr(model, inner_iters, opt_iters, ci_iters)
         else:
             assert init_method is not None, "initialisation_method must not be None, if M < N."
             if 'reinitialise' not in init_method.__name__:
-                _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M)
+                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M)
             else:
-                _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters, X)
+                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters, X)
     # If we fail due to a (spurious) Cholesky error, restart.
     except tf.errors.InvalidArgumentError as error:
         msg = error.message
@@ -68,8 +68,6 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, oute
         else:
             print("Cholesky error caught, retrying...")
             return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters)
-
-    return model.elbo()
 
 
 def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
@@ -80,6 +78,8 @@ def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
     for _ in range(inner_iters):
         opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
         model.optimise_ci(num_iters=ci_iters)
+
+    return model.elbo()
 
 
 def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M):
@@ -96,6 +96,8 @@ def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M):
     for _ in range(inner_iters):
         opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
         model.optimise_ci(num_iters=ci_iters)
+
+    return model.elbo()
 
 
 def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, reinit_method, M, outer_iters, X):
@@ -127,4 +129,4 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, reinit_me
         prev_elbo = next_elbo
         outer_iters -= 1
 
-    return np.max(elbos)
+    return np.max(elbos)  # return the highest ELBO
