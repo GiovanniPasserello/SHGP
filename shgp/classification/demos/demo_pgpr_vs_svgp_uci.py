@@ -6,8 +6,10 @@ from datetime import datetime
 from tensorflow import sigmoid
 
 from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
-from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
 from shgp.models.pgpr import PGPR
+from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
+from shgp.utilities.utils import invlink
+
 
 np.random.seed(0)
 tf.random.set_seed(0)
@@ -20,12 +22,6 @@ tf.random.set_seed(0)
 # TODO: Quote and describe these datasets in the report.
 # TODO: Important to note that all SVGP experiments are full-batch.
 #       This doesn't matter as all we care about is ELBO/ACC, not time.
-
-
-# TODO: Move to utils
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def standardise_features(data):

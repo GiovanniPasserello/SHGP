@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import sigmoid
-
 from shgp.inducing.initialisation_methods import uniform_subsample, reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
+from shgp.utilities.utils import invlink
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -42,12 +41,6 @@ pgpr_go  = [-226.0541, -154.0237, -128.1117, -120.5023, -120.2991, -120.2990]
 pgpr_gv  = [-270.2286, -260.6265, -146.7757, -122.9001, -120.3033, -120.2990]
 pgpr_hgv = [-271.8792, -261.2195, -142.4490, -122.4783, -120.3020, -120.2990]
 """
-
-
-# TODO: Move to utils
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def run_experiment(M):

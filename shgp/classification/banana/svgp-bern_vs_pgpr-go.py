@@ -7,6 +7,7 @@ from tensorflow import sigmoid
 
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.models.pgpr import PGPR
+from shgp.utilities.utils import invlink
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -20,12 +21,6 @@ ELBO results for M = [4, 8, 16, 32, 64, 400]:
 svgp_bern = [-222.2855, -139.3380, -112.7833, -106.8041, -106.5783, -106.5766]
 pgpr_go   = [-226.0541, -154.0237, -128.1117, -120.5023, -120.2991, -120.2990]
 """
-
-
-# TODO: Move to utils
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def run_experiment(M):

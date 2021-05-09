@@ -1,12 +1,10 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
+
 from tensorflow import sigmoid
 
-
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
+from shgp.utilities.utils import invlink
 
 
 def classification_demo():

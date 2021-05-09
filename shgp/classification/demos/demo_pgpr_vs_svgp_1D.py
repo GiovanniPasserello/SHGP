@@ -1,17 +1,12 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorflow import sigmoid
 
 from shgp.models.pgpr import PGPR
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
+from shgp.utilities.utils import invlink
 
 INDUCING_INTERVAL = 1
-
-
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def model_comparison():

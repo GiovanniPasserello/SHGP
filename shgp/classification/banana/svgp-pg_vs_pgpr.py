@@ -3,11 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import sigmoid
-
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.models.pgpr import PGPR
+from shgp.utilities.utils import invlink
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -23,12 +22,6 @@ As I added robust_cholesky to pgpr, it only uses jitter if needed and often atta
 svgp_pg = [-234.8614, -229.7986, -174.8937, -125.2562, -120.9208, -120.2989]
 pgpr    = [-234.8613, -229.7983, -173.5446, -125.2301, -120.8549, -120.2990]
 """
-
-
-# TODO: Move to utils
-# Polya-Gamma uses logit link / sigmoid
-def invlink(f):
-    return gpflow.likelihoods.Bernoulli(invlink=sigmoid).invlink(f).numpy()
 
 
 def run_experiment(M):
