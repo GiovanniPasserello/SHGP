@@ -9,3 +9,7 @@ SHGP is a GPflow-based software package for Sparse Heteroscedastic Gaussian Proc
 * An implementation of a novel heteroscedastic inducing point selection method for both Gaussian process regression and classification. The method is a heteroscedastic extension of [Burt et al. 2020], but its application to classification is entirely novel and is made possible by our collapsed model.
 * A robust procedure for stable Cholesky decompositions with dynamic jitter selection.
 * Multiple demonstrations and experiments which investigate the benefits of the above contributions. In particular, we show that our collapsed Gaussian process classification model paired with our inducing point selection method permits much sparser models than alternative schemes. We also show that the selection method allows the number of inducing points required for a sufficiently accurate approximation to be automatically determined by the model.
+
+### License
+
+This project is licensed under the MIT License - see [LICENSE](https://github.com/GiovanniPasserello/SHGP/blob/main/LICENSE) for details.
