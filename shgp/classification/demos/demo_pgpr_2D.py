@@ -1,9 +1,13 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
+
+np.random.seed(0)
+tf.random.set_seed(0)
 
 
 def classification_demo():

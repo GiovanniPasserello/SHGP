@@ -5,61 +5,52 @@ import tensorflow as tf
 
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
-from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
 
-np.random.seed(42)
-tf.random.set_seed(42)
+np.random.seed(0)
+tf.random.set_seed(0)
 
 """
-A comparison of SVGP with a Polya Gamma likelihood and PGPR. The inducing points are fixed, but gradient-based
-optimisation of both models will converge to the same results.
+A comparison of SVGP with a Polya Gamma likelihood and PGPR. The inducing points are uniformly subsampled 
+and then optimised using gradient-based optimisation. Both models converge to the same result.
 
 ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
-These results slightly differ because of the differing amounts of jitter.
-As I added robust_cholesky to pgpr, it only uses jitter if needed and often attains a better ELBO.
-svgp_pg = [-234.8614, -229.7986, -174.8937, -125.2562, -120.9208, -120.2989]
-pgpr    = [-234.8613, -229.7983, -173.5446, -125.2301, -120.8549, -120.2990]
+svgp_pg and pgpr may slightly differ due to different amounts of jitter.
+PGPR uses robust_cholesky() with dynamic jitter, whereas SVGP uses fixed jitter.
+svgp_pg = [-218.8079, -154.0238, -128.1115, -120.5025, -120.2992, -120.2989]
+pgpr    = [-218.8079, -154.0237, -128.1116, -120.5023, -120.2990, -120.2990]
 """
 
 
 def run_experiment(M):
-    initial_inducing_inputs, _ = uniform_subsample(X, M)
-
-    ################
-    # Optimisation #
-    ################
-
-    #############################
-    # SVGP PG likelihood #
-    #############################
-    svgp_pg = gpflow.models.SVGP(
-        kernel=gpflow.kernels.SquaredExponential(),
-        likelihood=PolyaGammaBernoulli(),
-        inducing_variable=initial_inducing_inputs.copy()
-    )
-    gpflow.set_trainable(svgp_pg.inducing_variable, False)
-    gpflow.optimizers.Scipy().minimize(
-        svgp_pg.training_loss_closure((X, Y)),
-        variables=svgp_pg.trainable_variables
-    )
-    print("svgp_pg trained: ELBO = {}".format(svgp_pg.elbo((X, Y))))
-
     ########
     # PGPR #
     ########
-    pgpr = PGPR(
-        data=(X, Y),
+
+    pgpr, pgpr_elbo = train_pgpr(
+        X, Y,
+        20, 1000, 20,
         kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=initial_inducing_inputs.copy()
+        M=M,
+        init_method=uniform_subsample,
+        optimise_Z=True
     )
-    gpflow.set_trainable(pgpr.inducing_variable, False)
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(20):
-        opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables)
-        pgpr.optimise_ci(num_iters=20)
-    print("pgpr trained: ELBO = {}".format(pgpr.elbo()))
+    print("pgpr trained: ELBO = {:.6f}".format(pgpr_elbo))
+
+    ###########
+    # SVGP PG #
+    ###########
+
+    svgp_pg = gpflow.models.SVGP(
+        kernel=gpflow.kernels.SquaredExponential(),
+        likelihood=PolyaGammaBernoulli(),
+        inducing_variable=pgpr.inducing_variable.Z  # initialise Z to pgpr's optimised result
+    )
+    gpflow.set_trainable(svgp_pg.inducing_variable, False)  # fix Z for a direct comparison
+    gpflow.optimizers.Scipy().minimize(svgp_pg.training_loss_closure((X, Y)), variables=svgp_pg.trainable_variables)
+    print("svgp_pg trained: ELBO = {:.6f}".format(svgp_pg.elbo((X, Y))))
 
     ##############
     # Prediction #
@@ -69,7 +60,7 @@ def run_experiment(M):
     X_test_mean_svgp_pg, _ = svgp_pg.predict_f(X_test)
     P_test_svgp_pg = invlink(X_test_mean_svgp_pg)
 
-    # Take predictions from PGPR HGV
+    # Take predictions from PGPR
     X_test_mean_pgpr, _ = pgpr.predict_f(X_test)
     P_test_pgpr = invlink(X_test_mean_pgpr)
 

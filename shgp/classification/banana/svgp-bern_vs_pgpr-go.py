@@ -9,17 +9,18 @@ from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
 
-np.random.seed(42)
-tf.random.set_seed(42)
+np.random.seed(0)
+tf.random.set_seed(0)
 
 """
 A comparison of SVGP with a Bernoulli likelihood and PGPR. The inducing points of both models 
 are uniformly subsampled and then optimised using gradient-based optimisation.
+The results for M=4 are highly dependent on the random seed used - this result isn't representative.
 
 ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
-svgp_bern = [-222.2855, -139.3380, -112.7833, -106.8041, -106.5783, -106.5766]
-pgpr_go   = [-226.0541, -154.0237, -128.1117, -120.5023, -120.2991, -120.2990]
+svgp_bern = [-222.2735, -139.3382, -112.6421, -106.7603, -106.5780, -106.5769]
+pgpr_go   = [-218.8078, -154.0237, -128.1116, -120.5023, -120.2990, -120.2990]
 """
 
 
