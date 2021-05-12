@@ -13,13 +13,18 @@ from shgp.models.hgpr import HGPR
 np.random.seed(42)
 
 
+"""
+This class effectively implements SHGP/shgp/utilities/train_pgpr, but for HGPR.
+"""
+
+
 if __name__ == "__main__":
     NUM_DATA = 200
     X, Y, NoiseVar = generate_polynomial_noise_data(NUM_DATA)
     xx = np.linspace(-5, 5, 200)[:, None]
     num_inducing = 20
 
-    # Naive random selection and optimisations
+    # Uniform subsampling with gradient-based optimisation
     likelihood1 = HeteroscedasticPolynomial(degree=2)
     kernel1 = gpflow.kernels.SquaredExponential()
     inducing_vars1, induing_idx1 = uniform_subsample(X, num_inducing)
@@ -29,7 +34,7 @@ if __name__ == "__main__":
     _, var1_y = model1.predict_y(xx)
     elbo1 = model1.elbo()
 
-    # Greedy variance selection
+    # Heteroscedastic greedy variance selection
     likelihood2 = HeteroscedasticPolynomial(degree=2)
     kernel2 = gpflow.kernels.SquaredExponential()
     model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=X.copy(), likelihood=likelihood2)
