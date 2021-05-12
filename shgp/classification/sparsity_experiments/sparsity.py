@@ -6,6 +6,7 @@ from shgp.data.metadata_sparsity import MagicSparsityMetaDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.train_pgpr import train_pgpr
 
+# TODO: K-Means and Uniform Subsampling
 
 np.random.seed(42)
 tf.random.set_seed(42)

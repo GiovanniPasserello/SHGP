@@ -85,13 +85,13 @@ def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
 
 def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method):
     """
-    Train a sparse PGPR model with a given fixed initialisation method.
+    Train a sparse PGPR model with a fixed initialisation method.
     For example: uniform_subsample() or kmeans().
     """
     inducing_locs, _ = init_method(model.data[0].numpy(), M)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
-    gpflow.set_trainable(model.inducing_variable, False)
+    gpflow.set_trainable(model.inducing_variable, False)  # no gradient-based optimisation
 
     opt = gpflow.optimizers.Scipy()
     for _ in range(inner_iters):
@@ -114,7 +114,7 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
         # Reinitialise inducing points
         reinit_method(model, M, reinit_metadata.selection_threshold)
 
-        # Optimize model
+        # Optimise model
         for _ in range(inner_iters):
             opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
             model.optimise_ci(num_iters=ci_iters)

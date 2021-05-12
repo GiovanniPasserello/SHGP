@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     # Naive random selection and optimisations
     likelihood1 = HeteroscedasticPolynomial(degree=2)
-    kernel1 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
+    kernel1 = gpflow.kernels.SquaredExponential()
     inducing_vars1, induing_idx1 = uniform_subsample(X, num_inducing)
     model1 = HGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1, likelihood=likelihood1)
     gpflow.optimizers.Scipy().minimize(model1.training_loss, variables=model1.trainable_variables)
@@ -30,27 +30,26 @@ if __name__ == "__main__":
     elbo1 = model1.elbo()
 
     # Greedy variance selection
-    threshold = 1e-6
     likelihood2 = HeteroscedasticPolynomial(degree=2)
-    kernel2 = gpflow.kernels.SquaredExponential(lengthscales=0.2)
-    inducing_locs2, inducing_idx2 = h_greedy_variance(X, likelihood2.noise_variance(X), num_inducing, kernel2, threshold)
-    inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-    model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=inducing_vars2, likelihood=likelihood2)
-    gpflow.set_trainable(model2.inducing_variable, False)
+    kernel2 = gpflow.kernels.SquaredExponential()
+    model2 = HGPR((X, Y), kernel=kernel2, inducing_variable=X.copy(), likelihood=likelihood2)
     prev_elbo = model2.elbo()
     while True:
+        # Reinitialise inducing points
+        inducing_locs2, inducing_idx2 = h_greedy_variance(X, model2.likelihood.noise_variance(X), num_inducing, kernel2)
+        inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
+        model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
+        gpflow.set_trainable(model2.inducing_variable, False)
+
+        # Optimise model
         gpflow.optimizers.Scipy().minimize(model2.training_loss, variables=model2.trainable_variables)
 
+        # Check convergence
         next_elbo = model2.elbo()
         print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
         if np.abs(next_elbo - prev_elbo) <= 1e-6:
             break
         prev_elbo = next_elbo
-
-        inducing_locs2, inducing_idx2 = h_greedy_variance(X, model2.likelihood.noise_variance(X), num_inducing, kernel2, threshold)
-        inducing_vars2 = gpflow.inducing_variables.InducingPoints(inducing_locs2)
-        model2.inducing_variable = inducingpoint_wrapper(inducing_vars2)
-        gpflow.set_trainable(model2.inducing_variable, False)
 
     print("Final number of inducing points:", model2.inducing_variable.num_inducing)
 

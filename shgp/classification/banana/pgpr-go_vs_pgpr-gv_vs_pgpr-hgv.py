@@ -87,7 +87,7 @@ def run_experiment(M):
         iter_limit = 10
         while True:
             # Reinitialise inducing points
-            reinitialise_PGPR(pgpr_gv, X, m)
+            reinitialise_PGPR(pgpr_gv, m)
 
             # Optimize model
             for _ in range(20):
@@ -125,7 +125,7 @@ def run_experiment(M):
         iter_limit = 10
         while True:
             # Reinitialise inducing points
-            h_reinitialise_PGPR(pgpr_hgv, X, m)
+            h_reinitialise_PGPR(pgpr_hgv, m)
 
             # Optimize model
             for _ in range(20):

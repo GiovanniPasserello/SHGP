@@ -19,7 +19,6 @@ class PolyaGammaLikelihood(Likelihood):
         :param variance: The initial variance for each data point
         :param variance_lower_bound: The lower (exclusive) bound of ``variance``.
         """
-
         super().__init__(latent_dim=1, observation_dim=1)
 
         if variance < variance_lower_bound:

@@ -51,13 +51,13 @@ def classification_demo():
         zorder=100,
     )
 
-    # Plot contours of the PG variance.
+    # Plot contours of the PG variance (yellow is low variance).
     # This allows us to inspect how PG variance behaves around boundaries and
     # how this may influence inducing point selection methods.
     test_c_i = m.likelihood.compute_c_i(X_test_mean, X_test_var)
     test_theta = m.likelihood.compute_theta(test_c_i).numpy()
     polya_gamma_vars = np.reciprocal(test_theta)
-    cf = ax2.contourf(
+    _ = ax2.contourf(
         *X_grid,
         polya_gamma_vars.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
         zorder=-100,
@@ -67,8 +67,6 @@ def classification_demo():
     ax1.set_title('PGPR Classification Boundaries')
     ax2.set_title('Polya-Gamma Variance Contours')
 
-    # Optional sidebar (yellow is low variance)
-    # plt.colorbar(cf)
     plt.show()
 
 
