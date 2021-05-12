@@ -106,20 +106,21 @@ def h_greedy_variance(
     return training_inputs[indices], perm[indices]
 
 
-def h_reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0):
+def h_reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0, optimise_Z: bool = False):
     """
     Reinitialise the inducing points of a PGPR model using h_greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
     :param threshold: convergence threshold at which to stop selection of inducing points early.
+    :param optimise_Z: Allow gradient-based optimisation of the inducing inputs.
     """
     X = model.data[0].numpy()
     theta_inv = tf.math.reciprocal(model.likelihood.compute_theta())
     inducing_locs, inducing_idx = h_greedy_variance(X, theta_inv, M, model.kernel, threshold)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
-    gpflow.set_trainable(model.inducing_variable, False)
+    gpflow.set_trainable(model.inducing_variable, optimise_Z)
     return inducing_locs, inducing_idx
 
 
@@ -145,17 +146,18 @@ def greedy_variance(
     return h_greedy_variance(training_inputs, lmbda, M, kernel, threshold)
 
 
-def reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0):
+def reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0, optimise_Z: bool = False):
     """
     Reinitialise the inducing points of a PGPR model using greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
     :param threshold: convergence threshold at which to stop selection of inducing points early.
+    :param optimise_Z: Allow gradient-based optimisation of the inducing inputs.
     """
     X = model.data[0].numpy()
     inducing_locs, inducing_idx = greedy_variance(X, M, model.kernel, threshold)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
-    gpflow.set_trainable(model.inducing_variable, False)
+    gpflow.set_trainable(model.inducing_variable, optimise_Z)
     return inducing_locs, inducing_idx

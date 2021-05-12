@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from gpflow.models.util import inducingpoint_wrapper
+from gpflow.kernels import Kernel
 
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
@@ -18,9 +19,11 @@ def train_pgpr(
     opt_iters: int,
     ci_iters: int,
     *,
+    kernel: Kernel = ConstrainedExpSEKernel(),  # increased stability, with minor performance detriment.
     M: Optional[int] = None,
     init_method: Optional[Callable] = None,
-    reinit_metadata: Optional[ReinitMetaDataset] = None
+    reinit_metadata: Optional[ReinitMetaDataset] = None,
+    optimise_Z: bool = False
 ):
     """
         Train a PGPR model with the following parameters.
@@ -31,22 +34,24 @@ def train_pgpr(
         :param inner_iters: The number of iterations of the inner optimisation loop.
         :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
         :param ci_iters: The number of iterations of update for the local variational parameters.
+        :param kernel: The covariance kernel for the PGPR model.
         :param M: The number of inducing points, if using a sparse model.
         :param init_method: The inducing point initialisation method, if using a sparse model.
         :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
-        :return: float, the final evidence lower bound.
+        :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
+        :return: The final model and best evidence lower bound.
     """
-    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
+    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z)
 
 
-def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata):
+def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z):
     """
     Train a PGPR model until completion.
     If we error, keep retrying until success - this is due to a spurious Cholesky error.
     """
     model = PGPR(
         data=(X, Y),
-        kernel=ConstrainedExpSEKernel(),  # increased stability, with minor performance detriment.
+        kernel=kernel,
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(model.inducing_variable, False)
@@ -58,9 +63,9 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, rein
         else:
             assert init_method is not None, "initialisation_method must not be None, if M < N."
             if reinit_metadata:
-                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
+                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata, optimise_Z)
             else:
-                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method)
+                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, optimise_Z)
     # If we fail due to a (spurious) Cholesky error, restart.
     except tf.errors.InvalidArgumentError as error:
         msg = error.message
@@ -68,7 +73,7 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, rein
             raise error
         else:
             print("Cholesky error caught, retrying...")
-            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
+            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z)
 
 
 def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
@@ -80,10 +85,10 @@ def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
         opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
         model.optimise_ci(num_iters=ci_iters)
 
-    return model.elbo()
+    return model, model.elbo()
 
 
-def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method):
+def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, optimise_Z):
     """
     Train a sparse PGPR model with a fixed initialisation method.
     For example: uniform_subsample() or kmeans().
@@ -91,17 +96,17 @@ def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method):
     inducing_locs, _ = init_method(model.data[0].numpy(), M)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
-    gpflow.set_trainable(model.inducing_variable, False)  # no gradient-based optimisation
+    gpflow.set_trainable(model.inducing_variable, optimise_Z)
 
     opt = gpflow.optimizers.Scipy()
     for _ in range(inner_iters):
         opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
         model.optimise_ci(num_iters=ci_iters)
 
-    return model.elbo()
+    return model, model.elbo()
 
 
-def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit_method, reinit_metadata):
+def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit_method, reinit_metadata, optimise_Z):
     """
     Train a sparse PGPR model with a given reinitialisation method.
     For example: greedy_variance() or h_greedy_variance().
@@ -112,7 +117,7 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
 
     while True:
         # Reinitialise inducing points
-        reinit_method(model, M, reinit_metadata.selection_threshold)
+        reinit_method(model, M, reinit_metadata.selection_threshold, optimise_Z)
 
         # Optimise model
         for _ in range(inner_iters):
@@ -130,4 +135,4 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
         prev_elbo = next_elbo
         outer_iters -= 1
 
-    return np.max(elbos)  # return the highest ELBO
+    return model, np.max(elbos)  # return the highest ELBO

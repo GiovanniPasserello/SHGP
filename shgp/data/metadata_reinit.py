@@ -16,4 +16,4 @@ class ReinitMetaDataset:
         :param selection_threshold: The threshold on the trace term which tells us when we have enough inducing points.
     """
     outer_iters: int = 10
-    selection_threshold: int = 0
+    selection_threshold: float = 0.0

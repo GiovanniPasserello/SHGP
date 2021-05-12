@@ -3,52 +3,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
-from shgp.models.pgpr import PGPR
+from shgp.data.metadata_reinit import ReinitMetaDataset
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, uniform_subsample
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
 
 np.random.seed(0)
 tf.random.set_seed(0)
 
 
 def inducing_demo():
-    num_inducing = 15
-    num_iters = 5
+    num_inducing, inner_iters, opt_iters, ci_iters = 15, 5, 100, 10
 
-    # Naive random selection and optimisations
-    kernel1 = gpflow.kernels.Matern52()
-    inducing_idx1 = np.random.choice(np.arange(X.shape[0]), size=num_inducing, replace=False)
-    inducing_vars1 = gpflow.inducing_variables.InducingPoints(X[inducing_idx1])
-    model1 = PGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1)
-    # Optimize model
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(num_iters):
-        opt.minimize(model1.training_loss, variables=model1.trainable_variables)
-        model1.optimise_ci()
-    elbo1 = model1.elbo()
+    # Uniform subsampling with gradient-based optimisation
+    model1, elbo1 = train_pgpr(
+        X, Y,
+        inner_iters, opt_iters, ci_iters,
+        kernel=gpflow.kernels.Matern52(),
+        M=num_inducing,
+        init_method=uniform_subsample,
+        optimise_Z=True
+    )
 
-    # Greedy variance selection
-    threshold = 1e-1
-    kernel2 = gpflow.kernels.Matern52()
-    model2 = PGPR((X, Y), kernel=kernel2)
-    prev_elbo = model2.elbo()
-    while True:
-        _, inducing_idx2 = h_reinitialise_PGPR(model2, num_inducing, threshold)
-
-        # Optimize model
-        opt = gpflow.optimizers.Scipy()
-        for _ in range(num_iters):
-            opt.minimize(model2.training_loss, variables=model2.trainable_variables)
-            model2.optimise_ci()
-
-        next_elbo = model2.elbo()
-        print("Previous ELBO: {}, Next ELBO: {}".format(prev_elbo, next_elbo))
-        if np.abs(next_elbo - prev_elbo) <= 1e-6:
-            break
-        prev_elbo = next_elbo
-
-    print("Final number of inducing points:", model2.inducing_variable.num_inducing)
-
+    # Heteroscedastic greedy variance selection
+    model2, _ = train_pgpr(
+        X, Y,
+        inner_iters, opt_iters, ci_iters,
+        kernel=gpflow.kernels.Matern52(),
+        M=num_inducing,
+        init_method=h_reinitialise_PGPR,
+        reinit_metadata=ReinitMetaDataset(10, 1e-1)
+    )
     elbo2 = model2.elbo()
 
     fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6))
@@ -97,10 +82,11 @@ def inducing_demo():
     inducing_inputs1 = model1.inducing_variable.Z.variables[0]
     inducing_outputs1, _ = model1.predict_f(inducing_inputs1)
     p_inducing_outputs1 = invlink(inducing_outputs1)
-    inducing_outputs2, _ = model1.predict_f(X[inducing_idx2])
+    inducing_inputs2 = model2.inducing_variable.Z.variables[0]
+    inducing_outputs2, _ = model1.predict_f(inducing_inputs2)
     p_inducing_outputs2 = invlink(inducing_outputs2)
     ax1.scatter(inducing_inputs1, p_inducing_outputs1, c="b", label='ind point', zorder=1000)
-    ax2.scatter(X[inducing_idx2].squeeze(), p_inducing_outputs2, c="b", label='ind point', zorder=1000)
+    ax2.scatter(inducing_inputs2, p_inducing_outputs2, c="b", label='ind point', zorder=1000)
 
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')
