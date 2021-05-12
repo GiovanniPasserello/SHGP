@@ -3,24 +3,30 @@ from dataclasses import dataclass
 import numpy as np
 
 from shgp.data.dataset import BreastCancerDataset, FertilityDataset, MagicDataset
+from shgp.data.metadata_reinit import ReinitMetaDataset
 
 
 @dataclass
 class SparsityMetaDataset:
     """
         A dataset utilities class specifically for sparsity experiments.
+        The training hyperparameters typically need to be smaller for sparsity
+        experiments. For example, we use a smaller number of optimisation iterations
+        otherwise the experiments are computationally infeasible.
 
         :param num_cycles: The number of times to train a model and average results over.
         :param inner_iters: The number of iterations of the inner optimisation loop.
         :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
         :param ci_iters: The number of iterations of update for the local variational parameters.
         :param M_array: An array containing the number of inducing points to test.
+        :param reinit_metadata: A dataclass containing training hyperparameters for reinitialisation schemes.
     """
     num_cycles: int
     inner_iters: int
     opt_iters: int
     ci_iters: int
     M_array: np.ndarray
+    reinit_metadata: ReinitMetaDataset = ReinitMetaDataset()  # for sparsity experiment, we use default class
 
 
 """ Fertility with Exp kernel - np.arange(1, 31):

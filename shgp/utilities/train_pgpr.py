@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from gpflow.models.util import inducingpoint_wrapper
 
+from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.models.pgpr import PGPR
 
@@ -17,9 +18,9 @@ def train_pgpr(
     opt_iters: int,
     ci_iters: int,
     *,
-    init_method: Optional[Callable] = None,
     M: Optional[int] = None,
-    outer_iters: Optional[int] = 10
+    init_method: Optional[Callable] = None,
+    reinit_metadata: Optional[ReinitMetaDataset] = None
 ):
     """
         Train a PGPR model with the following parameters.
@@ -30,15 +31,15 @@ def train_pgpr(
         :param inner_iters: The number of iterations of the inner optimisation loop.
         :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
         :param ci_iters: The number of iterations of update for the local variational parameters.
-        :param init_method: The inducing point initialisation method, if using a sparse model.
         :param M: The number of inducing points, if using a sparse model.
-        :param outer_iters: The number of iterations of the outer optimisation loop, if using a reinitialisation method.
+        :param init_method: The inducing point initialisation method, if using a sparse model.
+        :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
         :return: float, the final evidence lower bound.
     """
-    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters)
+    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
 
 
-def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters):
+def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata):
     """
     Train a PGPR model until completion.
     If we error, keep retrying until success - this is due to a spurious Cholesky error.
@@ -56,10 +57,10 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, oute
             return _train_full_pgpr(model, inner_iters, opt_iters, ci_iters)
         else:
             assert init_method is not None, "initialisation_method must not be None, if M < N."
-            if 'reinitialise' not in init_method.__name__:
-                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M)
+            if reinit_metadata:
+                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
             else:
-                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters, X)
+                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method)
     # If we fail due to a (spurious) Cholesky error, restart.
     except tf.errors.InvalidArgumentError as error:
         msg = error.message
@@ -67,7 +68,7 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, oute
             raise error
         else:
             print("Cholesky error caught, retrying...")
-            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method, M, outer_iters)
+            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata)
 
 
 def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
@@ -82,12 +83,12 @@ def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
     return model.elbo()
 
 
-def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M):
+def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method):
     """
     Train a sparse PGPR model with a given fixed initialisation method.
     For example: uniform_subsample() or kmeans().
     """
-    inducing_locs, _ = init_method(model.data[0], M)
+    inducing_locs, _ = init_method(model.data[0].numpy(), M)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
     gpflow.set_trainable(model.inducing_variable, False)
@@ -100,18 +101,18 @@ def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, init_method, M):
     return model.elbo()
 
 
-def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, reinit_method, M, outer_iters, X):
+def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit_method, reinit_metadata):
     """
     Train a sparse PGPR model with a given reinitialisation method.
     For example: greedy_variance() or h_greedy_variance().
     """
     opt = gpflow.optimizers.Scipy()
-    prev_elbo = model.elbo()
-    elbos = []
+    prev_elbo, elbos = model.elbo(), []
+    outer_iters = reinit_metadata.outer_iters
 
     while True:
         # Reinitialise inducing points
-        reinit_method(model, X, M)
+        reinit_method(model, M, reinit_metadata.selection_threshold)
 
         # Optimize model
         for _ in range(inner_iters):
@@ -121,9 +122,9 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, reinit_me
         # Check convergence
         next_elbo = model.elbo()
         elbos.append(next_elbo)
-        if np.abs(next_elbo - prev_elbo) <= 1e-3:
+        if np.abs(next_elbo - prev_elbo) <= 1e-3:  # if ELBO fails to significantly improve, finish.
             break
-        elif outer_iters == 0:
+        elif outer_iters == 0:  # it is likely that M is too low, and we will not further converge.
             print("PGPR ELBO failed to converge: prev {}, next {}.".format(prev_elbo, next_elbo))
             break
         prev_elbo = next_elbo

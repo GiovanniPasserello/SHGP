@@ -46,7 +46,7 @@ def inducing_demo():
     prev_elbo = model2.elbo()
     iter_limit = 10  # to avoid infinite loops
     while True:
-        _, inducing_idx2 = h_reinitialise_PGPR(model2, X, num_inducing, threshold)
+        _, inducing_idx2 = h_reinitialise_PGPR(model2, num_inducing, threshold)
 
         # Optimize model
         opt = gpflow.optimizers.Scipy()

@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.metadata_sparsity import MagicSparsityMetaDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.train_pgpr import train_pgpr
-from shgp.classification.sparsity_experiments.metadata import \
-    BreastCancerSparsityMetaDataset, FertilitySparsityMetaDataset, MagicSparsityMetaDataset
 
 
 np.random.seed(42)
@@ -20,10 +19,10 @@ selection (at what point does the ELBO converge). For comparisons against Bernou
 """
 
 
-def run_experiment(X, Y, M, inner_iters, opt_iters, ci_iters):
-    elbo_pgpr_gv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method=reinitialise_PGPR, M=M)
+def run_experiment(X, Y, M, inner_iters, opt_iters, ci_iters, reinit_metadata):
+    elbo_pgpr_gv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=reinitialise_PGPR, reinit_metadata=reinit_metadata)
     print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
-    elbo_pgpr_hgv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, init_method=h_reinitialise_PGPR, M=M)
+    elbo_pgpr_hgv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=h_reinitialise_PGPR, reinit_metadata=reinit_metadata)
     print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
     return elbo_pgpr_gv, elbo_pgpr_hgv
 
@@ -63,7 +62,7 @@ if __name__ == '__main__':
         print("Beginning cycle {}...".format(c + 1))
         for i, m in enumerate(dataset.M_array):
             print("Beginning training for", m, "inducing points...")
-            res_gv, res_hgv = run_experiment(X, Y, m, dataset.inner_iters, dataset.opt_iters, dataset.ci_iters)
+            res_gv, res_hgv = run_experiment(X, Y, m, dataset.inner_iters, dataset.opt_iters, dataset.ci_iters, dataset.reinit_metadata)
             results_gv[i] += res_gv
             results_hgv[i] += res_hgv
         print("Completed cycle {}.".format(c + 1))

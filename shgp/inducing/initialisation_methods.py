@@ -21,7 +21,6 @@ def uniform_subsample(training_inputs: np.ndarray, M: int):
     :return: inducing inputs, indices
     [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
     """
-
     N = training_inputs.shape[0]
     if M is None:
         M = N
@@ -107,22 +106,17 @@ def h_greedy_variance(
     return training_inputs[indices], perm[indices]
 
 
-def h_reinitialise_PGPR(
-    model: PGPR,
-    training_inputs: np.ndarray,
-    M: int,
-    threshold: Optional[float] = 0.0
-):
+def h_reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0):
     """
     Reinitialise the inducing points of a PGPR model using h_greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
-    :param training_inputs: [N,D] np.ndarray, the training data.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
     :param threshold: convergence threshold at which to stop selection of inducing points early.
     """
+    X = model.data[0].numpy()
     theta_inv = tf.math.reciprocal(model.likelihood.compute_theta())
-    inducing_locs, inducing_idx = h_greedy_variance(training_inputs, theta_inv, M, model.kernel, threshold)
+    inducing_locs, inducing_idx = h_greedy_variance(X, theta_inv, M, model.kernel, threshold)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
     gpflow.set_trainable(model.inducing_variable, False)
@@ -151,105 +145,16 @@ def greedy_variance(
     return h_greedy_variance(training_inputs, lmbda, M, kernel, threshold)
 
 
-def reinitialise_PGPR(
-    model: PGPR,
-    training_inputs: np.ndarray,
-    M: int,
-    threshold: Optional[float] = 0.0
-):
+def reinitialise_PGPR(model: PGPR, M: int, threshold: Optional[float] = 0.0):
     """
     Reinitialise the inducing points of a PGPR model using greedy_variance.
 
     :param model: PGPR, the model to reinitialise.
-    :param training_inputs: [N,D] np.ndarray, the training data.
     :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
     :param threshold: convergence threshold at which to stop selection of inducing points early.
     """
-    inducing_locs, inducing_idx = greedy_variance(training_inputs, M, model.kernel, threshold)
-    inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
-    model.inducing_variable = inducingpoint_wrapper(inducing_vars)
-    gpflow.set_trainable(model.inducing_variable, False)
-    return inducing_locs, inducing_idx
-
-
-def greedy_bound_increase(
-    training_inputs: np.ndarray,
-    lmbda: np.ndarray,
-    M: int,
-    kernel: Callable[[np.ndarray, Optional[np.ndarray], Optional[bool]], np.ndarray]
-):
-    """
-    Heteroscedastic implementation of an O(MN^2) greedy ELBO inducing point initialisation.
-    This chooses the inducing point that maximises a trace term from the rank-1 difference
-    of the ELBO before and after adding that inducing points.
-    Note that due to being O(MN^2) this is not a preferable method, it is simply for comparisons,
-    however it does generally produce superior inducing point locations which yield a higher ELBO.
-
-    TODO: This could be changed to O(NM) memory, O(NM^2) time by only operating on a randomly
-          chosen candidate set of size M - would this still beat greedy variance, and is it worth it?
-
-    Complexity: O(N^2) memory, O(MN^2) time
-    :param training_inputs: [N,D] np.ndarray, the training data.
-    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
-    :param kernel: kernelwrapper object.
-    :return: inducing inputs, indices,
-    [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
-    """
-
-    N = training_inputs.shape[0]
-    assert M <= N, 'Cannot set M > N'
-
-    perm = np.random.permutation(N)  # permute entries so tie-breaking is random
-    training_inputs = training_inputs[perm]
-    lmbda = tf.gather(lmbda, perm)
-    Kff = tf.reshape(kernel(training_inputs, full_cov=False), (-1, 1))
-
-    indices = np.zeros(M, dtype=int)
-    selected = np.argmax(lmbda * Kff)
-    indices[0] = selected  # select first point, add to index 0
-    Z = np.array([training_inputs[selected]])
-
-    for m in range(1, M):
-        kuf = kernel(Z, training_inputs)
-        kuu = kernel(Z, Z) + 1e-12  # jitter
-        L = tf.linalg.cholesky(kuu)
-
-        ku = kernel(Z, training_inputs)
-        L_ku = tf.linalg.triangular_solve(L, ku)
-        c = tf.squeeze(Kff) - np.einsum('ij,ij->j', L_ku, L_ku)
-        L_kuf = tf.linalg.triangular_solve(L, kuf)
-        kf = kernel(training_inputs, training_inputs)  # computes full NxN matrix -> expensive!
-        b = tf.matmul(L_kuf, L_ku, transpose_a=True) - kf
-        scores = (tf.reduce_sum(lmbda * tf.math.square(b), axis=0) / c).numpy()  # inner products per row
-
-        # doesn't account for duplicate inputs (can remove in preprocessing)
-        scores[indices[:m]] = float("-inf")
-
-        # need max across points
-        selected = np.argmax(scores)
-        indices[m] = selected
-        Z = np.append(Z, [training_inputs[selected]], axis=0)
-
-    indices = indices.astype(int)
-    Z = training_inputs[indices]
-    indices = perm[indices]
-    return Z, indices
-
-
-def bound_max_reinitialise_PGPR(
-    model: PGPR,
-    training_inputs: np.ndarray,
-    M: int
-):
-    """
-    Reinitialise the inducing points of a PGPR model using greedy_bound_increase.
-
-    :param model: PGPR, the model to reinitialise.
-    :param training_inputs: [N,D] np.ndarray, the training data.
-    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
-    """
-    theta_inv = tf.math.reciprocal(model.likelihood.compute_theta())
-    inducing_locs, inducing_idx = greedy_bound_increase(training_inputs, theta_inv, M, model.kernel)
+    X = model.data[0].numpy()
+    inducing_locs, inducing_idx = greedy_variance(X, M, model.kernel, threshold)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
     gpflow.set_trainable(model.inducing_variable, False)

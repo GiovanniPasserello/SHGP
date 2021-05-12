@@ -406,7 +406,7 @@ def run_experiment():
     opt = gpflow.optimizers.Scipy()
     iter_limit = 10  # to avoid infinite loops
     while True:
-        h_reinitialise_PGPR(pgpr, X, NUM_INDUCING, GREEDY_THRESHOLD)
+        h_reinitialise_PGPR(pgpr, NUM_INDUCING, GREEDY_THRESHOLD)
 
         # Optimize model
         for _ in range(PGPR_ITERS[0]):
