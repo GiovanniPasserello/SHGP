@@ -19,7 +19,7 @@ def inducing_demo():
     model1, elbo1 = train_pgpr(
         X, Y,
         inner_iters, opt_iters, ci_iters,
-        kernel=gpflow.kernels.Matern52(),
+        kernel_type=gpflow.kernels.Matern52,
         M=num_inducing,
         init_method=uniform_subsample,
         optimise_Z=True
@@ -29,7 +29,7 @@ def inducing_demo():
     model2, _ = train_pgpr(
         X, Y,
         inner_iters, opt_iters, ci_iters,
-        kernel=gpflow.kernels.Matern52(),
+        kernel_type=gpflow.kernels.Matern52,
         M=num_inducing,
         init_method=h_reinitialise_PGPR,
         reinit_metadata=ReinitMetaDataset(10, 1e-1)

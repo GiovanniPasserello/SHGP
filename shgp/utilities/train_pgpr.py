@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Type
 
 import gpflow
 import numpy as np
@@ -19,7 +19,7 @@ def train_pgpr(
     opt_iters: int,
     ci_iters: int,
     *,
-    kernel: Kernel = ConstrainedExpSEKernel(),  # increased stability, with minor performance detriment.
+    kernel_type: Type[Kernel] = ConstrainedExpSEKernel,  # increased stability, with minor performance detriment.
     M: Optional[int] = None,
     init_method: Optional[Callable] = None,
     reinit_metadata: Optional[ReinitMetaDataset] = None,
@@ -34,24 +34,25 @@ def train_pgpr(
         :param inner_iters: The number of iterations of the inner optimisation loop.
         :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
         :param ci_iters: The number of iterations of update for the local variational parameters.
-        :param kernel: The covariance kernel for the PGPR model.
+        :param kernel_type: The covariance kernel type for the PGPR model. We use a type, instead of an object
+                            so that we can reinitialise in the case of an error.
         :param M: The number of inducing points, if using a sparse model.
         :param init_method: The inducing point initialisation method, if using a sparse model.
         :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
         :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
         :return: The final model and best evidence lower bound.
     """
-    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z)
+    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z)
 
 
-def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z):
+def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z):
     """
     Train a PGPR model until completion.
     If we error, keep retrying until success - this is due to a spurious Cholesky error.
     """
     model = PGPR(
         data=(X, Y),
-        kernel=kernel,
+        kernel=kernel_type(),
         inducing_variable=X.copy()
     )
     gpflow.set_trainable(model.inducing_variable, False)
@@ -73,7 +74,7 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_meth
             raise error
         else:
             print("Cholesky error caught, retrying...")
-            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel, M, init_method, reinit_metadata, optimise_Z)
+            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z)
 
 
 def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):

@@ -15,7 +15,7 @@ def classification_demo():
     m, elbo = train_pgpr(
         X, Y,
         10, 250, 10,
-        kernel=gpflow.kernels.SquaredExponential()
+        kernel_type=gpflow.kernels.SquaredExponential
     )
     print(elbo)
 

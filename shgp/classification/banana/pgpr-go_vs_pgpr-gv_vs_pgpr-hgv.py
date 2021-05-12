@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import uniform_subsample, reinitialise_PGPR, h_reinitialise_PGPR
-from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -44,103 +45,49 @@ pgpr_hgv = [-271.8792, -261.2195, -142.4490, -122.4783, -120.3020, -120.2990]
 
 
 def run_experiment(M):
-    initial_inducing_inputs, _ = uniform_subsample(X, M)
-
-    ################
-    # Optimisation #
-    ################
+    inner_iters, opt_iters, ci_iters = 20, 1000, 20
 
     ################################################
     # PGPR with Gradient-Optimised Inducing Points #
     ################################################
-    pgpr_go = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=initial_inducing_inputs.copy()
+
+    pgpr_go, pgpr_go_elbo = train_pgpr(
+        X, Y,
+        inner_iters, opt_iters, ci_iters,
+        kernel_type=gpflow.kernels.SquaredExponential,
+        M=M,
+        init_method=uniform_subsample,
+        optimise_Z=True
     )
-    if m == len(Y):
-        gpflow.set_trainable(pgpr_go.inducing_variable, False)
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(20):
-        opt.minimize(pgpr_go.training_loss, variables=pgpr_go.trainable_variables)
-        pgpr_go.optimise_ci(num_iters=20)
-    print("pgpr_go trained: ELBO = {}".format(pgpr_go.elbo()))
+    print("pgpr_go trained: ELBO = {}".format(pgpr_go_elbo))
 
     #############################################
     # PGPR with Greedy Variance #
     #############################################
-    pgpr_gv = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=initial_inducing_inputs.copy()
+
+    pgpr_gv, pgpr_gv_elbo = train_pgpr(
+        X, Y,
+        inner_iters, opt_iters, ci_iters,
+        kernel_type=gpflow.kernels.SquaredExponential,
+        M=M,
+        init_method=reinitialise_PGPR,
+        reinit_metadata=ReinitMetaDataset()
     )
-    opt = gpflow.optimizers.Scipy()
-    # If we use full dataset, don't use inducing point selection
-    if m == len(Y):
-        gpflow.set_trainable(pgpr_gv.inducing_variable, False)
-        # Optimize model
-        for _ in range(20):
-            opt.minimize(pgpr_gv.training_loss, variables=pgpr_gv.trainable_variables)
-            pgpr_gv.optimise_ci(num_iters=20)
-    else:
-        prev_elbo = pgpr_gv.elbo()
-        iter_limit = 10
-        while True:
-            # Reinitialise inducing points
-            reinitialise_PGPR(pgpr_gv, m)
-
-            # Optimize model
-            for _ in range(20):
-                opt.minimize(pgpr_gv.training_loss, variables=pgpr_gv.trainable_variables)
-                pgpr_gv.optimise_ci(num_iters=20)
-
-            # Check convergence
-            next_elbo = pgpr_gv.elbo()
-            if np.abs(next_elbo - prev_elbo) <= 1e-3 or iter_limit == 0:
-                if iter_limit == 0:
-                    print("pgpr_gv did not converge: prev={}, next={}".format(prev_elbo, next_elbo))
-                break
-            prev_elbo = next_elbo
-            iter_limit -= 1
-    print("pgpr_gv trained: ELBO = {}".format(pgpr_gv.elbo()))
+    print("pgpr_gv trained: ELBO = {}".format(pgpr_gv_elbo))
 
     #############################################
     # PGPR with Heteroscedastic Greedy Variance #
     #############################################
-    pgpr_hgv = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=initial_inducing_inputs.copy()
+
+    pgpr_hgv, pgpr_hgv_elbo = train_pgpr(
+        X, Y,
+        inner_iters, opt_iters, ci_iters,
+        kernel_type=gpflow.kernels.SquaredExponential,
+        M=M,
+        init_method=h_reinitialise_PGPR,
+        reinit_metadata=ReinitMetaDataset()
     )
-    opt = gpflow.optimizers.Scipy()
-    # If we use full dataset, don't use inducing point selection
-    if m == len(Y):
-        gpflow.set_trainable(pgpr_hgv.inducing_variable, False)
-        # Optimize model
-        for _ in range(20):
-            opt.minimize(pgpr_hgv.training_loss, variables=pgpr_hgv.trainable_variables)
-            pgpr_hgv.optimise_ci(num_iters=20)
-    else:
-        prev_elbo = pgpr_hgv.elbo()
-        iter_limit = 10
-        while True:
-            # Reinitialise inducing points
-            h_reinitialise_PGPR(pgpr_hgv, m)
-
-            # Optimize model
-            for _ in range(20):
-                opt.minimize(pgpr_hgv.training_loss, variables=pgpr_hgv.trainable_variables)
-                pgpr_hgv.optimise_ci(num_iters=20)
-
-            # Check convergence
-            next_elbo = pgpr_hgv.elbo()
-            if np.abs(next_elbo - prev_elbo) <= 1e-3 or iter_limit == 0:
-                if iter_limit == 0:
-                    print("pgpr_hgv did not converge: prev={}, next={}".format(prev_elbo, next_elbo))
-                break
-            prev_elbo = next_elbo
-            iter_limit -= 1
-    print("pgpr_hgv trained: ELBO = {}".format(pgpr_hgv.elbo()))
+    print("pgpr_hgv trained: ELBO = {}".format(pgpr_hgv_elbo))
 
     ##############
     # Prediction #

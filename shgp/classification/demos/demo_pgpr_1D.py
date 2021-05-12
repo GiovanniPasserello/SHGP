@@ -15,7 +15,7 @@ def classification_demo():
     m, elbo = train_pgpr(
         X, Y,
         10, 1000, 10,
-        kernel=gpflow.kernels.Matern52()
+        kernel_type=gpflow.kernels.Matern52
     )
     print(elbo)
 

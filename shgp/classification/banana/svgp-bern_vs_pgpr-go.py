@@ -27,13 +27,10 @@ pgpr_go   = [-218.8078, -154.0237, -128.1116, -120.5023, -120.2990, -120.2990]
 def run_experiment(M):
     initial_inducing_inputs, _ = uniform_subsample(X, M)
 
-    ################
-    # Optimisation #
-    ################
-
     #############################
     # SVGP Bernoulli likelihood #
     #############################
+
     svgp_bern = gpflow.models.SVGP(
         kernel=gpflow.kernels.SquaredExponential(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
@@ -50,6 +47,7 @@ def run_experiment(M):
     ################################################
     # PGPR with Gradient-Optimised Inducing Points #
     ################################################
+
     pgpr_go = PGPR(
         data=(X, Y),
         kernel=gpflow.kernels.SquaredExponential(),

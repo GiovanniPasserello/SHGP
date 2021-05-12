@@ -23,7 +23,7 @@ def model_comparison():
     pgpr, pgpr_elbo = train_pgpr(
         X, Y,
         20, 250, 10,
-        kernel=gpflow.kernels.SquaredExponential(),
+        kernel_type=gpflow.kernels.SquaredExponential,
         M=num_inducing,
         init_method=uniform_subsample
     )

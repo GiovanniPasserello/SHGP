@@ -23,7 +23,7 @@ def model_comparison():
     pgpr, pgpr_elbo = train_pgpr(
         X, Y,
         10, 1000, 10,
-        kernel=gpflow.kernels.Matern52(),
+        kernel_type=gpflow.kernels.Matern52,
         M=num_inducing,
         init_method=uniform_subsample
     )

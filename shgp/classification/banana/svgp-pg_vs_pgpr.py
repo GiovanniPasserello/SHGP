@@ -32,7 +32,7 @@ def run_experiment(M):
     pgpr, pgpr_elbo = train_pgpr(
         X, Y,
         20, 1000, 20,
-        kernel=gpflow.kernels.SquaredExponential(),
+        kernel_type=gpflow.kernels.SquaredExponential,
         M=M,
         init_method=uniform_subsample,
         optimise_Z=True
