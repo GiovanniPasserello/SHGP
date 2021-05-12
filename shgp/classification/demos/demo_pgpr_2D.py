@@ -2,30 +2,22 @@ import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
 
-from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
 
 
 def classification_demo():
-    # Define model
-    m = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.SquaredExponential(),
-        inducing_variable=X.copy()
+    # Train model
+    m, elbo = train_pgpr(
+        X, Y,
+        10, 250, 10,
+        kernel=gpflow.kernels.SquaredExponential()
     )
-    gpflow.set_trainable(m.inducing_variable, False)
-
-    # Optimize model
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(10):
-        opt.minimize(m.training_loss, variables=m.trainable_variables, options=dict(maxiter=250))
-        m.optimise_ci()
+    print(elbo)
 
     # Take predictions
     X_test_mean, X_test_var = m.predict_f(X_test)
     P_test = invlink(X_test_mean)
-
-    print(m.elbo())
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 

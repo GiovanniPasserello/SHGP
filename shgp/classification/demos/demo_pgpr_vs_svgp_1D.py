@@ -1,12 +1,15 @@
 import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 
-from tensorflow import sigmoid
-
-from shgp.models.pgpr import PGPR
+from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
+
+np.random.seed(0)
+tf.random.set_seed(0)
 
 
 def model_comparison():
@@ -14,60 +17,53 @@ def model_comparison():
     # Model Optimisation #
     ######################
 
-    # To test uniform sparsity
-    INDUCING_INTERVAL = 5
+    num_inducing = 10
+
+    # PGPR
+    pgpr, pgpr_elbo = train_pgpr(
+        X, Y,
+        10, 1000, 10,
+        kernel=gpflow.kernels.Matern52(),
+        M=num_inducing,
+        init_method=uniform_subsample
+    )
+    print("pgpr trained")
 
     # TODO: This comparison of Bernoulli vs PG is worth showing in `Evaluation'.
     # SVGP (choose Bernoulli or PG likelihood for comparison)
-    # likelihood = gpflow.likelihoods.Bernoulli(invlink=sigmoid)
+    # likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
     likelihood = PolyaGammaBernoulli()
     svgp = gpflow.models.SVGP(
         kernel=gpflow.kernels.Matern52(),
         likelihood=likelihood,
-        inducing_variable=X[::INDUCING_INTERVAL].copy()
+        inducing_variable=pgpr.inducing_variable.Z
     )
-    loss = svgp.training_loss_closure((X, Y))
     gpflow.set_trainable(svgp.inducing_variable, False)
-    gpflow.optimizers.Scipy().minimize(loss, variables=svgp.trainable_variables)
+    gpflow.optimizers.Scipy().minimize(svgp.training_loss_closure((X, Y)), variables=svgp.trainable_variables)
+    svgp_elbo = svgp.elbo((X, Y))
     print("svgp trained")
-
-    # PGPR
-    pgpr = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.Matern52(),
-        inducing_variable=X[::INDUCING_INTERVAL].copy()
-    )
-    gpflow.set_trainable(pgpr.inducing_variable, False)
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(10):
-        opt.minimize(pgpr.training_loss, variables=pgpr.trainable_variables)
-        pgpr.optimise_ci(num_iters=10)
-    print("pgpr trained")
 
     ##############
     # Prediction #
     ##############
-
-    # Take predictions from SVGP
-    X_test_mean_svgp, _ = svgp.predict_f(X_test)
-    P_test_svgp = invlink(X_test_mean_svgp)
-    X_train_mean_svgp, _ = svgp.predict_f(X)
 
     # Take predictions from PGPR
     X_test_mean_pgpr, _ = pgpr.predict_f(X_test)
     P_test_pgpr = invlink(X_test_mean_pgpr)
     X_train_mean_pgpr, _ = pgpr.predict_f(X)
 
+    # Take predictions from SVGP
+    X_test_mean_svgp, _ = svgp.predict_f(X_test)
+    P_test_svgp = invlink(X_test_mean_svgp)
+    X_train_mean_svgp, _ = svgp.predict_f(X)
+
     ############
     # Plotting #
     ############
 
-    svgp_elbo = svgp.elbo((X, Y))
-    pgpr_elbo = pgpr.elbo()
-
     # Plot squashed predictions
+    plt.plot(X_test, P_test_pgpr, "b", lw=1, label='PGPR ({:.2f})'.format(pgpr_elbo), zorder=101)
     plt.plot(X_test, P_test_svgp, "r", lw=1, label='SVGP ({:.2f})'.format(svgp_elbo))
-    plt.plot(X_test, P_test_pgpr, "b", lw=1, label='PGPR ({:.2f})'.format(pgpr_elbo))
 
     # Plot data
     plt.plot(X, Y, "x", color='k', ms=7, mew=1)

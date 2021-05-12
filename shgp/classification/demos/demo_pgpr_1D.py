@@ -2,24 +2,18 @@ import gpflow
 import matplotlib.pyplot as plt
 import numpy as np
 
-from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
+from shgp.utilities.train_pgpr import train_pgpr
 
 
 def classification_demo():
-    # Define model
-    m = PGPR(
-        data=(X, Y),
-        kernel=gpflow.kernels.Matern52(),
-        inducing_variable=X.copy()
+    # Train model
+    m, elbo = train_pgpr(
+        X, Y,
+        10, 1000, 10,
+        kernel=gpflow.kernels.Matern52()
     )
-    gpflow.set_trainable(m.inducing_variable, False)
-
-    # Optimize model
-    opt = gpflow.optimizers.Scipy()
-    for _ in range(10):
-        opt.minimize(m.training_loss, variables=m.trainable_variables)
-        m.optimise_ci()
+    print(elbo)
 
     # Take predictions
     X_test_mean, X_test_var = m.predict_f(X_test)
@@ -47,8 +41,6 @@ def classification_demo():
     correct = P_train.round() == Y
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
-
-    print(m.elbo())
 
     plt.title("PGPR 1D Toy Dataset")
     plt.ylim((-0.5, 1.5))
