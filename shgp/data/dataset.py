@@ -71,6 +71,18 @@ Specific
 """
 
 
+class BananaDataset(Dataset):
+    # https://github.com/GPflow/docs/tree/master/doc/source/notebooks/basics/data
+    # N=400, D=2, C=2
+
+    def __init__(self):
+        super().__init__(
+            name='Banana',
+            filename='toy/banana.csv',
+            delimiter=','
+        )
+
+
 class FertilityDataset(Dataset):
     # https://archive.ics.uci.edu/ml/datasets/Fertility
     # N=100, D=9, C=2

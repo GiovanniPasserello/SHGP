@@ -2,8 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shgp.data.dataset import BreastCancerDataset, FertilityDataset, MagicDataset
-from shgp.data.metadata_reinit import ReinitMetaDataset
+from shgp.data.dataset import BananaDataset, BreastCancerDataset, FertilityDataset, MagicDataset
 
 
 @dataclass
@@ -26,7 +25,21 @@ class SparsityMetaDataset:
     opt_iters: int
     ci_iters: int
     M_array: np.ndarray
-    reinit_metadata: ReinitMetaDataset = ReinitMetaDataset()  # for sparsity experiment, we use default class
+
+
+""" Banana with Exp kernel - np.arange(5, 51, 5):
+results_gv = [-265.49513108 -195.44167004 -145.87563741 -131.90480825 -125.9670635
+ -122.73358912 -121.30270616 -120.68870247 -120.43619712 -120.35173555]
+results_hgv = [-266.29317535 -204.79355749 -145.56674102 -132.28223269 -126.11717347
+ -123.08139882 -121.23531664 -120.75147426 -120.43485241 -120.35837124]
+optimal = -120.29951799625849
+"""  # TODO: Update results after run finishes
+
+
+class BananaSparsityMetaDataset(BananaDataset, SparsityMetaDataset):
+    def __init__(self):
+        BananaDataset.__init__(self)
+        SparsityMetaDataset.__init__(self, 5, 10, 250, 10, np.arange(5, 51, 5))
 
 
 """ Fertility with Exp kernel - np.arange(1, 31):

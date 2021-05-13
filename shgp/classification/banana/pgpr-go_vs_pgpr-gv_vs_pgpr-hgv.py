@@ -8,6 +8,9 @@ from shgp.inducing.initialisation_methods import uniform_subsample, reinitialise
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
+# TODO: Update for new joint dataset, with shuffled load_data results!
+#       Will need to update below results, unless we don't shuffle & standardise.
+
 np.random.seed(42)
 tf.random.set_seed(42)
 

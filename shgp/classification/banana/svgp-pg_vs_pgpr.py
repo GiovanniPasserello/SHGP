@@ -8,6 +8,9 @@ from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
+# TODO: Update for new joint dataset, with shuffled load_data results!
+#       Will need to update below results, unless we don't shuffle & standardise.
+
 np.random.seed(0)
 tf.random.set_seed(0)
 

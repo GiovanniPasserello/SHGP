@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from shgp.data.metadata_sparsity import MagicSparsityMetaDataset
+from shgp.data.metadata_reinit import ReinitMetaDataset
+from shgp.data.metadata_sparsity import BananaSparsityMetaDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -20,10 +21,48 @@ selection (at what point does the ELBO converge). For comparisons against Bernou
 """
 
 
-def run_experiment(X, Y, M, inner_iters, opt_iters, ci_iters, reinit_metadata):
-    elbo_pgpr_gv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=reinitialise_PGPR, reinit_metadata=reinit_metadata)
+def run_sparsity_experiment(X, Y, M_array, num_cycles, inner_iters, opt_iters, ci_iters):
+    ################################################
+    # PGPR with Different Reinitialisation Methods #
+    ################################################
+
+    results_gv = np.zeros_like(M_array, dtype=float)
+    results_hgv = np.zeros_like(M_array, dtype=float)
+
+    for c in range(num_cycles):  # run num_cycles times and take an average
+        print("Beginning cycle {}...".format(c + 1))
+        for i, m in enumerate(M_array):
+            print("Beginning training for", m, "inducing points...")
+            res_gv, res_hgv = test_sparsity(X, Y, m, inner_iters, opt_iters, ci_iters)
+            results_gv[i] += res_gv
+            results_hgv[i] += res_hgv
+        print("Completed cycle {}.".format(c + 1))
+
+    results_gv = results_gv / num_cycles
+    results_hgv = results_hgv / num_cycles
+    results = list(zip(results_gv, results_hgv))
+
+    ##############################################
+    # PGPR with Full Inducing Points ('Optimal') #
+    ##############################################
+
+    _, elbo_pgpr = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters)
+    print("pgpr trained: ELBO = {}".format(elbo_pgpr))
+    optimal = np.full(len(results), elbo_pgpr)
+
+    print("Final results:")
+    print("results_gv = {}".format(results_gv))
+    print("results_hgv = {}".format(results_hgv))
+    print("optimal = {}".format(elbo_pgpr))
+
+    return results, optimal
+
+
+# Test the performance of a model with a given number of inducing points, M.
+def test_sparsity(X, Y, M, inner_iters, opt_iters, ci_iters, reinit_metadata=ReinitMetaDataset()):
+    _, elbo_pgpr_gv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=reinitialise_PGPR, reinit_metadata=reinit_metadata)
     print("pgpr_gv trained: ELBO = {}".format(elbo_pgpr_gv))
-    elbo_pgpr_hgv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=h_reinitialise_PGPR, reinit_metadata=reinit_metadata)
+    _, elbo_pgpr_hgv = train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, M=M, init_method=h_reinitialise_PGPR, reinit_metadata=reinit_metadata)
     print("pgpr_hgv trained: ELBO = {}".format(elbo_pgpr_hgv))
     return elbo_pgpr_gv, elbo_pgpr_hgv
 
@@ -51,39 +90,13 @@ def plot_results(name, M_array, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = MagicSparsityMetaDataset()  # to test another dataset, just change this definition
+    dataset = BananaSparsityMetaDataset()  # to test another dataset, just change this definition
     X, Y = dataset.load_data()
 
-    ################################################
-    # PGPR with Different Reinitialisation Methods #
-    ################################################
-    results_gv = np.zeros_like(dataset.M_array, dtype=float)
-    results_hgv = np.zeros_like(dataset.M_array, dtype=float)
-    for c in range(dataset.num_cycles):  # run NUM_CYCLES times and take an average
-        print("Beginning cycle {}...".format(c + 1))
-        for i, m in enumerate(dataset.M_array):
-            print("Beginning training for", m, "inducing points...")
-            res_gv, res_hgv = run_experiment(X, Y, m, dataset.inner_iters, dataset.opt_iters, dataset.ci_iters, dataset.reinit_metadata)
-            results_gv[i] += res_gv
-            results_hgv[i] += res_hgv
-        print("Completed cycle {}.".format(c + 1))
-    results_gv = results_gv / dataset.num_cycles
-    results_hgv = results_hgv / dataset.num_cycles
-    results = list(zip(results_gv, results_hgv))
+    results, optimal = run_sparsity_experiment(
+        X, Y,
+        dataset.M_array, dataset.num_cycles,
+        dataset.inner_iters, dataset.opt_iters, dataset.ci_iters
+    )
 
-    ##############################################
-    # PGPR with Full Inducing Points ('Optimal') #
-    ##############################################
-    elbo_pgpr = train_pgpr(X, Y, dataset.inner_iters, dataset.opt_iters, dataset.ci_iters)
-    print("pgpr trained: ELBO = {}".format(elbo_pgpr))
-    optimal = np.full(len(results), elbo_pgpr)
-
-    ############
-    # Plotting #
-    ############
     plot_results(dataset.name, dataset.M_array, np.array(results), optimal)
-
-    print("Final results:")
-    print("results_gv = {}".format(results_gv))
-    print("results_hgv = {}".format(results_hgv))
-    print("optimal = {}".format(elbo_pgpr))
