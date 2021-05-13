@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import PlatformDataset
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -46,19 +47,21 @@ def classification_demo():
     plt.scatter(X[correct], Y[correct], c="g", s=40, marker='x', label='correct')
     plt.scatter(X[~correct], Y[~correct], c="r", s=40, marker='x', label='incorrect')
 
-    plt.title("PGPR 1D Toy Dataset")
+    # Meta
+    plt.title("PGPR - Platform Dataset")
+    plt.xlim((-2, 2))
     plt.ylim((-0.5, 1.5))
 
-    # Plot
+    # Display
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
     # Load data
-    X = np.genfromtxt("../../data/datasets/toy/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("../../data/datasets/toy/classif_1D_Y.csv").reshape(-1, 1)
-    X_test = np.linspace(0, 6, 200).reshape(-1, 1)
+    X, Y = PlatformDataset().load_data()
+    X_test = np.linspace(-2, 2, 200).reshape(-1, 1)
+
     # Plot params
     plt.rcParams["figure.figsize"] = (8, 4)
 

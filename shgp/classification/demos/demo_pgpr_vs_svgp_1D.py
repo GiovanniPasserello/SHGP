@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import PlatformDataset
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
@@ -68,17 +69,21 @@ def model_comparison():
     # Plot data
     plt.plot(X, Y, "x", color='k', ms=7, mew=1)
 
+    # Meta
+    plt.title('PGPR vs SVGP - Platform Dataset')
+    plt.xlim((-2, 2))
     plt.ylim((-0.5, 1.5))
-    plt.title('SVGP vs PGPR')
+
+    # Display
     plt.legend(loc='upper right')
     plt.show()
 
 
 if __name__ == '__main__':
     # Load data
-    X = np.genfromtxt("../../data/datasets/toy/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("../../data/datasets/toy/classif_1D_Y.csv").reshape(-1, 1)
-    X_test = np.linspace(0, 6, 200).reshape(-1, 1)
+    X, Y = PlatformDataset().load_data()
+    X_test = np.linspace(-2, 2, 200).reshape(-1, 1)
+
     # Plot params
     plt.rcParams["figure.figsize"] = (8, 4)
 

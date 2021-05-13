@@ -28,12 +28,22 @@ class SparsityMetaDataset:
 
 
 """ Banana with Exp kernel - np.arange(5, 51, 5):
+    Results without shuffling the training set, and without standardising features (old).
 results_gv = [-265.49513108 -195.44167004 -145.87563741 -131.90480825 -125.9670635
  -122.73358912 -121.30270616 -120.68870247 -120.43619712 -120.35173555]
 results_hgv = [-266.29317535 -204.79355749 -145.56674102 -132.28223269 -126.11717347
  -123.08139882 -121.23531664 -120.75147426 -120.43485241 -120.35837124]
 optimal = -120.29951799625849
-"""  # TODO: Update results after run finishes
+"""
+
+""" Banana with Exp kernel - np.arange(5, 51, 5):
+    Results *with* shuffling the training set, and standardising features (new).
+results_gv = [-263.96390801 -193.47278328 -146.06442775 -131.69559018 -125.21248857
+ -122.07170094 -120.68262996 -120.08218722 -119.87603769 -119.79144935]
+results_hgv = [-265.21812865 -218.44034193 -146.41359466 -133.27414978 -124.94452836
+ -122.51418155 -120.67969943 -120.04857661 -119.9010278  -119.80383267]
+optimal = -119.74156303725914
+"""
 
 
 class BananaSparsityMetaDataset(BananaDataset, SparsityMetaDataset):

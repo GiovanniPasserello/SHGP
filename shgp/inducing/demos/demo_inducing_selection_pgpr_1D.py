@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import PlatformDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, uniform_subsample
 from shgp.utilities.general import invlink
@@ -36,7 +37,7 @@ def inducing_demo():
     )
     elbo2 = model2.elbo()
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 6))
+    fig, (ax1, ax2) = plt.subplots(2, figsize=(10, 8))
 
     ###########
     # Model 1 #
@@ -91,7 +92,9 @@ def inducing_demo():
     fig.tight_layout(pad=4)
     ax1.set_title('Optimized Naive Selection')
     ax2.set_title('Polya-Gamma Greedy Variance')
+    ax1.set_xlim((-2, 2))
     ax1.set_ylim((-0.5, 1.5))
+    ax2.set_xlim((-2, 2))
     ax2.set_ylim((-0.5, 1.5))
     ax1.legend(loc='upper right')
     ax2.legend(loc='upper right')
@@ -103,8 +106,7 @@ def inducing_demo():
 
 if __name__ == "__main__":
     # Load data
-    X = np.genfromtxt("../../data/datasets/toy/classif_1D_X.csv").reshape(-1, 1)
-    Y = np.genfromtxt("../../data/datasets/toy/classif_1D_Y.csv").reshape(-1, 1)
-    X_test = np.linspace(0, 6, 200).reshape(-1, 1)
+    X, Y = PlatformDataset().load_data()
+    X_test = np.linspace(-2, 2, 200).reshape(-1, 1)
 
     inducing_demo()

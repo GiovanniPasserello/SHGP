@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import BananaDataset
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
@@ -86,21 +87,22 @@ def model_comparison():
     c1.collections[0].set_label('PGPR ({:.2f})'.format(pgpr_elbo))
     c2.collections[0].set_label('SVGP ({:.2f})'.format(svgp_elbo))
 
-    plt.title('SVGP vs PGPR')
+    plt.title('PGPR vs SVGP - Banana Dataset')
     plt.legend(loc='upper left')
     plt.show()
 
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
+    X, Y = BananaDataset().load_data()
     mask = Y[:, 0] == 1
+
     # Test data
-    NUM_TEST_INDICES = 40
+    NUM_TEST_INDICES = 100
     X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)
+
     # Plot params
     plt.rcParams["figure.figsize"] = (7, 7)
 

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import BananaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, uniform_subsample
 from shgp.utilities.general import invlink
@@ -10,15 +11,17 @@ from shgp.utilities.train_pgpr import train_pgpr
 np.random.seed(0)
 tf.random.set_seed(0)
 
+"""
+A comparison of greedy_variance vs h_greedy_variance:
+  greedy spreads mass, h_greedy places at boundaries (our hypothesis)
+  greedy performs better for very low number of inducing points
+  h_greedy performs better for larger number of inducing points
+  gradient-based optimisation better for very few points, but expensive for many points
+"""
+
 
 def inducing_demo():
     num_inducing, inner_iters, opt_iters, ci_iters = 30, 10, 500, 10
-
-    # A comparison of greedy_variance vs h_greedy_variance:
-    # greedy spreads mass, h_greedy places at boundaries (our hypothesis)
-    # greedy performs better for very low number of inducing points
-    # h_greedy performs better for larger number of inducing points
-    # gradient-based optimisation better for very few points, but expensive for many points
 
     # Uniform subsampling with gradient-based optimisation
     model1, elbo1 = train_pgpr(
@@ -39,7 +42,7 @@ def inducing_demo():
     )
     elbo2 = model2.elbo()
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 12))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
 
     ###########
     # Model 1 #
@@ -105,11 +108,11 @@ def inducing_demo():
 
 if __name__ == "__main__":
     # Load data
-    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
+    X, Y = BananaDataset().load_data()
     mask = Y[:, 0] == 1
+
     # Test data
-    NUM_TEST_INDICES = 40
+    NUM_TEST_INDICES = 100
     X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)

@@ -5,6 +5,7 @@ import tensorflow as tf
 from datetime import datetime
 from tensorflow import sigmoid
 
+from shgp.data.utils import standardise_features
 from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
 from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
@@ -16,25 +17,10 @@ tf.random.set_seed(0)
 
 
 # TODO: Better convergence guarantees of training PGPR
-# TODO: Experiments - each dataset with 100 inducing points, ACCURACY & ELBO.
+# TODO: Experiments - each dataset with 100 inducing points, ACCURACY, ELBO and NLL.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 # TODO: Use test sets for evaluation.
-# TODO: Important to note that all SVGP experiments are full-batch.
-#       This doesn't matter as all we care about is ELBO/ACC, not time.
-
-
-def standardise_features(data):
-    """
-    Standardise all features to 0 mean and unit variance.
-
-    :param: data - the input data.
-    :return: the normalised data.
-    """
-    data_means = data.mean(axis=0)  # mean value per feature
-    data_stds = data.std(axis=0)  # standard deviation per feature
-
-    # standardise each feature
-    return (data - data_means) / data_stds
+# TODO: Add experiment contrasting PGPR HGV to PGPR GO initialised at HGV - how much performance are we missing?
 
 
 def load_fertility():

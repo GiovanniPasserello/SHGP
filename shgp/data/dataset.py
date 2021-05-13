@@ -67,8 +67,20 @@ class Dataset:
 
 
 """
-Specific
+Toy Datasets
 """
+
+
+class PlatformDataset(Dataset):
+    # https://github.com/GPflow/docs/tree/master/doc/source/notebooks/basics/data
+    # N=50, D=1, C=2
+
+    def __init__(self):
+        super().__init__(
+            name='Platform',
+            filename='toy/platform.csv',
+            delimiter=','
+        )
 
 
 class BananaDataset(Dataset):
@@ -81,6 +93,11 @@ class BananaDataset(Dataset):
             filename='toy/banana.csv',
             delimiter=','
         )
+
+
+"""
+Real Datasets
+"""
 
 
 class FertilityDataset(Dataset):
