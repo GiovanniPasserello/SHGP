@@ -3,13 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import BananaDataset
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
-
-# TODO: Update for new joint dataset, with shuffled load_data results!
-#       Will need to update below results, unless we don't shuffle & standardise.
 
 np.random.seed(0)
 tf.random.set_seed(0)
@@ -22,8 +20,8 @@ ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
 svgp_pg and pgpr may slightly differ due to different amounts of jitter.
 PGPR uses robust_cholesky() with dynamic jitter, whereas SVGP uses fixed jitter.
-svgp_pg = [-218.8079, -154.0238, -128.1115, -120.5025, -120.2992, -120.2989]
-pgpr    = [-218.8079, -154.0237, -128.1116, -120.5023, -120.2990, -120.2990]
+pgpr    = [-215.7537, -153.3771, -127.5161, -119.9482, -119.7410, -119.7408]
+svgp_pg = [-215.7537, -153.3771, -127.5158, -119.9484, -119.7410, -119.7413]
 """
 
 
@@ -112,7 +110,7 @@ def plot_results(M, results):
         # Plot SVGP PG decision boundary
         _ = axis[0].contour(
             *X_grid,
-            P_test_svgp_pg.reshape(40, 40),
+            P_test_svgp_pg.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -122,7 +120,7 @@ def plot_results(M, results):
         # Plot PGPR decision boundary
         _ = axis[1].contour(
             *X_grid,
-            P_test_pgpr.reshape(40, 40),
+            P_test_pgpr.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -135,11 +133,12 @@ def plot_results(M, results):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
+    X, Y = BananaDataset().load_data()
     mask = Y[:, 0] == 1
+
     # Test data
-    X_range = np.linspace(-3, 3, 40)
+    NUM_TEST_INDICES = 100
+    X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)
 

@@ -3,17 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+from shgp.data.dataset import BananaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import uniform_subsample, reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
-# TODO: Update for new joint dataset, with shuffled load_data results!
-#       Will need to update below results, unless we don't shuffle & standardise.
-
-np.random.seed(42)
-tf.random.set_seed(42)
-
+np.random.seed(0)
+tf.random.set_seed(0)
 
 """
 A comparison of PGPR with three different inducing point initialisation procedures. The inducing points 
@@ -21,10 +18,10 @@ of the first model are uniformly subsampled and then optimised using gradient-ba
 The inducing points of the second PGPR model use greedy variance reinitialisation, and the inducing
 points of the final PGPR use heteroscedastic greedy variance reinitialisation.
 
-Key takeaways: For very small and fixed M, GV/HGV adds extra complexity and tunable parameters than does
+Key takeaways: For very small and fixed M, GV/HGV adds extra complexity and tunable parameters that do
 not provide much benefit - in fact it can take longer than GO without efficient convergence checks in place. 
 For larger scale problems however, the initialisations can be quite superior and significantly outperform in
-terms of the ELBO - this is with both a lower M and with less compute. PG in general adds complexity / fragility
+terms of the ELBO - this is with both a lower M and using less compute. PG in general adds complexity / fragility
 of additional hyperparameters but it also brings many benefits - with a robust empirical setup I believe that it 
 could be a large step forward in the GP classification framework.
 
@@ -36,14 +33,13 @@ does 'theta', and so the HGV initialisation is superior as we can accurately mod
 
 Another downside is that GO is susceptible to local minimums - its performance may vary between runs due to randomness.
 These differences are less evident in this small-scale problem, but we will see the benefits of HGV in other 
-comparisons on larger-scale problems. Note also that I have not standardised the features in this 2D example which would
-be more important as we scale up the number of dimensions - this example has similar variances in X1 & X2.
+comparisons on larger-scale problems.
 
 ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
-pgpr_go  = [-226.0541, -154.0237, -128.1117, -120.5023, -120.2991, -120.2990]
-pgpr_gv  = [-270.2286, -260.6265, -146.7757, -122.9001, -120.3033, -120.2990]
-pgpr_hgv = [-271.8792, -261.2195, -142.4490, -122.4783, -120.3020, -120.2990]
+pgpr_go  = [-215.7537, -153.3771, -127.5161, -119.9526, -119.7409, -119.7408]
+pgpr_gv  = [-265.5385, -255.8328, -141.4131, -121.4397, -119.7441, -119.7408]
+pgpr_hgv = [-270.2324, -239.5404, -143.3945, -121.3860, -119.7440, -119.7408]
 """
 
 
@@ -156,7 +152,7 @@ def plot_results(M, results):
         # Plot PGPR GO decision boundary
         _ = axis[0].contour(
             *X_grid,
-            P_test_pgpr_go.reshape(40, 40),
+            P_test_pgpr_go.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -166,7 +162,7 @@ def plot_results(M, results):
         # Plot PGPR GV decision boundary
         _ = axis[1].contour(
             *X_grid,
-            P_test_pgpr_gv.reshape(40, 40),
+            P_test_pgpr_gv.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -176,7 +172,7 @@ def plot_results(M, results):
         # Plot PGPR HGV decision boundary
         _ = axis[2].contour(
             *X_grid,
-            P_test_pgpr_hgv.reshape(40, 40),
+            P_test_pgpr_hgv.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -189,11 +185,12 @@ def plot_results(M, results):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
+    X, Y = BananaDataset().load_data()
     mask = Y[:, 0] == 1
+
     # Test data
-    X_range = np.linspace(-3, 3, 40)
+    NUM_TEST_INDICES = 100
+    X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)
 

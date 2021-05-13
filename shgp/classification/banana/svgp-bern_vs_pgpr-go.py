@@ -5,12 +5,10 @@ import tensorflow as tf
 
 from tensorflow import sigmoid
 
+from shgp.data.dataset import BananaDataset
 from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.models.pgpr import PGPR
 from shgp.utilities.general import invlink
-
-# TODO: Update for new joint dataset, with shuffled load_data results!
-#       Will need to update below results, unless we don't shuffle & standardise.
 
 np.random.seed(0)
 tf.random.set_seed(0)
@@ -22,8 +20,8 @@ The results for M=4 are highly dependent on the random seed used - this result i
 
 ELBO results for M = [4, 8, 16, 32, 64, 400]:
 
-svgp_bern = [-222.2735, -139.3382, -112.6421, -106.7603, -106.5780, -106.5769]
-pgpr_go   = [-218.8078, -154.0237, -128.1116, -120.5023, -120.2990, -120.2990]
+pgpr_go   = [-215.7537, -153.3771, -127.5161, -119.9482, -119.7410, -119.7408]
+svgp_bern = [-210.9973, -138.5364, -112.1889, -106.1611, -105.9458, -105.9441]
 """
 
 
@@ -121,7 +119,7 @@ def plot_results(M, results):
         # Plot SVGP Bernoulli decision boundary
         _ = axis[0].contour(
             *X_grid,
-            P_test_svgp_bern.reshape(40, 40),
+            P_test_svgp_bern.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -131,7 +129,7 @@ def plot_results(M, results):
         # Plot PGPR GO decision boundary
         _ = axis[1].contour(
             *X_grid,
-            P_test_pgpr_go.reshape(40, 40),
+            P_test_pgpr_go.reshape(NUM_TEST_INDICES, NUM_TEST_INDICES),
             [0.5],  # p=0.5 decision boundary
             colors="k",
             linewidths=1.5,
@@ -144,11 +142,12 @@ def plot_results(M, results):
 
 if __name__ == '__main__':
     # Load data
-    X = np.loadtxt("../../data/toy/banana_X.csv", delimiter=",")
-    Y = np.loadtxt("../../data/toy/banana_Y.csv").reshape(-1, 1)
+    X, Y = BananaDataset().load_data()
     mask = Y[:, 0] == 1
+
     # Test data
-    X_range = np.linspace(-3, 3, 40)
+    NUM_TEST_INDICES = 100
+    X_range = np.linspace(-3, 3, NUM_TEST_INDICES)
     X_grid = np.meshgrid(X_range, X_range)
     X_test = np.asarray(X_grid).transpose([1, 2, 0]).reshape(-1, 2)
 

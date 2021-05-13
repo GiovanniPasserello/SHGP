@@ -51,6 +51,8 @@ class Dataset:
 
         return X[permutation], Y[permutation]
 
+    # TODO: The data should only be standardised, w.r.t. the training set parameters
+    #       Need to change this so that the test set is standardised after.
     def load_train_test_split(self, train_proportion=0.9):
         assert 0.0 < train_proportion < 1.0, 'train_proportion must be: 0.0 < X < 1.0'
 
