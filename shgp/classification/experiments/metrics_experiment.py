@@ -1,31 +1,27 @@
-from datetime import datetime
-
 import gpflow
 import numpy as np
 import tensorflow as tf
 
 from shgp.data.metadata_metrics import BananaMetricsMetaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, k_means
 from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
-from shgp.utilities.metrics import compute_accuracy, compute_nll, ExperimentResult, ExperimentResults
+from shgp.utilities.metrics import compute_test_metrics, ExperimentResult, ExperimentResults
 from shgp.utilities.train_pgpr import train_pgpr
 
-"""
-... May need multiple of these classes - one for each experiment I want to run
-"""
-
-np.random.seed(0)
-tf.random.set_seed(0)
+np.random.seed(42)
+tf.random.set_seed(42)
 
 
 def run_metrics_experiment(metadata):
-    X, Y = metadata.load_data()
-
     svgp_results, pgpr_results = ExperimentResults(), ExperimentResults()
+
     for c in range(metadata.num_cycles):
+        # Different train_test_split for each iteration
+        X, Y, X_test, Y_test = metadata.load_train_test_split()
+
         print("Beginning cycle {}...".format(c + 1))
-        svgp_result, pgpr_result = run_iteration(metadata, X, Y)
+        svgp_result, pgpr_result = run_iteration(metadata, X, Y, X_test, Y_test)
         svgp_results.add_result(svgp_result)
         pgpr_results.add_result(pgpr_result)
         print("SVGP: ELBO = {:.6f}, ACC = {:.6f}, NLL = {:.6f}.".format(svgp_result.elbo, svgp_result.accuracy, svgp_result.nll))
@@ -57,8 +53,7 @@ def run_metrics_experiment(metadata):
     )
 
 
-# TODO: Make this return the results corresponding to the best PGPR ELBO during the train loop
-def run_iteration(metadata, X, Y):
+def run_iteration(metadata, X, Y, X_test, Y_test):
     ########
     # SVGP #
     ########
@@ -66,32 +61,29 @@ def run_iteration(metadata, X, Y):
     svgp = gpflow.models.SVGP(
         kernel=ConstrainedExpSEKernel(),
         likelihood=gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid),
-        inducing_variable=uniform_subsample(X, metadata.M)[0].copy()
+        inducing_variable=k_means(X, metadata.M).copy()
     )
-    gpflow.set_trainable(svgp.inducing_variable, False)
+    gpflow.set_trainable(svgp.inducing_variable, False)  # we don't want to optimize - the comparison is fixed methods
     gpflow.optimizers.Scipy().minimize(
         svgp.training_loss_closure((X, Y)),
         variables=svgp.trainable_variables,
         options=dict(maxiter=metadata.svgp_iters)
     )
-    svgp_F, _ = svgp.predict_f(X)
-    svgp_elbo, svgp_acc, svgp_nll = svgp.elbo((X, Y)), compute_accuracy(Y, svgp_F), compute_nll(Y, svgp_F)
-    svgp_result = ExperimentResult(svgp_elbo, svgp_acc, svgp_nll)
+    svgp_result = ExperimentResult(svgp.elbo((X, Y)), *compute_test_metrics(svgp, X_test, Y_test))
 
     ########
     # PGPR #
     ########
 
-    pgpr, pgpr_elbo = train_pgpr(
+    pgpr, pgpr_result = train_pgpr(
         X, Y,
         metadata.inner_iters, metadata.opt_iters, metadata.ci_iters,
         M=metadata.M,
         init_method=h_reinitialise_PGPR,
-        reinit_metadata=ReinitMetaDataset()
+        reinit_metadata=ReinitMetaDataset(),
+        X_test=X_test,
+        Y_test=Y_test
     )
-    pgpr_F, _ = pgpr.predict_f(X)
-    pgpr_elbo, pgpr_acc, pgpr_nll = pgpr.elbo(), compute_accuracy(Y, pgpr_F), compute_nll(Y, pgpr_F)
-    pgpr_result = ExperimentResult(pgpr_elbo, pgpr_acc, pgpr_nll)
 
     return svgp_result, pgpr_result
 

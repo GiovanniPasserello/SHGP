@@ -1,5 +1,6 @@
 import gpflow
 import numpy as np
+import scipy.cluster
 import tensorflow as tf
 
 from gpflow.models.util import inducingpoint_wrapper
@@ -7,18 +8,17 @@ from typing import Callable, Optional
 
 from shgp.models.pgpr import PGPR
 
-# TODO: Add KMeans initialiations
-#       Then add sparsity test: GV vs. HGV vs. (non-grad-optim) US vs. (non-grad-optim) KM.
+# TODO: Add sparsity test: GV vs. HGV vs. (non-grad-optim) US vs. (non-grad-optim) KM.
 
 
 def uniform_subsample(training_inputs: np.ndarray, M: int):
     """
-    Uniformly subsample inducing points from the training_inputs.
+    Uniformly subsample inducing points from training_inputs.
 
     Complexity: O(NM) memory, O(NM^2) time
     :param training_inputs: [N,D] np.ndarray, the training data.
-    :param M: int, number of inducing points. If threshold is None actual number returned may be less than M.
-    :return: inducing inputs, indices
+    :param M: int, number of inducing points.
+    :return: inducing_inputs, indices
     [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
     """
     N = training_inputs.shape[0]
@@ -29,6 +29,37 @@ def uniform_subsample(training_inputs: np.ndarray, M: int):
 
     indices = np.random.choice(N, M, replace=False)
     return training_inputs[indices], indices
+
+
+def k_means(training_inputs: np.ndarray, M: int):
+    """
+    Initialize inducing points from training_inputs using k-means++.
+    Adapted from https://github.com/markvdw/RobustGP/blob/master/robustgp/init_methods/methods.py.
+
+    :param training_inputs: [N,D] np.ndarray, the training data.
+    :param M: int, number of inducing points ("k" in k-means).
+    :return: inducing_inputs [M,D] np.ndarray containing inducing inputs
+    """
+    N = training_inputs.shape[0]
+    assert M <= N, 'Cannot set M > N'
+
+    # If N is large, take a uniform subset
+    MAX_N = 20000
+    if N > MAX_N:
+        training_inputs = uniform_subsample(training_inputs, MAX_N)
+
+    # Scipy k-means++
+    centroids, _ = scipy.cluster.vq.kmeans(training_inputs, M)
+
+    # Sometimes k-means returns fewer than k centroids, in this case we sample remaining point from data
+    # These may overlap, but the chances are low.
+    if len(centroids) < M:
+        num_extra_points = M - len(centroids)
+        indices = np.random.choice(N, size=num_extra_points, replace=False)
+        additional_points = training_inputs[indices]
+        centroids = np.concatenate([centroids, additional_points], axis=0)
+
+    return centroids
 
 
 def h_greedy_variance(
@@ -52,7 +83,6 @@ def h_greedy_variance(
     :return: inducing inputs, indices,
     [M,D] np.ndarray containing inducing inputs, [M] np.ndarray containing indices of selected points in training_inputs
     """
-
     N = training_inputs.shape[0]
     assert M <= N, 'Cannot set M > N'
 

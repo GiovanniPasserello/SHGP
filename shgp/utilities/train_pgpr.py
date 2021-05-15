@@ -10,6 +10,7 @@ from gpflow.kernels import Kernel
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.models.pgpr import PGPR
+from shgp.utilities.metrics import compute_test_metrics, ExperimentResults, ExperimentResult
 
 
 def train_pgpr(
@@ -23,7 +24,9 @@ def train_pgpr(
     M: Optional[int] = None,
     init_method: Optional[Callable] = None,
     reinit_metadata: Optional[ReinitMetaDataset] = None,
-    optimise_Z: bool = False
+    optimise_Z: bool = False,
+    X_test: Optional[np.ndarray] = None,
+    Y_test: Optional[np.ndarray] = None
 ):
     """
         Train a PGPR model with the following parameters.
@@ -40,12 +43,14 @@ def train_pgpr(
         :param init_method: The inducing point initialisation method, if using a sparse model.
         :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
         :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
-        :return: The final model and best evidence lower bound.
+        :param X_test: [N_test,D], the test feature data.
+        :param Y_test: [N_test,1], the test label data.
+        :return: The final model and best evidence lower bound (or full set of metrics).
     """
-    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z)
+    return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z, X_test, Y_test)
 
 
-def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z):
+def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z, X_test, Y_test):
     """
     Train a PGPR model until completion.
     If we error, keep retrying until success - this is due to a spurious Cholesky error.
@@ -60,13 +65,13 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init
     # Try to run the full optimisation cycle.
     try:
         if M is None or M == len(X):
-            return _train_full_pgpr(model, inner_iters, opt_iters, ci_iters)
+            return result(*_train_full_pgpr(model, inner_iters, opt_iters, ci_iters), X_test, Y_test)
         else:
             assert init_method is not None, "initialisation_method must not be None, if M < N."
             if reinit_metadata:
-                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata, optimise_Z)
+                return _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, reinit_metadata, optimise_Z, X_test, Y_test)
             else:
-                return _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, optimise_Z)
+                return result(*_train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, optimise_Z), X_test, Y_test)
     # If we fail due to a (spurious) Cholesky error, restart.
     except tf.errors.InvalidArgumentError as error:
         msg = error.message
@@ -74,7 +79,7 @@ def _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init
             raise error
         else:
             print("Cholesky error caught, retrying...")
-            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z)
+            return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z, X_test, Y_test)
 
 
 def _train_full_pgpr(model, inner_iters, opt_iters, ci_iters):
@@ -107,7 +112,7 @@ def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, 
     return model, model.elbo()
 
 
-def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit_method, reinit_metadata, optimise_Z):
+def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit_method, reinit_metadata, optimise_Z, X_test, Y_test):
     """
     Train a sparse PGPR model with a given reinitialisation method.
     For example: greedy_variance() or h_greedy_variance().
@@ -115,6 +120,10 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
     opt = gpflow.optimizers.Scipy()
     prev_elbo, elbos = model.elbo(), []
     outer_iters = reinit_metadata.outer_iters
+
+    return_metrics = X_test is not None
+    if return_metrics:  # track ELBO, ACC, NLL
+        results = ExperimentResults()
 
     while True:
         # Reinitialise inducing points
@@ -125,9 +134,13 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
             opt.minimize(model.training_loss, variables=model.trainable_variables, options=dict(maxiter=opt_iters))
             model.optimise_ci(num_iters=ci_iters)
 
-        # Check convergence
+        # Evaluate metrics
         next_elbo = model.elbo()
         elbos.append(next_elbo)
+        if return_metrics:  # track ELBO, ACC, NLL
+            results.add_result(ExperimentResult(next_elbo, *compute_test_metrics(model, X_test, Y_test)))
+
+        # Check convergence
         if np.abs(next_elbo - prev_elbo) <= 1e-3:  # if ELBO fails to significantly improve, finish.
             break
         elif outer_iters == 0:  # it is likely that M is too low, and we will not further converge.
@@ -136,4 +149,18 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
         prev_elbo = next_elbo
         outer_iters -= 1
 
-    return model, np.max(elbos)  # return the highest ELBO
+    if return_metrics:
+        return model, np.max(results.results)   # return the metrics with the highest ELBO
+    else:
+        return model, np.max(elbos)   # return the highest ELBO
+
+
+def result(model, elbo, X_test, Y_test):
+    """
+    If a test set is not provided, return the model and the elbo.
+    If a test set is provided, return the model and a set of test metrics.
+    """
+    if X_test is None:
+        return model, elbo
+    else:
+        return model, ExperimentResult(elbo, *compute_test_metrics(model, X_test, Y_test))

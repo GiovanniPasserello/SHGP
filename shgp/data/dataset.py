@@ -36,9 +36,11 @@ class Dataset:
         self.y_slice = y_slice
         self.x_delete_columns = x_delete_columns
 
-    def load_data(self):
+    def load_data(self, standardise=True):
         data = np.loadtxt(self.path, delimiter=self.delimiter, skiprows=self.skiprows)
-        X = standardise_features(data[self.x_slice])
+        X = data[self.x_slice]
+        if standardise:
+            X = standardise_features(X)
         Y = data[self.y_slice].reshape(-1, 1)
 
         # Remove specified column indices.
@@ -56,7 +58,7 @@ class Dataset:
     def load_train_test_split(self, train_proportion=0.9):
         assert 0.0 < train_proportion < 1.0, 'train_proportion must be: 0.0 < X < 1.0'
 
-        X, Y = self.load_data()
+        X, Y = self.load_data(standardise=False)
         N = len(X)
         train_size = int(N * train_proportion)
         permutation = np.random.permutation(N)
@@ -64,6 +66,12 @@ class Dataset:
         train_split, test_split = permutation[:train_size], permutation[train_size:]
         X_train, Y_train = X[train_split], Y[train_split]
         X_test, Y_test = X[test_split], Y[test_split]
+
+        # Manual standardisation on only the train set
+        train_means = X_train.mean(axis=0)  # mean value per feature
+        train_stds = X_train.std(axis=0)  # standard deviation per feature
+        X_train = (X_train - train_means) / train_stds
+        X_test = (X_test - train_means) / train_stds
 
         return X_train, Y_train, X_test, Y_test
 

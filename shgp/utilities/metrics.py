@@ -19,6 +19,9 @@ class ExperimentResult:
     accuracy: float
     nll: float
 
+    def __le__(self, other):
+        return self.elbo <= other.elbo
+
 
 class ExperimentResults:
     """
@@ -47,6 +50,7 @@ class ExperimentResults:
         std = ExperimentResult(np.std(elbos), np.std(accs), np.std(nlls))
         return maximum, minimum, median, mean, std
 
+
 # Predictive Accuracy
 def compute_accuracy(Y, F):
     preds = np.round(invlink(F))
@@ -55,6 +59,11 @@ def compute_accuracy(Y, F):
 
 # Average NLL
 def compute_nll(Y, F):
-    # TODO: Assert all Y is in 0, 1
     P = invlink(F)
     return -np.log(np.where(Y, P, 1 - P)).mean()
+
+
+# Compute metrics on a held-out test set
+def compute_test_metrics(model, X_test, Y_test):
+    F, _ = model.predict_f(X_test)
+    return compute_accuracy(Y_test, F), compute_nll(Y_test, F)

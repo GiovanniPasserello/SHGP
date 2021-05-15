@@ -26,15 +26,15 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# SVGP Distribution:
-# ELBO - max: -106.792589, min: -196.696657, median: -107.981071, mean: -116.731394, std: 26.660928.
-# ACC  - max: 0.940000, min: 0.850000, median: 0.935000, mean: 0.926750, std: 0.025813.
-# NLL  - max: 0.345786, min: 0.157273, median: 0.160449, mean: 0.178562, std: 0.055760.
+# SVGP Distribution: (kmeans++, no grad-optim)
+# ELBO - max: -93.853361, min: -182.765859, median: -95.308010, mean: -112.722297, std: 32.829257.
+# ACC  - max: 0.975000, min: 0.700000, median: 0.862500, mean: 0.865000, std: 0.069101.
+# NLL  - max: 0.624052, min: 0.060643, median: 0.304361, mean: 0.331887, std: 0.151419.
 #
-# PGPR Distribution:
-# ELBO - max: -119.815090, min: -119.815090, median: -119.815090, mean: -119.815090, std: 0.000000.
-# ACC  - max: 0.935000, min: 0.935000, median: 0.935000, mean: 0.935000, std: 0.000000.
-# NLL  - max: 0.168204, min: 0.168201, median: 0.168201, mean: 0.168202, std: 0.000001.
+# PGPR Distribution: (heteroscedastic greedy variance, no grad-optim)
+# ELBO - max: -107.566929, min: -115.670121, median: -108.165849, mean: -109.333836, std: 2.417689.
+# ACC  - max: 1.000000, min: 0.800000, median: 0.862500, mean: 0.882500, std: 0.058149.
+# NLL  - max: 0.517790, min: 0.069080, median: 0.284605, mean: 0.274303, std: 0.104619.
 
 class BananaMetricsMetaDataset(BananaDataset, MetricsMetaDataset):
     def __init__(self):
