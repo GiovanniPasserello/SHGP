@@ -6,9 +6,8 @@ tf.random.set_seed(0)
 
 
 # TODO: Better convergence guarantees of training PGPR
-# TODO: Experiments - each dataset with 100 inducing points, ACCURACY, ELBO and NLL.
+# TODO: Experiments - choose M from sparsity, or cap at 500 for large datasets. Report ACCURACY, ELBO and NLL.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
-# TODO: Use test sets for evaluation.
 # TODO: Add experiment contrasting PGPR HGV to PGPR GO initialised at HGV - how much performance are we missing?
 
 
@@ -65,24 +64,6 @@ def load_crabs():
     BERN_ITERS = 200  # best with 200: -112.733273, acc: 0.875000 (with 28: -112.174307, acc: 0.895000)
     PGPR_ITERS = (5, 25, 5)  # best with 200: -37.638322, acc: 1.00
     GREEDY_THRESHOLD = 1e-1  # (early stops at 28): -37.665957, acc: 1.00 (can move to 5e-1, still acc: 1.00)
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
-def load_heart():
-    # https://www.openml.org/d/53
-    dataset = "../../data/datasets/heart.csv"
-
-    data = np.loadtxt(dataset, delimiter=",", skiprows=1)
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1)
-
-    # TODO: Sparsity experiment?
-
-    NUM_INDUCING = 270  # quicker with 58 than with 270
-    BERN_ITERS = 100  # best with 270: -112.617769, acc: 0.855556 (with 58: -113.003773, acc: 0.851852)
-    PGPR_ITERS = (5, 25, 5)  # best with 270: -116.390483, acc: 0.851852
-    GREEDY_THRESHOLD = 5e-1  # (early stops at 58): -116.563723, acc: 0.851852 (but first iteration is better)
 
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 

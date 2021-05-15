@@ -44,9 +44,8 @@ def k_means(training_inputs: np.ndarray, M: int):
     assert M <= N, 'Cannot set M > N'
 
     # If N is large, take a uniform subset
-    MAX_N = 20000
-    if N > MAX_N:
-        training_inputs = uniform_subsample(training_inputs, MAX_N)
+    if N > 20000:
+        training_inputs, _ = uniform_subsample(training_inputs, 20000)
 
     # Scipy k-means++
     centroids, _ = scipy.cluster.vq.kmeans(training_inputs, M)

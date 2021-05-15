@@ -2,12 +2,12 @@ import gpflow
 import numpy as np
 import tensorflow as tf
 
-from shgp.data.metadata_metrics import BananaMetricsMetaDataset
+from shgp.data.metadata_metrics import BananaMetricsMetaDataset, BreastCancerMetaDataset, HeartMetricsMetaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, k_means
-from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
-from shgp.utilities.metrics import compute_test_metrics, ExperimentResult, ExperimentResults
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
+from shgp.utilities.metrics import ExperimentResults
 from shgp.utilities.train_pgpr import train_pgpr
+from shgp.utilities.train_svgp import train_svgp
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -58,26 +58,20 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
     # SVGP #
     ########
 
-    svgp = gpflow.models.SVGP(
-        kernel=ConstrainedExpSEKernel(),
-        likelihood=gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid),
-        inducing_variable=k_means(X, metadata.M).copy()
-    )
-    gpflow.set_trainable(svgp.inducing_variable, False)  # we don't want to optimize - the comparison is fixed methods
-    gpflow.optimizers.Scipy().minimize(
-        svgp.training_loss_closure((X, Y)),
-        variables=svgp.trainable_variables,
-        options=dict(maxiter=metadata.svgp_iters)
-    )
-    svgp_result = ExperimentResult(svgp.elbo((X, Y)), *compute_test_metrics(svgp, X_test, Y_test))
+    _, svgp_result = train_svgp(
+        X, Y, metadata.M,
+        train_iters=metadata.svgp_iters,
+        X_test=X_test, Y_test=Y_test
+    )  # TODO: ConstrainedExpSEKernel?
 
     ########
     # PGPR #
     ########
 
-    pgpr, pgpr_result = train_pgpr(
+    _, pgpr_result = train_pgpr(
         X, Y,
         metadata.inner_iters, metadata.opt_iters, metadata.ci_iters,
+        kernel_type=gpflow.kernels.SquaredExponential,  # TODO: ConstrainedExpSEKernel?
         M=metadata.M,
         init_method=h_reinitialise_PGPR,
         reinit_metadata=ReinitMetaDataset(),
