@@ -18,7 +18,6 @@ class SparsityMetaDataset:
         :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
         :param ci_iters: The number of iterations of update for the local variational parameters.
         :param M_array: An array containing the number of inducing points to test.
-        :param reinit_metadata: A dataclass containing training hyperparameters for reinitialisation schemes.
     """
     num_cycles: int
     inner_iters: int

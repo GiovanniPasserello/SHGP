@@ -3,14 +3,12 @@ import numpy as np
 import tensorflow as tf
 
 from datetime import datetime
-from tensorflow import sigmoid
 
 from shgp.data.utils import standardise_features
 from shgp.inducing.initialisation_methods import uniform_subsample, h_reinitialise_PGPR
 from shgp.models.pgpr import PGPR
-from shgp.robustness.contrained_kernels import ConstrainedSigmoidSEKernel
+from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.utilities.general import invlink
-
 
 np.random.seed(0)
 tf.random.set_seed(0)
@@ -51,7 +49,7 @@ def load_fertility():
 
 def load_crabs():
     # https://datarepository.wolframcloud.com/resources/Sample-Data-Crab-Measures
-    dataset = "../../data/crabs.csv"
+    dataset = "../../data/datasets/crabs.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, 1:]
@@ -69,6 +67,9 @@ def load_crabs():
     # Even with different seeds or more optimisation steps, PGPR always outperforms
     # SVGP with Bern. Why is this?
 
+    # TODO: Maybe put an asterisk next to this experiment and mark as unconstrained.
+    #       Because SVGP fails to converge with any constrained kernel.
+
     NUM_INDUCING = 28  # quicker with 28 than with 200
     BERN_ITERS = 200  # best with 200: -112.733273, acc: 0.875000 (with 28: -112.174307, acc: 0.895000)
     PGPR_ITERS = (5, 25, 5)  # best with 200: -37.638322, acc: 1.00
@@ -79,13 +80,13 @@ def load_crabs():
 
 def load_heart():
     # https://www.openml.org/d/53
-    dataset = "../../data/heart.csv"
+    dataset = "../../data/datasets/heart.csv"
 
     data = np.loadtxt(dataset, delimiter=",", skiprows=1)
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    # TODO: Sparisity experiment?
+    # TODO: Sparsity experiment?
 
     NUM_INDUCING = 270  # quicker with 58 than with 270
     BERN_ITERS = 100  # best with 270: -112.617769, acc: 0.855556 (with 58: -113.003773, acc: 0.851852)
@@ -349,6 +350,7 @@ def compute_accuracy(Y, F):
 
 # Average NLL
 def compute_nll(Y, F):
+    # TODO: Assert all Y is in 0, 1
     P = invlink(F)
     return -np.log(np.where(Y, P, 1 - P)).mean()
 
@@ -360,8 +362,8 @@ def run_experiment():
     # SVGP #
     ########
     svgp = gpflow.models.SVGP(
-        kernel=ConstrainedSigmoidSEKernel(),
-        likelihood=gpflow.likelihoods.Bernoulli(invlink=sigmoid),
+        kernel=ConstrainedExpSEKernel(),
+        likelihood=gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid),
         inducing_variable=initial_inducing_inputs.copy()
     )
     svgp_start = datetime.now()
@@ -382,7 +384,7 @@ def run_experiment():
     # Define model
     pgpr = PGPR(
         data=(X, Y),
-        kernel=ConstrainedSigmoidSEKernel(),  # TODO: Change to Exp
+        kernel=ConstrainedExpSEKernel(),
         inducing_variable=initial_inducing_inputs.copy()
     )
 
@@ -418,7 +420,7 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_crabs()
+    X, Y, NUM_INDUCING, SVGP_ITERS, PGPR_ITERS, GREEDY_THRESHOLD = load_heart()
     X = standardise_features(X)
 
     run_experiment()
