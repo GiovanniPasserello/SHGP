@@ -2,7 +2,8 @@ import gpflow
 import numpy as np
 import tensorflow as tf
 
-from shgp.data.metadata_metrics import BananaMetricsMetaDataset, BreastCancerMetaDataset, HeartMetricsMetaDataset
+from shgp.data.metadata_metrics import BananaMetricsMetaDataset, BreastCancerMetricsMetaDataset, \
+    CrabsMetricsMetaDataset, HeartMetricsMetaDataset, IonosphereMetricsMetaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.utilities.metrics import ExperimentResults
@@ -11,6 +12,13 @@ from shgp.utilities.train_svgp import train_svgp
 
 np.random.seed(42)
 tf.random.set_seed(42)
+
+"""
+A comparison of PGPR with heteroscedastic greedy variance reinitialisation and SVGP with a Bernoulli
+likelihood and fixed inducing points initialised with kmeans. 
+These are the 'best' case scenarios of best method used for a thorough evaluation of PGPR vs SVGP. 
+In particular we evaluate the performance of very sparse models to see whether HGV is beneficial.
+"""
 
 
 def run_metrics_experiment(metadata):
@@ -62,7 +70,7 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
         X, Y, metadata.M,
         train_iters=metadata.svgp_iters,
         X_test=X_test, Y_test=Y_test
-    )  # TODO: ConstrainedExpSEKernel?
+    )
 
     ########
     # PGPR #
@@ -71,7 +79,7 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
     _, pgpr_result = train_pgpr(
         X, Y,
         metadata.inner_iters, metadata.opt_iters, metadata.ci_iters,
-        kernel_type=gpflow.kernels.SquaredExponential,  # TODO: ConstrainedExpSEKernel?
+        kernel_type=gpflow.kernels.SquaredExponential,
         M=metadata.M,
         init_method=h_reinitialise_PGPR,
         reinit_metadata=ReinitMetaDataset(),
@@ -83,4 +91,4 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
 
 
 if __name__ == '__main__':
-    run_metrics_experiment(BananaMetricsMetaDataset())
+    run_metrics_experiment(IonosphereMetricsMetaDataset())

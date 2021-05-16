@@ -37,58 +37,6 @@ def load_fertility():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
-def load_crabs():
-    # https://datarepository.wolframcloud.com/resources/Sample-Data-Crab-Measures
-    dataset = "../../data/datasets/crabs.csv"
-
-    data = np.loadtxt(dataset, delimiter=",", skiprows=1)
-    X = data[:, 1:]
-    X = np.delete(X, 1, axis=1)  # remove a column of indices (6 dimensions)
-    Y = data[:, 0].reshape(-1, 1)
-
-    # TODO: Sparsity experiment?
-    # Interesting that Bernoulli GO has a significantly worse ELBO than PGPR. With
-    # an unconstrained kernel Bernoulli GO gets -43.075003 and 1.00 accuracy, which
-    # is still a lower ELBO than PGPR - why is this?
-    # With an unconstrained kernel PGPR achieves an ELBO of -30.343163
-
-    # TODO: Important
-    # This is one of the key datasets where PGPR completely outperforms SVGP!
-    # Even with different seeds or more optimisation steps, PGPR always outperforms
-    # SVGP with Bern. Why is this?
-
-    # TODO: Maybe put an asterisk next to this experiment and mark as unconstrained.
-    #       Because SVGP fails to converge with any constrained kernel.
-
-    NUM_INDUCING = 28  # quicker with 28 than with 200
-    BERN_ITERS = 200  # best with 200: -112.733273, acc: 0.875000 (with 28: -112.174307, acc: 0.895000)
-    PGPR_ITERS = (5, 25, 5)  # best with 200: -37.638322, acc: 1.00
-    GREEDY_THRESHOLD = 1e-1  # (early stops at 28): -37.665957, acc: 1.00 (can move to 5e-1, still acc: 1.00)
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
-def load_ionosphere():
-    # https://archive.ics.uci.edu/ml/datasets/ionosphere
-    dataset = "../../data/ionosphere.txt"
-
-    # TODO: Sparisity experiment?
-    data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, :-1]
-    X = np.delete(X, 1, axis=1)  # remove a column of zeros (33 dimensions)
-    Y = data[:, -1].reshape(-1, 1)
-
-    # In this case, Bernoulli GO seems to perform much better than PGPR.
-    # This is likely because of the small dataset size.
-
-    NUM_INDUCING = 351  # quicker with 156 than with 351
-    BERN_ITERS = 100  # best with 351: -100.021138 (with 156: -107.370414)
-    PGPR_ITERS = (5, 25, 5)  # best with 351: -126.962021
-    GREEDY_THRESHOLD = 1  # (early stops at 156): -127.549833
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
 def load_breast_cancer():
     # https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29
     dataset = "../../data/breast-cancer-diagnostic.txt"
@@ -98,7 +46,7 @@ def load_breast_cancer():
     Y = data[:, 1].reshape(-1, 1)
 
     # TODO: This might be a good example to discuss PG sometimes beating Bernoulli.
-    # TODO: Sparisity experiment?
+    # TODO: Sparsity experiment?
     # The comparison here may be that:
     # With 569 inducing points fixed for Bernoulli, the ELBO is -178.680281. Interestingly,
     # the PGPR ELBO is -74.876002 even though both models receive the same fixed set of data
@@ -121,18 +69,6 @@ def load_breast_cancer():
     # takes 45.37 seconds. Also when using the unconstrained kernel for NUM_INDUCING=59 for Bernoulli
     # we get an ELBO of -66.578607.
 
-    # TODO: Important thoughts:
-    # So when do we constrain the kernel, and when do we not??? Is one definitely better? For consistency
-    # we should probably use constrained SE kernels everywhere to avoid Cholesky errors and make sure to
-    # mention this in the report. PGPR isn't affected in this example, but Bernoulli is significantly affected.
-
-    # TODO: Other thoughts
-    # if we change the seed to 42 with a constrained kernel however:
-    #       Bernoulli achieves an ELBO of -86.431603 with 54 datapoints and -60.998253 with 569
-    # Interestingly inconsistent performance, and sometimes significantly worse than PGPR - why is this?
-    # Could this perhaps be due to a very noisy dataset - is this an observed downside to SVGP/gradient methods?
-
-    # TODO: These results definitely need to be averaged over many runs (see above)
     NUM_INDUCING = 569  # quicker with 54 than with 569
     BERN_ITERS = 200  # best with 569: -178.680281 (with 54): -253.199324)  # why such catastrophic performance?
     PGPR_ITERS = (5, 25, 5)  # best with 569: -74.876002

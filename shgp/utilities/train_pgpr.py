@@ -141,10 +141,11 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
             results.add_result(ExperimentResult(next_elbo, *compute_test_metrics(model, X_test, Y_test)))
 
         # Check convergence
-        if np.abs(next_elbo - prev_elbo) <= 1e-3:  # if ELBO fails to significantly improve, finish.
+        if np.abs(next_elbo - prev_elbo) <= reinit_metadata.conv_threshold:  # if ELBO fails to significantly improve.
             break
         elif outer_iters == 0:  # it is likely that M is too low, and we will not further converge.
-            print("PGPR ELBO failed to converge: prev {}, next {}.".format(prev_elbo, next_elbo))
+            if reinit_metadata.conv_threshold > 0:
+                print("PGPR ELBO failed to converge: prev {}, next {}.".format(prev_elbo, next_elbo))
             break
         prev_elbo = next_elbo
         outer_iters -= 1

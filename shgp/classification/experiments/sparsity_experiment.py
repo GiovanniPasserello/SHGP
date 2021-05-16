@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.data.metadata_sparsity import BananaSparsityMetaDataset
+from shgp.data.metadata_sparsity import HeartSparsityMetaDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -42,6 +42,10 @@ def run_sparsity_experiment(X, Y, M_array, num_cycles, inner_iters, opt_iters, c
     results_hgv = results_hgv / num_cycles
     results = list(zip(results_gv, results_hgv))
 
+    print("Sparse results:")
+    print("results_gv = {}".format(results_gv))
+    print("results_hgv = {}".format(results_hgv))
+
     ##############################################
     # PGPR with Full Inducing Points ('Optimal') #
     ##############################################
@@ -50,9 +54,7 @@ def run_sparsity_experiment(X, Y, M_array, num_cycles, inner_iters, opt_iters, c
     print("pgpr trained: ELBO = {}".format(elbo_pgpr))
     optimal = np.full(len(results), elbo_pgpr)
 
-    print("Final results:")
-    print("results_gv = {}".format(results_gv))
-    print("results_hgv = {}".format(results_hgv))
+    print("Full result:")
     print("optimal = {}".format(elbo_pgpr))
 
     return results, optimal
@@ -90,7 +92,7 @@ def plot_results(name, M_array, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = BananaSparsityMetaDataset()  # to test another dataset, just change this definition
+    dataset = HeartSparsityMetaDataset()  # to test another dataset, just change this definition
     X, Y = dataset.load_data()
 
     results, optimal = run_sparsity_experiment(

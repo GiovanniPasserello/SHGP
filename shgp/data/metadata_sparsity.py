@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shgp.data.dataset import BananaDataset, BreastCancerDataset, FertilityDataset, MagicDataset
+from shgp.data.dataset import BananaDataset, BreastCancerDataset, FertilityDataset, HeartDataset, MagicDataset
 
 
 @dataclass
@@ -72,6 +72,31 @@ class FertilitySparsityMetaDataset(FertilityDataset, SparsityMetaDataset):
     def __init__(self):
         FertilityDataset.__init__(self)
         SparsityMetaDataset.__init__(self, 10, 10, 250, 10, np.arange(1, 31))
+
+
+""" Heart with Exp kernel - np.arange(5, 36)
+results_gv = [-149.89383002 -152.00710325 -143.62037379 -130.17692237 -132.55702415
+ -124.84901607 -122.26416493 -127.3711103  -118.9368316  -117.46242384
+ -117.39032259 -117.31566198 -117.25612216 -117.22138389 -117.18431512
+ -124.13964485 -117.12037684 -117.08700376 -117.05800921 -117.02467553
+ -117.00864017 -116.98405797 -116.95961806 -116.93282486 -116.91689965
+ -116.90863542 -116.88328531 -116.86232315 -116.84860093 -116.8271588
+ -116.82212092]
+results_hgv = [-148.76503507 -142.36200692 -132.6211421  -143.9070711  -130.04724815
+ -132.49269419 -136.40839469 -122.25113204 -119.84868769 -117.61866759
+ -117.55443058 -117.38374159 -117.35889061 -117.28851663 -117.25051371
+ -117.23099963 -124.17515359 -117.1190942  -124.08173384 -117.05083756
+ -117.01637656 -117.00397749 -116.93492216 -123.95107217 -116.91613874
+ -116.87625325 -116.86585064 -116.847066   -116.8249032  -116.80518564
+ -116.79155455]
+optimal = -116.39046838357692
+"""
+
+
+class HeartSparsityMetaDataset(HeartDataset, SparsityMetaDataset):
+    def __init__(self):
+        HeartDataset.__init__(self)
+        SparsityMetaDataset.__init__(self, 10, 10, 250, 10, np.arange(5, 36))
 
 
 """ Breast Cancer with Exp kernel - np.arange(5, 101, 5):

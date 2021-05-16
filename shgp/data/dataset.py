@@ -53,8 +53,6 @@ class Dataset:
 
         return X[permutation], Y[permutation]
 
-    # TODO: The data should only be standardised, w.r.t. the training set parameters
-    #       Need to change this so that the test set is standardised after.
     def load_train_test_split(self, train_proportion=0.9):
         assert 0.0 < train_proportion < 1.0, 'train_proportion must be: 0.0 < X < 1.0'
 
@@ -67,7 +65,7 @@ class Dataset:
         X_train, Y_train = X[train_split], Y[train_split]
         X_test, Y_test = X[test_split], Y[test_split]
 
-        # Manual standardisation on only the train set
+        # Manual standardisation using only the train set
         train_means = X_train.mean(axis=0)  # mean value per feature
         train_stds = X_train.std(axis=0)  # standard deviation per feature
         X_train = (X_train - train_means) / train_stds
