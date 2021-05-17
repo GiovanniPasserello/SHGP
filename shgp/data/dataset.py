@@ -200,8 +200,8 @@ class TwonormDataset(Dataset):
             skiprows=1
         )
 
-    def load_data(self):
-        X, Y = super().load_data()
+    def load_data(self, standardise=True):
+        X, Y = super().load_data(standardise=standardise)
         return X, Y - 1  # the labels must be in [-1, 1] or [0, 1], not [1, 2]
 
 
@@ -217,8 +217,8 @@ class RingnormDataset(Dataset):
             skiprows=1
         )
 
-    def load_data(self):
-        X, Y = super().load_data()
+    def load_data(self, standardise=True):
+        X, Y = super().load_data(standardise=standardise)
         return X, Y - 1  # the labels must be in [-1, 1] or [0, 1], not [1, 2]
 
 

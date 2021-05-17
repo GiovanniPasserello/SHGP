@@ -137,3 +137,111 @@ class BreastCancerMetricsMetaDataset(BreastCancerDataset, MetricsMetaDataset):
     def __init__(self):
         BreastCancerDataset.__init__(self)
         MetricsMetaDataset.__init__(self, 10, 50, 500, 10, 250, 10)
+
+
+"""
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default)
+ELBO - max: -335.880773, min: -346.814701, median: -342.072790, mean: -341.638486, std: 3.397007.
+ACC  - max: 0.844156, min: 0.714286, median: 0.785714, mean: 0.780519, std: 0.035065.
+NLL  - max: 0.522449, min: 0.364078, median: 0.443357, mean: 0.441000, std: 0.047642.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default)
+ELBO - max: -339.673734, min: -350.845679, median: -345.761043, mean: -345.529780, std: 3.339615.
+ACC  - max: 0.857143, min: 0.727273, median: 0.785714, mean: 0.789610, std: 0.032233.
+NLL  - max: 0.518303, min: 0.370971, median: 0.440707, mean: 0.441000, std: 0.044599.
+"""
+
+
+# TODO: Sparsity experiment
+class PimaMetricsMetaDataset(PimaDataset, MetricsMetaDataset):
+    def __init__(self):
+        PimaDataset.__init__(self)
+        MetricsMetaDataset.__init__(self, 10, 60, 500, 10, 250, 10)
+
+
+"""
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=100)
+ELBO - max: -435.307312, min: -4550.765233, median: -4132.715446, mean: -2949.644103, std: 1793.864148.
+ACC  - max: 0.979730, min: 0.956757, median: 0.970946, mean: 0.969324, std: 0.007452.
+NLL  - max: 0.679808, min: 0.062394, median: 0.526168, mean: 0.398681, std: 0.269309.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=100)
+ELBO - max: -449.189194, min: -4616.360228, median: -4616.360228, mean: -3784.142286, std: 1664.438106.
+ACC  - max: 0.985135, min: 0.902703, median: 0.933108, mean: 0.938243, std: 0.024764.
+NLL  - max: 0.693147, min: 0.050044, median: 0.693147, mean: 0.566307, std: 0.253713.
+"""
+
+# (10, 100, 500, 10, 250, 10)
+# SVGP: ELBO = -520.542760, ACC = 0.975676, NLL = 0.062394.  # 1
+# PGPR: ELBO = -4616.360228, ACC = 0.927027, NLL = 0.693147.
+# SVGP: ELBO = -437.738622, ACC = 0.979730, NLL = 0.067435.  # 2
+# PGPR: ELBO = -449.189194, ACC = 0.979730, NLL = 0.067844.
+# SVGP: ELBO = -4548.879012, ACC = 0.977027, NLL = 0.679808. # 3
+# PGPR: ELBO = -461.351842, ACC = 0.985135, NLL = 0.050044.
+# SVGP: ELBO = -1843.197768, ACC = 0.971622, NLL = 0.102737. # 4
+# PGPR: ELBO = -4616.360228, ACC = 0.902703, NLL = 0.693147.
+# SVGP: ELBO = -4219.859002, ACC = 0.959459, NLL = 0.540904. # 5
+# PGPR: ELBO = -4616.360228, ACC = 0.940541, NLL = 0.693147.
+
+
+# TODO: Need to finish - maybe try on Colab?
+# TODO: Try 200 - keep experimenting
+# TODO: Try 100 again, but with (10, 100, 500, 20, 500, 20)!!!!! -> important one to try!
+# M=150 works quite well
+# With a large number of inducing points, we are prone to inversion/cholesky errors
+# This is something to look into in future work.
+class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
+    def __init__(self):
+        TwonormDataset.__init__(self)
+        MetricsMetaDataset.__init__(self, 10, 150, 500, 10, 250, 10)
+
+
+"""
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=100)
+ELBO - max: -1343.326952, min: -3853.552475, median: -1663.819734, mean: -2132.205899, std: 897.843589.
+ACC  - max: 0.959459, min: 0.508108, median: 0.946622, mean: 0.852703, std: 0.168002.
+NLL  - max: 0.567328, min: 0.111391, median: 0.154397, mean: 0.244232, std: 0.156691.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=100)
+ELBO - max: -1915.354700, min: -4616.360228, median: -2110.011878, mean: -2342.593651, std: 763.174001.
+ACC  - max: 0.968919, min: 0.822973, median: 0.943919, mean: 0.933243, std: 0.038046.
+NLL  - max: 0.693147, min: 0.117649, median: 0.173071, mean: 0.221537, std: 0.159302.
+"""
+
+# (10, 100, 500, 10, 250, 10) -> ~4mins per iteration
+# SVGP: ELBO = -1343.326952, ACC = 0.956757, NLL = 0.111391.
+# PGPR: ELBO = -1944.491960, ACC = 0.966216, NLL = 0.125356.
+
+# (10, 100, 1000, 20, 500, 20) -> ~8mins per iteration
+# We observe that SVGP is prone to catastrophic failure, whereas PGPR is much more stable.
+# SVGP: ELBO = -1343.326952, ACC = 0.956757, NLL = 0.111391. # 1
+# PGPR: ELBO = -1915.354700, ACC = 0.968919, NLL = 0.117649.
+# SVGP: ELBO = -1398.368509, ACC = 0.944595, NLL = 0.147709. # 2
+# PGPR: ELBO = -2069.113872, ACC = 0.944595, NLL = 0.168655.
+# SVGP: ELBO = -1344.080831, ACC = 0.948649, NLL = 0.128455. # 3
+# PGPR: ELBO = -1981.906180, ACC = 0.943243, NLL = 0.154874.
+# SVGP: ELBO = -1470.956913, ACC = 0.954054, NLL = 0.138897. # 4
+# PGPR: ELBO = -2160.896554, ACC = 0.936486, NLL = 0.206544.
+# SVGP: ELBO = -2238.879201, ACC = 0.906757, NLL = 0.235299. # 5
+# PGPR: ELBO = -2058.936326, ACC = 0.954054, NLL = 0.145316.
+# SVGP: ELBO = -3853.552475, ACC = 0.508108, NLL = 0.567328. # 6
+# PGPR: ELBO = -2073.280321, ACC = 0.944595, NLL = 0.156893.
+# SVGP: ELBO = -3486.709797, ACC = 0.535135, NLL = 0.485103. # 7
+# PGPR: ELBO = -2164.046119, ACC = 0.935135, NLL = 0.198798.
+# SVGP: ELBO = -1481.393108, ACC = 0.959459, NLL = 0.123016. # 8
+# PGPR: ELBO = -4616.360228, ACC = 0.822973, NLL = 0.693147.
+# SVGP: ELBO = -1846.246360, ACC = 0.950000, NLL = 0.161084. # 9
+# PGPR: ELBO = -2146.743435, ACC = 0.948649, NLL = 0.177487.
+
+# (10, 100, 1000, 20, 500, 20)
+# ... (running overnight)
+
+
+# TODO: Investigate various M here (try M=200, or higher if using Colab?)
+# TODO: Try 500 for a few iterations to see if there's any significant improvement?
+# TODO: Try standard greedy variance with (10, 100, 500, 20, 500, 20)
+# TODO: Best is (10, 100, 500, 20, 500, 20)
+class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
+    def __init__(self):
+        RingnormDataset.__init__(self)  # TODO: Change back to M=100?
+        MetricsMetaDataset.__init__(self, 10, 200, 500, 20, 500, 20)

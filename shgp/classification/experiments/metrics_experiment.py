@@ -3,7 +3,8 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.metadata_metrics import BananaMetricsMetaDataset, BreastCancerMetricsMetaDataset, \
-    CrabsMetricsMetaDataset, HeartMetricsMetaDataset, IonosphereMetricsMetaDataset
+    CrabsMetricsMetaDataset, HeartMetricsMetaDataset, IonosphereMetricsMetaDataset, PimaMetricsMetaDataset, \
+    TwonormMetricsMetaDataset, RingnormMetricsMetaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.utilities.metrics import ExperimentResults
@@ -91,4 +92,4 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
 
 
 if __name__ == '__main__':
-    run_metrics_experiment(IonosphereMetricsMetaDataset())
+    run_metrics_experiment(RingnormMetricsMetaDataset())

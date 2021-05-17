@@ -5,7 +5,6 @@ np.random.seed(0)
 tf.random.set_seed(0)
 
 
-# TODO: Better convergence guarantees of training PGPR
 # TODO: Experiments - choose M from sparsity, or cap at 500 for large datasets. Report ACCURACY, ELBO and NLL.
 #       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 # TODO: Add experiment contrasting PGPR HGV to PGPR GO initialised at HGV - how much performance are we missing?
@@ -77,33 +76,6 @@ def load_breast_cancer():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
-def load_pima():
-    # http://networkrepository.com/pima-indians-diabetes.php
-    dataset = "../../data/pima-diabetes.csv"
-
-    data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1)
-
-    # TODO: Sparisity experiment?
-    # As the size of the datasets grow, we begin to see the benefits of PGPR. Where Bernoulli becomes
-    # infeasible, PGPR is able to find sparser and more efficient solutions.
-
-    # with 768 bern took 43.24 seconds, with 123 bern took 5.67 seconds
-    # with 768 PGPR took 26.59 seconds, with 123 PGPR took 9.85 seconds
-    # (accounting for looping convergence, PGPR 768 took 18.48 seconds and 123 took 2.63 seconds)
-    # TODO: Sort out the convergence criterion: Perhaps it's better to just check if the ELBO increases?
-    #       Perhaps this doesn't matter as speed is not the focus on this project.
-    #       It would be an interesing point for future work to look into.
-
-    NUM_INDUCING = 768  # quicker with 123 than with 768
-    BERN_ITERS = 100  # best with 768: -372.840412 (with 123: -374.059495)
-    PGPR_ITERS = (5, 25, 5)  # best with 768: -377.604798
-    GREEDY_THRESHOLD = 1  # (early stops at 123): -378.048993
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
 def load_twonorm():
     # https://www.openml.org/d/1507
     dataset = "../../data/twonorm.csv"
@@ -112,24 +84,6 @@ def load_twonorm():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1) - 1
 
-    # TODO: Reiteration from 'magic'
-    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
-    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
-
-    # TODO: We can prune the dataset if needed
-    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
-    #       Probably possible for small-scale tests, e.g. 100 inducing points
-
-    # TODO: Only computationally feasible to try a small number of inducing points.
-    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
-    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
-
-    # TODO: Important
-    # This is a very interesting comparison of Bern vs PGPR.
-    # It seems that in general, especially for small M, Bern outperforms PGPR (especially M=10)
-    # The ELBO of SVGP however is far lower than the ELBO of PGPR for M=200. Why is it in this case
-    # that the accuracy is almost identical, but the ELBO is so wildly different. In general we would
-    # expect similar or worse ELBOs from PGPR.
     NUM_INDUCING = 100
     BERN_ITERS = 200  # best with 100: -5031.590838, accuracy: 0.971757 (in 1.79 seconds)
     PGPR_ITERS = (5, 25, 10)  # best with 100: -5129.289144, accuracy: 0.961081 (in 10.85 seconds)
@@ -155,24 +109,11 @@ def load_ringnorm():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1) - 1
 
-    # TODO: Reiteration from 'magic'
-    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
-    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
-
-    # TODO: We can prune the dataset if needed
-    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
-    #       Probably possible for small-scale tests, e.g. 100 inducing points
-
-    # TODO: Only computationally feasible to try a small number of inducing points.
-    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
-    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
-
     # TODO: Important
     # This is one of the key datasets where PGPR almost always outperforms SVGP!
     # Training of SVGP is very unstable and depends on the random seed
     # - Bern often barely gets above 50% accuracy and sometimes unconstraining the kernel doesn't make a difference!
     # - This is another downside showing the inconsistency/fragility of grad optim Bern & SVGP
-    # - When Bernoulli works, it works very well!
     NUM_INDUCING = 100
     BERN_ITERS = 200  # best with 100: -4539.416618, accuracy: 0.504865  # catastophic failure again?
     PGPR_ITERS = (5, 25, 10)  # best with 100: -2716.269190, accuracy: 0.919459 (but one iteration was -2284.628780 - better convergence criterion, or just report max?)
