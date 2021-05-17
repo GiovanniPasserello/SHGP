@@ -5,8 +5,6 @@ np.random.seed(0)
 tf.random.set_seed(0)
 
 
-# TODO: Experiments - choose M from sparsity, or cap at 500 for large datasets. Report ACCURACY, ELBO and NLL.
-#       Run 5-10 times and average. Bern GO, PGPR GO, PGPR GV, PGPR HGV.
 # TODO: Add experiment contrasting PGPR HGV to PGPR GO initialised at HGV - how much performance are we missing?
 
 
@@ -36,99 +34,6 @@ def load_fertility():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
-def load_breast_cancer():
-    # https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+%28Diagnostic%29
-    dataset = "../../data/breast-cancer-diagnostic.txt"
-
-    data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, 2:]
-    Y = data[:, 1].reshape(-1, 1)
-
-    # TODO: This might be a good example to discuss PG sometimes beating Bernoulli.
-    # TODO: Sparsity experiment?
-    # The comparison here may be that:
-    # With 569 inducing points fixed for Bernoulli, the ELBO is -178.680281. Interestingly,
-    # the PGPR ELBO is -74.876002 even though both models receive the same fixed set of data
-    # points - the full training set. Why is this? This is very interesting to explore!
-    # SVGP convergence is very noisy and sometimes converges rapidly, sometimes slowly.
-    # PGPR is quick to converge, but due to my convergence criterion it can cycle for a while.
-    # (perhaps we need a better convergence setup than the current absolute difference check - the number of cycles matters).
-
-    # In a way, the fact that Bernoulli achieves -178.680281 (a suboptimal value) with the full training set
-    # emphasises the unreliability of gradient-based methods (changing the random seed allows Bernoulli
-    # to converge). One large benefit of greedy variance is that there is no stochasticity in the
-    # selection process. The same points will be chosen no matter the setup. The only thing that does
-    # change when using greedy variance is the optimisation of hyperparameters (which is often stochastic).
-    # The added randomness of SVGP Bernoulli makes it quite unreliable - some seeds converge in 1 second,
-    # other seeds take 15 seconds. Or is this more to do with the kernel being constrained? see below:
-
-    # TODO: The effect of using a constrained SE kernel is large. It makes the difference between
-    # Bernoulli converging to its optimal values or not. The problem of -178.680281 Bernoulli is removed
-    # when we use the standard SE kernel with NUM_INDUCING=569. In fact it achieves -59.074076 but also
-    # takes 45.37 seconds. Also when using the unconstrained kernel for NUM_INDUCING=59 for Bernoulli
-    # we get an ELBO of -66.578607.
-
-    NUM_INDUCING = 569  # quicker with 54 than with 569
-    BERN_ITERS = 200  # best with 569: -178.680281 (with 54): -253.199324)  # why such catastrophic performance?
-    PGPR_ITERS = (5, 25, 5)  # best with 569: -74.876002
-    GREEDY_THRESHOLD = 1  # (early stops at 54): -75.173682
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
-def load_twonorm():
-    # https://www.openml.org/d/1507
-    dataset = "../../data/twonorm.csv"
-
-    data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1) - 1
-
-    NUM_INDUCING = 100
-    BERN_ITERS = 200  # best with 100: -5031.590838, accuracy: 0.971757 (in 1.79 seconds)
-    PGPR_ITERS = (5, 25, 10)  # best with 100: -5129.289144, accuracy: 0.961081 (in 10.85 seconds)
-    GREEDY_THRESHOLD = 0
-
-    # TODO: This might be a good dataset for small-scale sparsity experiments
-
-    # 200 - mixed performance - far better ELBO, slightly better ACC, far better NLL, worse time
-    # bernoulli: ELBO=-5062.441466, ACC=0.975000, NLL=0.683428, TIME=3.50
-    # pgpr: ELBO=-505.188846, ACC=0.979459, NLL=0.056077, TIME=90.51 (but it cycled and converged ~25 seconds)
-    # 10 - worse performance
-    # bernoulli: ELBO=-5128.682356, ACC=0.918784, NLL=0.693055, TIME=1.12
-    # pgpr: ELBO=-5129.289144, ACC=0.778649, NLL=0.693147, TIME=3.20
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
-def load_ringnorm():
-    # https://www.openml.org/d/1496
-    dataset = "../../data/ringnorm.csv"
-
-    data = np.loadtxt(dataset, delimiter=",", skiprows=1)  # skip headers
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1) - 1
-
-    # TODO: Important
-    # This is one of the key datasets where PGPR almost always outperforms SVGP!
-    # Training of SVGP is very unstable and depends on the random seed
-    # - Bern often barely gets above 50% accuracy and sometimes unconstraining the kernel doesn't make a difference!
-    # - This is another downside showing the inconsistency/fragility of grad optim Bern & SVGP
-    NUM_INDUCING = 100
-    BERN_ITERS = 200  # best with 100: -4539.416618, accuracy: 0.504865  # catastophic failure again?
-    PGPR_ITERS = (5, 25, 10)  # best with 100: -2716.269190, accuracy: 0.919459 (but one iteration was -2284.628780 - better convergence criterion, or just report max?)
-    GREEDY_THRESHOLD = 0
-
-    # 200 - far superior performance
-    # bernoulli: ELBO=-4872.606096, ACC=0.505946, NLL=0.656005, TIME=3.84 (with different seed: ELBO=-853.335810, ACC=0.984730)
-    # pgpr: ELBO=-1421.169011, ACC=0.978108, NLL=0.076769, TIME=170.78 (but it cycled for a long time)
-    # 20 - far superior performance (10 had inversion errors for Bernoulli)
-    # bernoulli: ELBO=-5000.689376, ACC=0.505270, NLL=0.674485, TIME=0.81
-    # pgpr: ELBO=-4176.587485, ACC=0.736216, NLL=0.551947, TIME=25.40 (but it cycled for a long time)
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
 def load_magic():
     # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
     dataset = "../../data/magic.txt"
@@ -137,19 +42,6 @@ def load_magic():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
-    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
-    # Here it is very important to have good convergence guarantees - the current absolute
-    # difference check is not good enough. Perhaps we can check if the ELBO increases, but
-    # is that reliable - what if we reach a local minimum which we might leave later?
-
-    # TODO: We can prune the dataset if needed
-    # TODO: Maybe we should do full runs if possible - but the compute is not possible?
-    #       Probably possible for small-scale tests, e.g. 100 inducing points
-
-    # TODO: Only computationally feasible to try a small number of inducing points.
-    # This means that we cannot realistically do a sparsity experiment (unless we prune).
-    # We can do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
     NUM_INDUCING = 100  # 200
     BERN_ITERS = 200  # 100
     PGPR_ITERS = (5, 25, 10)  # This slightly benefits from being larger than this, but becomes slow
@@ -166,17 +58,6 @@ def load_electricity():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    # TODO: Reiteration from 'magic'
-    # TODO: Large comparison, how do we reliably find results when this takes so long to run?
-    # Maybe smaller datasets contain more feasible insight - too many variables to consider?
-
-    # TODO: We can prune the dataset if needed
-    # TODO: Maybe we should do full runs if possible - but the compute isn't possible if M is large?
-    #       Probably possible for small-scale tests, e.g. 100 inducing points
-
-    # TODO: Only computationally feasible to try a small number of inducing points.
-    # This means that we cannot realistically do a sparsity experiment, but perhaps we can
-    # do a metric experiment with 100 inducing points. (e.g. error bars on ELBO/ACC)
     NUM_INDUCING = 100  # 100
     BERN_ITERS = 200  # best with 100: -20891.910067, accuracy: 0.789217
     PGPR_ITERS = (5, 25, 10)  # best with 100: -21090.760171, accuracy: 0.784936

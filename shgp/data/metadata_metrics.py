@@ -165,12 +165,33 @@ ELBO - max: -435.307312, min: -4550.765233, median: -4132.715446, mean: -2949.64
 ACC  - max: 0.979730, min: 0.956757, median: 0.970946, mean: 0.969324, std: 0.007452.
 NLL  - max: 0.679808, min: 0.062394, median: 0.526168, mean: 0.398681, std: 0.269309.
 
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=200)
+ELBO - max: -2267.790177, min: -4488.839930, median: -4376.347131, mean: -4157.906175, std: 635.116272.
+ACC  - max: 0.979730, min: 0.779730, median: 0.967568, mean: 0.949324, std: 0.056867.
+NLL  - max: 0.667522, min: 0.256185, median: 0.646418, mean: 0.605678, std: 0.117353.
+
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
+ELBO - max: -3525.264918, min: -4500.681519, median: -4460.407540, mean: -4194.907578, std: 425.883111.
+ACC  - max: 0.974324, min: 0.936486, median: 0.961486, mean: 0.959459, std: 0.012834.
+NLL  - max: 0.671031, min: 0.397189, median: 0.662346, mean: 0.595052, std: 0.108684.
+
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=100)
 ELBO - max: -449.189194, min: -4616.360228, median: -4616.360228, mean: -3784.142286, std: 1664.438106.
 ACC  - max: 0.985135, min: 0.902703, median: 0.933108, mean: 0.938243, std: 0.024764.
 NLL  - max: 0.693147, min: 0.050044, median: 0.693147, mean: 0.566307, std: 0.253713.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=200)
+ELBO - max: -456.871311, min: -4616.360228, median: -4616.360228, mean: -3785.067699, std: 1662.585607.
+ACC  - max: 0.979730, min: 0.902703, median: 0.954054, mean: 0.952568, std: 0.022077.
+NLL  - max: 0.693147, min: 0.048832, median: 0.693147, mean: 0.565048, std: 0.256204.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
+ELBO - max: -441.419710, min: -464.018613, median: -452.083285, mean: -451.609530, std: 7.613344.
+ACC  - max: 0.985135, min: 0.972973, median: 0.975676, mean: 0.977838, std: 0.004196.
+NLL  - max: 0.077174, min: 0.046878, median: 0.062856, mean: 0.063841, std: 0.010713.
 """
 
+# Too few for stability
 # (10, 100, 500, 10, 250, 10)
 # SVGP: ELBO = -520.542760, ACC = 0.975676, NLL = 0.062394.  # 1
 # PGPR: ELBO = -4616.360228, ACC = 0.927027, NLL = 0.693147.
@@ -183,17 +204,36 @@ NLL  - max: 0.693147, min: 0.050044, median: 0.693147, mean: 0.566307, std: 0.25
 # SVGP: ELBO = -4219.859002, ACC = 0.959459, NLL = 0.540904. # 5
 # PGPR: ELBO = -4616.360228, ACC = 0.940541, NLL = 0.693147.
 
+# (10, 300, 500, 10, 250, 10)
+# SVGP: ELBO = -4434.778278, ACC = 0.972973, NLL = 0.657662. # 1
+# PGPR: ELBO = -452.927107, ACC = 0.974324, NLL = 0.062034.
+# SVGP: ELBO = -3579.396447, ACC = 0.936486, NLL = 0.397189. # 2
+# PGPR: ELBO = -458.741920, ACC = 0.982432, NLL = 0.053706.
+# SVGP: ELBO = -4463.158650, ACC = 0.964865, NLL = 0.663630. # 3
+# PGPR: ELBO = -444.264951, ACC = 0.974324, NLL = 0.075936.
+# SVGP: ELBO = -4473.513536, ACC = 0.958108, NLL = 0.666257. # 4
+# PGPR: ELBO = -459.084314, ACC = 0.982432, NLL = 0.053327.
+# SVGP: ELBO = -4482.821112, ACC = 0.956757, NLL = 0.669868. # 5
+# PGPR: ELBO = -441.419710, ACC = 0.975676, NLL = 0.077174.
+# SVGP: ELBO = -4500.681519, ACC = 0.937838, NLL = 0.671031. # 6
+# PGPR: ELBO = -445.391294, ACC = 0.975676, NLL = 0.073069.
+# SVGP: ELBO = -4457.656429, ACC = 0.974324, NLL = 0.661061. # 7
+# PGPR: ELBO = -456.977911, ACC = 0.985135, NLL = 0.055768.
+# SVGP: ELBO = -4500.596467, ACC = 0.955405, NLL = 0.670082. # 8
+# PGPR: ELBO = -442.030012, ACC = 0.974324, NLL = 0.076842.
+# SVGP: ELBO = -3531.208425, ACC = 0.966216, NLL = 0.445102. # 9
+# PGPR: ELBO = -464.018613, ACC = 0.981081, NLL = 0.046878.
+# SVGP: ELBO = -3525.264918, ACC = 0.971622, NLL = 0.448636. # 10
+# PGPR: ELBO = -451.239463, ACC = 0.972973, NLL = 0.063677.
 
-# TODO: Need to finish - maybe try on Colab?
-# TODO: Try 200 - keep experimenting
-# TODO: Try 100 again, but with (10, 100, 500, 20, 500, 20)!!!!! -> important one to try!
-# M=150 works quite well
-# With a large number of inducing points, we are prone to inversion/cholesky errors
-# This is something to look into in future work.
+
+# TODO: Try larger M on Colab (M=500)?
+# With a large number of inducing points (>= 200), we are prone to inversion/cholesky errors?
+# This means that we have to restart many times - a solution to this would be valuable in future work.
 class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
     def __init__(self):
         TwonormDataset.__init__(self)
-        MetricsMetaDataset.__init__(self, 10, 150, 500, 10, 250, 10)
+        MetricsMetaDataset.__init__(self, 10, 300, 500, 10, 250, 10)
 
 
 """
@@ -202,15 +242,31 @@ ELBO - max: -1343.326952, min: -3853.552475, median: -1663.819734, mean: -2132.2
 ACC  - max: 0.959459, min: 0.508108, median: 0.946622, mean: 0.852703, std: 0.168002.
 NLL  - max: 0.567328, min: 0.111391, median: 0.154397, mean: 0.244232, std: 0.156691.
 
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=200)
+ELBO - max: -827.505858, min: -4229.019174, median: -1354.343196, mean: -1952.737348, std: 1263.648744.
+ACC  - max: 0.981081, min: 0.535135, median: 0.946622, mean: 0.861351, std: 0.166338.
+NLL  - max: 0.630038, min: 0.051680, median: 0.142081, mean: 0.238596, std: 0.203371.
+
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=350)
+# ELBO - max: -752.252068, min: -3933.220987, median: -2438.577702, mean: -2129.962850, std: 1167.147312.
+# ACC  - max: 0.983784, min: 0.539189, median: 0.898649, mean: 0.839189, std: 0.166699.
+# NLL  - max: 0.571916, min: 0.047898, median: 0.281699, mean: 0.258076, std: 0.184207.
+
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=100)
 ELBO - max: -1915.354700, min: -4616.360228, median: -2110.011878, mean: -2342.593651, std: 763.174001.
 ACC  - max: 0.968919, min: 0.822973, median: 0.943919, mean: 0.933243, std: 0.038046.
 NLL  - max: 0.693147, min: 0.117649, median: 0.173071, mean: 0.221537, std: 0.159302.
-"""
 
-# (10, 100, 500, 10, 250, 10) -> ~4mins per iteration
-# SVGP: ELBO = -1343.326952, ACC = 0.956757, NLL = 0.111391.
-# PGPR: ELBO = -1944.491960, ACC = 0.966216, NLL = 0.125356.
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=200)
+ELBO - max: -1195.692441, min: -4616.360228, median: -1218.478131, mean: -1559.946067, std: 1018.956643.
+ACC  - max: 0.983784, min: 0.709459, median: 0.971622, mean: 0.947568, std: 0.079626.
+NLL  - max: 0.693147, min: 0.060996, median: 0.081233, mean: 0.139155, std: 0.184928.
+
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=350)
+ELBO - max: -923.197476, min: -4616.360228, median: -939.158414, mean: -1671.387251, std: 1472.501752.
+ACC  - max: 0.981081, min: 0.487838, median: 0.976351, mean: 0.907027, std: 0.152161.
+NLL  - max: 0.693147, min: 0.047588, median: 0.065627, mean: 0.189958, std: 0.251713.
+"""
 
 # (10, 100, 1000, 20, 500, 20) -> ~8mins per iteration
 # We observe that SVGP is prone to catastrophic failure, whereas PGPR is much more stable.
@@ -233,15 +289,58 @@ NLL  - max: 0.693147, min: 0.117649, median: 0.173071, mean: 0.221537, std: 0.15
 # SVGP: ELBO = -1846.246360, ACC = 0.950000, NLL = 0.161084. # 9
 # PGPR: ELBO = -2146.743435, ACC = 0.948649, NLL = 0.177487.
 
-# (10, 100, 1000, 20, 500, 20)
-# ... (running overnight)
+# (10, 200, 1000, 20, 500, 20)
+# SVGP: ELBO = -4229.019174, ACC = 0.535135, NLL = 0.630038. # 1
+# PGPR: ELBO = -1228.709653, ACC = 0.983784, NLL = 0.060996.
+# SVGP: ELBO = -827.505858, ACC = 0.960811, NLL = 0.089892.  # 2
+# PGPR: ELBO = -1211.444851, ACC = 0.963514, NLL = 0.092852.
+# SVGP: ELBO = -838.526551, ACC = 0.967568, NLL = 0.078273.  # 3
+# PGPR: ELBO = -1208.594288, ACC = 0.967568, NLL = 0.085665.
+# SVGP: ELBO = -2518.517455, ACC = 0.886486, NLL = 0.307559. # 4
+# PGPR: ELBO = -1203.384664, ACC = 0.968919, NLL = 0.084999.
+# SVGP: ELBO = -2876.921200, ACC = 0.858108, NLL = 0.343834. # 5
+# PGPR: ELBO = -1210.708639, ACC = 0.978378, NLL = 0.070667.
+# SVGP: ELBO = -861.552785, ACC = 0.981081, NLL = 0.051680.  # 6
+# PGPR: ELBO = -1242.803776, ACC = 0.983784, NLL = 0.061210.
+# SVGP: ELBO = -1847.133607, ACC = 0.932432, NLL = 0.194271. # 7
+# PGPR: ELBO = -1195.692441, ACC = 0.971622, NLL = 0.081010.
+# SVGP: ELBO = -860.419242, ACC = 0.977027, NLL = 0.063239.  # 8
+# PGPR: ELBO = -4616.360228, ACC = 0.709459, NLL = 0.693147.
+# SVGP: ELBO = -847.409672, ACC = 0.974324, NLL = 0.070873.  # 9
+# PGPR: ELBO = -1256.250717, ACC = 0.977027, NLL = 0.081456.
+# SVGP: ELBO = -3820.367932, ACC = 0.540541, NLL = 0.556305. # 10
+# PGPR: ELBO = -1225.511412, ACC = 0.971622, NLL = 0.079550.
+
+# (10, 350, 500, 10, 250, 10)
+# SVGP: ELBO = -3590.345572, ACC = 0.551351, NLL = 0.484845. # 1
+# PGPR: ELBO = -946.302094, ACC = 0.981081, NLL = 0.047588.
+# SVGP: ELBO = -3933.220987, ACC = 0.539189, NLL = 0.571916. # 2
+# PGPR: ELBO = -923.197476, ACC = 0.978378, NLL = 0.065232.
+# SVGP: ELBO = -780.125658, ACC = 0.983784, NLL = 0.047898.  # 3
+# PGPR: ELBO = -4616.360228, ACC = 0.774324, NLL = 0.693147.
+# SVGP: ELBO = -3078.699040, ACC = 0.701351, NLL = 0.432548. # 4
+# PGPR: ELBO = -936.401064, ACC = 0.978378, NLL = 0.066022.
+# SVGP: ELBO = -965.233208, ACC = 0.970270, NLL = 0.061761.  # 5
+# PGPR: ELBO = -938.161495, ACC = 0.970270, NLL = 0.059254.
+# SVGP: ELBO = -758.443778, ACC = 0.972973, NLL = 0.075304.  # 6
+# PGPR: ELBO = -928.896593, ACC = 0.968919, NLL = 0.078204.
+# SVGP: ELBO = -2416.712015, ACC = 0.900000, NLL = 0.281091. # 7
+# PGPR: ELBO = -926.775732, ACC = 0.978378, NLL = 0.073006.
+# SVGP: ELBO = -2460.443388, ACC = 0.895946, NLL = 0.282307. # 8
+# PGPR: ELBO = -4616.360228, ACC = 0.487838, NLL = 0.693147.   #  TODO: ???
+# SVGP: ELBO = -2564.152789, ACC = 0.897297, NLL = 0.287191. # 9
+# PGPR: ELBO = -940.155333, ACC = 0.975676, NLL = 0.063902.
+# SVGP: ELBO = -752.252068, ACC = 0.979730, NLL = 0.055897. # 10
+# PGPR: ELBO = -941.262270, ACC = 0.977027, NLL = 0.060075.
+
+# (10, 500, 1000, 20, 500, 20)
+# SVGP: ELBO = -2512.950163, ACC = 0.878378, NLL = 0.286941. # 1
+# PGPR: ELBO = -929.724989, ACC = 0.979730, NLL = 0.047482.
 
 
-# TODO: Investigate various M here (try M=200, or higher if using Colab?)
-# TODO: Try 500 for a few iterations to see if there's any significant improvement?
-# TODO: Try standard greedy variance with (10, 100, 500, 20, 500, 20)
-# TODO: Best is (10, 100, 500, 20, 500, 20)
+# TODO: Try 250 (with 20, 500, 20), 400! -> UNLUCKY 48% at 350
+# TODO: Investigate higher M here for stability (M=500 on Colab?)
 class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
     def __init__(self):
-        RingnormDataset.__init__(self)  # TODO: Change back to M=100?
-        MetricsMetaDataset.__init__(self, 10, 200, 500, 20, 500, 20)
+        RingnormDataset.__init__(self)  # TODO: Reset to M=200?
+        MetricsMetaDataset.__init__(self, 10, 350, 500, 10, 250, 10)
