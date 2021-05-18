@@ -107,7 +107,6 @@ NLL  - max: 0.502648, min: 0.121410, median: 0.301423, mean: 0.307200, std: 0.11
 """
 
 
-# TODO: Sparsity experiment
 class IonosphereMetricsMetaDataset(IonosphereDataset, MetricsMetaDataset):
     def __init__(self):
         IonosphereDataset.__init__(self)
@@ -266,6 +265,7 @@ PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default
 
 # (10, 300, 500, 20, 500, 20)
 # ...
+
 
 # TODO: Needs to run on Colab?
 # This experiment was run on a GPU so is not reproducable on CPU.
