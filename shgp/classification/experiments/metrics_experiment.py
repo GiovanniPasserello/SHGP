@@ -3,8 +3,8 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.metadata_metrics import BananaMetricsMetaDataset, BreastCancerMetricsMetaDataset, \
-    CrabsMetricsMetaDataset, HeartMetricsMetaDataset, IonosphereMetricsMetaDataset, PimaMetricsMetaDataset, \
-    TwonormMetricsMetaDataset, RingnormMetricsMetaDataset
+    CrabsMetricsMetaDataset, ElectricityMetricsMetaDataset, HeartMetricsMetaDataset, IonosphereMetricsMetaDataset, \
+    MagicMetricsMetaDataset, PimaMetricsMetaDataset, TwonormMetricsMetaDataset, RingnormMetricsMetaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
 from shgp.inducing.initialisation_methods import h_reinitialise_PGPR
 from shgp.utilities.metrics import ExperimentResults
