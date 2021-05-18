@@ -58,7 +58,6 @@ NLL  - max: 0.030897, min: 0.003004, median: 0.008187, mean: 0.011842, std: 0.00
 """
 
 
-# TODO: Sparsity experiment
 class CrabsMetricsMetaDataset(CrabsDataset, MetricsMetaDataset):
     # Bernoulli requires large number of training iters for this dataset
     def __init__(self):
@@ -152,7 +151,6 @@ NLL  - max: 0.518303, min: 0.370971, median: 0.440707, mean: 0.441000, std: 0.04
 """
 
 
-# TODO: Sparsity experiment
 class PimaMetricsMetaDataset(PimaDataset, MetricsMetaDataset):
     def __init__(self):
         PimaDataset.__init__(self)
@@ -194,6 +192,7 @@ NLL  - max: 0.077174, min: 0.046878, median: 0.062856, mean: 0.063841, std: 0.01
 # PGPR: ELBO = -451.239463, ACC = 0.972973, NLL = 0.063677.
 
 
+# TODO: Sparsity experiment?
 class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
     def __init__(self):
         TwonormDataset.__init__(self)
@@ -235,6 +234,7 @@ NLL  - max: 0.693147, min: 0.046114, median: 0.054798, mean: 0.183520, std: 0.25
 # PGPR: ELBO = -958.480074, ACC = 0.979730, NLL = 0.049802.
 
 
+# TODO: Sparsity experiment?
 class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
     def __init__(self):
         RingnormDataset.__init__(self)
@@ -247,10 +247,11 @@ SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
 """
 
-# (10, 200, 500, 20, 500, 20)
+# (10, 500, 500, 20, 500, 20)
+# ...
 
 
-# TODO: Needs to run on Colab
+# This experiment was run on a GPU so is not reproducable on CPU.
 class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
     def __init__(self):
         MagicDataset.__init__(self)
@@ -263,12 +264,12 @@ SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
 """
 
-# (10, 200, 500, 20, 500, 20)
+# (10, 300, 500, 20, 500, 20)
 # ...
 
-
-# TODO: Needs to run on Colab
+# TODO: Needs to run on Colab?
+# This experiment was run on a GPU so is not reproducable on CPU.
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):
         ElectricityDataset.__init__(self)
-        MetricsMetaDataset.__init__(self, 10, 200, 500, 20, 500, 20)
+        MetricsMetaDataset.__init__(self, 10, 300, 500, 10, 250, 10)

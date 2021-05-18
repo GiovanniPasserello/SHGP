@@ -245,10 +245,3 @@ class ElectricityDataset(Dataset):
             delimiter=',',
             skiprows=1
         )
-
-
-# Test
-if __name__ == '__main__':
-    ds = ElectricityDataset()
-    X, Y = ds.load_data()
-    pass

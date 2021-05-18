@@ -99,7 +99,7 @@ def _train_sparse_pgpr(model, inner_iters, opt_iters, ci_iters, M, init_method, 
     Train a sparse PGPR model with a fixed initialisation method.
     For example: uniform_subsample() or kmeans().
     """
-    inducing_locs, _ = init_method(model.data[0].numpy(), M)
+    inducing_locs = init_method(model.data[0].numpy(), M)
     inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
     model.inducing_variable = inducingpoint_wrapper(inducing_vars)
     gpflow.set_trainable(model.inducing_variable, optimise_Z)

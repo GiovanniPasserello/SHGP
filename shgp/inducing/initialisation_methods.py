@@ -28,7 +28,7 @@ def uniform_subsample(training_inputs: np.ndarray, M: int):
         assert M <= N, 'Cannot set M > N'
 
     indices = np.random.choice(N, M, replace=False)
-    return training_inputs[indices], indices
+    return training_inputs[indices]
 
 
 def k_means(training_inputs: np.ndarray, M: int):

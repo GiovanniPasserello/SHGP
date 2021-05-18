@@ -92,4 +92,4 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
 
 
 if __name__ == '__main__':
-    run_metrics_experiment(RingnormMetricsMetaDataset())
+    run_metrics_experiment(TwonormMetricsMetaDataset())

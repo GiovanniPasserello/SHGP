@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.data.metadata_sparsity import HeartSparsityMetaDataset
+from shgp.data.metadata_sparsity import PimaSparsityMetaDataset
 from shgp.inducing.initialisation_methods import reinitialise_PGPR, h_reinitialise_PGPR
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -92,7 +92,7 @@ def plot_results(name, M_array, results, optimal):
 
 if __name__ == '__main__':
     # Load data
-    dataset = HeartSparsityMetaDataset()  # to test another dataset, just change this definition
+    dataset = PimaSparsityMetaDataset()  # to test another dataset, just change this definition
     X, Y = dataset.load_data()
 
     results, optimal = run_sparsity_experiment(

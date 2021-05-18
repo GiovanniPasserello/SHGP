@@ -16,16 +16,6 @@ def load_fertility():
     X = data[:, :-1]
     Y = data[:, -1].reshape(-1, 1)
 
-    # TODO: This might be a good example to discuss sparsity (9 inducing points PGPR at 1e-6)
-    # The comparison here may be that:
-    # Yes, we can use 100 inducing points and Bernoulli is almost as quick as PGPR,
-    # but why use 100 when we can use 9? A large downside is that if we use 9 points
-    # with Bernoulli, it takes about 25 seconds as opposed to 2.38 with PGPR or 2.39
-    # with Bernoulli 100 points.
-
-    # TODO: The effect of using a constrained SE kernel slightly affects optimal values.
-    # Is there a good way to ensure we are not overly constraining the system?
-
     NUM_INDUCING = 100  # quicker with 100 than with 9
     BERN_ITERS = 500  # best with 100: -38.982949 (with 9: -38.991571)
     PGPR_ITERS = (5, 25, 5)  # best with 100: -39.354674
