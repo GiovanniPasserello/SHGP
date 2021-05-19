@@ -39,14 +39,15 @@ class Dataset:
     def load_data(self, standardise=True):
         data = np.loadtxt(self.path, delimiter=self.delimiter, skiprows=self.skiprows)
         X = data[self.x_slice]
-        if standardise:
-            X = standardise_features(X)
         Y = data[self.y_slice].reshape(-1, 1)
 
         # Remove specified column indices.
         # The indices should correspond to the columns *after* splitting (X, Y).
         if self.x_delete_columns:
             X = np.delete(X, self.x_delete_columns, axis=1)
+
+        if standardise:
+            X = standardise_features(X)
 
         # Shuffle the dataset to avoid training bias.
         permutation = np.random.permutation(len(X))

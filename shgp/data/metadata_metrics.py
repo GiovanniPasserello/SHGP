@@ -250,6 +250,7 @@ PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default
 # ...
 
 
+# TODO: Doesn't fit in memory -> crashes
 # This experiment was run on a GPU so is not reproducable on CPU.
 class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
     def __init__(self):
@@ -267,7 +268,7 @@ PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default
 # ...
 
 
-# TODO: Needs to run on Colab?
+# TODO: Doesn't fit in memory -> crashes
 # This experiment was run on a GPU so is not reproducable on CPU.
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):
