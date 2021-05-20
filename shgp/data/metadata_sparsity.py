@@ -366,6 +366,37 @@ class MagicSparsityMetaDataset(MagicDataset, SparsityMetaDataset):
         return X[random_subset], Y[random_subset]
 
 
+""" Twonorm with Exp kernel - np.arange(5, 51, 5):
+results_uniform = [-1396.70583573, -1017.94869122, -771.22872136, -605.30156586,
+                   -510.48140843,  -510.19789597,  -510.03721765, -511.07506492,
+                   -511.69896158,  -511.57398715]
+results_kmeans = [-806.35163434, -756.38506029, -690.23999253, -576.88703554, -512.15358069,
+                  -511.84802163, -511.69774876, -511.622588,   -511.60590338, -511.56933536]
+results_gv = [-1014.26413527, -818.68460218, -701.12421969, -567.82354756,
+              -499.54325414,  -499.43971312, -499.37827332, -499.30453848,
+              -499.2595869,   -499.22006871]
+results_hgv = [-1352.40125219, -872.77578924, -776.43254085, -587.7131583,
+               -499.49391003,  -499.39084051, -499.32350562, -499.28439395,
+               -499.245308,    -499.21059677]
+optimal = -498.60123103 (infeasible, so we take the max value achieved from any iteration)
+"""
+
+# TODO: Run experiment on Colab
+""" Twonorm with Exp kernel - np.arange(5, 51, 5):
+results_hgv = ...
+results_hgv_then_optimise = ...
+optimal = ...
+"""
+
+
+# TODO: Plot (start at M=10)
+class TwonormSparsityMetaDataset(TwonormDataset, SparsityMetaDataset):
+    # Converges at a surprisingly sparse M=25, as opposed to Ringnorm which requires ~250
+    def __init__(self):
+        TwonormDataset.__init__(self)
+        SparsityMetaDataset.__init__(self, 3, 5, 50, 10, np.arange(5, 51, 5))
+
+
 """ Ringnorm with Exp kernel - np.arange(5, 306, 10):
 results_uniform = [-3898.66433323, -3739.97035914, -3620.23629755, -3406.30837793,
                    -3006.92534855, -2767.35980403, -2352.11704331, -2236.35214327,
@@ -402,6 +433,7 @@ results_hgv = [-3957.46327061, -3889.61729723, -3839.42069026, -3293.78296912,
 optimal = -968.12391203 (infeasible, so we take the max value achieved from any iteration)
 """
 
+# TODO: ?
 """ Ringnorm with Exp kernel - np.arange(5, 306, 10):
 results_hgv = ...
 results_hgv_then_optimise = ...
@@ -414,31 +446,4 @@ optimal = ...
 class RingnormSparsityMetaDataset(RingnormDataset, SparsityMetaDataset):
     def __init__(self):
         RingnormDataset.__init__(self)
-        SparsityMetaDataset.__init__(self, 3, 5, 50, 10, np.arange(5, 306, 10))
-
-
-""" Twonorm with Exp kernel - np.arange(5, 306, 10):
-results_gv = ...
-results_hgv = ...
-optimal = infeasible
-"""
-
-""" Twonorm with Exp kernel - np.arange(5, 306, 10):
-results_uniform = ...
-results_kmeans = ...
-optimal = infeasible
-"""
-
-""" Twonorm with Exp kernel - np.arange(5, 306, 10):
-results_hgv = ...
-results_hgv_then_optimise = ...
-optimal = ...
-"""
-
-
-# TODO: Plot
-# TODO: Sparsity Twonorm, or remove?
-class TwonormSparsityMetaDataset(TwonormDataset, SparsityMetaDataset):
-    def __init__(self):
-        TwonormDataset.__init__(self)
         SparsityMetaDataset.__init__(self, 3, 5, 50, 10, np.arange(5, 306, 10))
