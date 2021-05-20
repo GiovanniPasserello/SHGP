@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from shgp.data.dataset import BananaDataset, BreastCancerDataset, CrabsDataset, FertilityDataset, HeartDataset, \
-    IonosphereDataset, MagicDataset, PimaDataset, RingnormDataset
+    IonosphereDataset, MagicDataset, PimaDataset, RingnormDataset, TwonormDataset
 
 
 @dataclass
@@ -439,13 +439,24 @@ class MagicSparsityMetaDataset(MagicDataset, SparsityMetaDataset):
 
 
 """ New (Colab) - Ringnorm with Exp kernel - np.arange(5, 306, 10):
-results_gv = ...
-results_hgv = ...
-optimal = ...
+results_gv = [-3973.53481162 -3944.63256465 -3900.51788397 -3520.95301494
+ -3382.01788093 -2705.88482369 -2775.27475406 -2566.73860189
+ -2275.23508154 -2283.89890084 -1995.83095559 -1828.61905992
+ -2009.59846106 -1793.4154635  -1767.54063342 -1564.87398159
+ -1588.19832361 -1568.04983754 -1441.8179984  -1357.68894854
+ -1296.78773805 -1237.88066877 -1096.15116867 -1000.21537697
+  -995.70653021  -992.97122679  -991.33675035  -989.93258068
+  -988.04297943  -986.86622979  -986.33677597]
+results_hgv = [-3957.46327061 -3889.61729723 -3839.42069026 -3293.78296912
+ -2693.66601991 -2686.00756728 -2605.8743586  -2572.78351148
+ -2441.61584767 -2448.39278645 -2222.35870473 -2159.9753885
+ -2182.08242191 -2099.49345541 -1991.33223853 -1869.61142949
+ -1792.96284388 -1644.38974353 -1474.62795655 -1362.68887795
+ -1259.62906694 -1165.99748628 -1070.91194744  -988.26451898
+  -984.59579463  -982.77330344  -981.11920296  -980.16404528
+  -978.95422732  -978.28747759  -977.49577389]
+optimal = infeasible
 """
-
-# TODO: Running on Colab
-#       Collect results!
 
 """ New (Colab) - Ringnorm with Exp kernel - np.arange(5, 306, 10):
 results_uniform = [-3898.66433323 -3739.97035914 -3620.23629755 -3406.30837793
@@ -474,9 +485,34 @@ optimal = ...
 """
 
 
+# TODO: Just graph results from 105 to 305? -> more stable
 class RingnormSparsityMetaDataset(RingnormDataset, SparsityMetaDataset):
     def __init__(self):
         RingnormDataset.__init__(self)
         SparsityMetaDataset.__init__(self, 3, 5, 50, 10, np.arange(5, 306, 10))
 
-# TODO: Sparsity Twonorm?
+
+""" New (Colab) - Twonorm with Exp kernel - np.arange(5, 306, 10):
+results_gv = ...
+results_hgv = ...
+optimal = infeasible
+"""
+
+""" New (Colab) - Twonorm with Exp kernel - np.arange(5, 306, 10):
+results_uniform = ...
+results_kmeans = ...
+optimal = infeasible
+"""
+
+""" New2 (Colab) - Twonorm with Exp kernel - np.arange(5, 306, 10):
+results_hgv = ...
+results_hgv_then_optimise = ...
+optimal = ...
+"""
+
+
+# TODO: Sparsity Twonorm, or remove?
+class TwonormSparsityMetaDataset(TwonormDataset, SparsityMetaDataset):
+    def __init__(self):
+        TwonormDataset.__init__(self)
+        SparsityMetaDataset.__init__(self, 3, 5, 50, 10, np.arange(5, 306, 10))

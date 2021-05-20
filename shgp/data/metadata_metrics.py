@@ -191,7 +191,6 @@ NLL  - max: 0.077174, min: 0.046878, median: 0.062856, mean: 0.063841, std: 0.01
 # PGPR: ELBO = -451.239463, ACC = 0.972973, NLL = 0.063677.
 
 
-# TODO: Sparsity experiment?
 class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
     def __init__(self):
         TwonormDataset.__init__(self)
@@ -233,7 +232,6 @@ NLL  - max: 0.693147, min: 0.046114, median: 0.054798, mean: 0.183520, std: 0.25
 # PGPR: ELBO = -958.480074, ACC = 0.979730, NLL = 0.049802.
 
 
-# TODO: Sparsity experiment?
 class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
     def __init__(self):
         RingnormDataset.__init__(self)
