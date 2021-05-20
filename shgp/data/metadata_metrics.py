@@ -26,6 +26,9 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
+# TODO: Fertility experiment?
+
+
 """
 SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default)
 ELBO - max: -89.519647, min: -103.250001, median: -98.954888, mean: -98.629271, std: 3.787107.
@@ -191,6 +194,7 @@ NLL  - max: 0.077174, min: 0.046878, median: 0.062856, mean: 0.063841, std: 0.01
 # PGPR: ELBO = -451.239463, ACC = 0.972973, NLL = 0.063677.
 
 
+# TODO: Try smaller after sparsity test???
 class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
     def __init__(self):
         TwonormDataset.__init__(self)
