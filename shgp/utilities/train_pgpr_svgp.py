@@ -90,8 +90,8 @@ def _train_sparse_pgpr_svgp(X, Y, M, opt_iters, kernel_type, reinit_method, rein
 
     # Initialise SVGP
     pgpr_svgp = gpflow.models.SVGP(
-        kernel=pgpr.kernel,
-        likelihood=gpflow.likelihoods.Bernoulli(tf.sigmoid),  # TODO: inversion error with tf.sigmoid?
+        kernel=kernel_type(),
+        likelihood=gpflow.likelihoods.Bernoulli(tf.sigmoid),
         inducing_variable=pgpr.inducing_variable,
         q_mu=q_mu,
         q_sqrt=q_sqrt
@@ -130,18 +130,92 @@ def _train_sparse_pgpr_svgp(X, Y, M, opt_iters, kernel_type, reinit_method, rein
         f_mu, f_var = pgpr_svgp.predict_f(X)
         pgpr.likelihood.c_i = tf.math.sqrt(tf.math.square(f_mu) + f_var)
 
-        # Update SVGP with reinitialised Z
+        # Reinitialised Z
+        pgpr.kernel = pgpr_svgp.kernel  # TODO: Performs worse with this line included?
         reinit_method(pgpr, M, reinit_metadata.selection_threshold)
-        pgpr_svgp.inducing_variable = pgpr.inducing_variable
-        gpflow.set_trainable(pgpr_svgp.inducing_variable, optimise_Z)
 
-        # Update SVGP with optimal q_mu, q_sqrt from PGPR
+        # Compute optimal q_mu, q_sqrt
         q_mu, q_var = pgpr.compute_qu()
         q_sqrt = tf.expand_dims(tf.linalg.cholesky(q_var), axis=0)
-        pgpr_svgp.q_mu = Parameter(q_mu,  dtype=default_float())
-        pgpr_svgp.q_sqrt = Parameter(q_sqrt, transform=triangular())
+
+        # Restart SVGP with optimal q_mu, q_sqrt and reinitialised Z from PGPR
+        pgpr_svgp = gpflow.models.SVGP(
+            kernel=kernel_type(),
+            likelihood=gpflow.likelihoods.Bernoulli(tf.sigmoid),
+            inducing_variable=pgpr.inducing_variable,
+            q_mu=q_mu,
+            q_sqrt=q_sqrt
+        )
+        gpflow.set_trainable(pgpr_svgp.inducing_variable, optimise_Z)
 
     if return_metrics:
         return pgpr_svgp, np.max(results.results)   # return the metrics with the highest ELBO
     else:
         return pgpr_svgp, np.max(elbos)   # return the highest ELBO
+
+
+# TODO: With greedy variance reinit (no PGPR)
+# def _train_sparse_pgpr_svgp(X, Y, M, opt_iters, kernel_type, reinit_method, reinit_metadata, optimise_Z, X_test, Y_test):
+#     """
+#     Train a sparse PGPR-SVGP model with a given reinitialisation method.
+#     For example: greedy_variance() or h_greedy_variance().
+#     """
+#     return_metrics = X_test is not None
+#     if return_metrics:  # track ELBO, ACC, NLL
+#         results = ExperimentResults()
+#
+#     # Initialise PGPR
+#     # pgpr = PGPR(data=(X, Y), kernel=kernel_type())
+#     # reinit_method(pgpr, M, reinit_metadata.selection_threshold)
+#     # q_mu, q_var = pgpr.compute_qu()
+#     # q_sqrt = tf.expand_dims(tf.linalg.cholesky(q_var), axis=0)
+#
+#     # Initialise SVGP
+#     pgpr_svgp = gpflow.models.SVGP(
+#         kernel=kernel_type(),
+#         likelihood=gpflow.likelihoods.Bernoulli(tf.sigmoid),
+#         inducing_variable=X.copy()
+#     )
+#
+#     opt = gpflow.optimizers.Scipy()
+#     outer_iters = reinit_metadata.outer_iters
+#     prev_elbo, elbos = -float("inf"), []
+#     while True:
+#         # Reinitialise Z
+#         inducing_locs, _ = greedy_variance(X, M, pgpr_svgp.kernel)
+#         inducing_vars = gpflow.inducing_variables.InducingPoints(inducing_locs)
+#         pgpr_svgp = gpflow.models.SVGP(
+#             kernel=kernel_type(),
+#             likelihood=gpflow.likelihoods.Bernoulli(tf.sigmoid),
+#             inducing_variable=inducingpoint_wrapper(inducing_vars)
+#         )
+#         gpflow.set_trainable(pgpr_svgp.inducing_variable, optimise_Z)
+#
+#         # Optimise SVGP
+#         opt.minimize(
+#             pgpr_svgp.training_loss_closure((X, Y)),
+#             variables=pgpr_svgp.trainable_variables,
+#             options=dict(maxiter=opt_iters)
+#         )
+#
+#         # Evaluate metrics
+#         next_elbo = pgpr_svgp.elbo((X, Y))
+#         print("PGPR-SVGP ELBO:", next_elbo)
+#         elbos.append(next_elbo)
+#         if return_metrics:  # track ELBO, ACC, NLL
+#             results.add_result(ExperimentResult(next_elbo, *compute_test_metrics(pgpr_svgp, X_test, Y_test)))
+#
+#         # Check convergence
+#         outer_iters -= 1
+#         if np.abs(next_elbo - prev_elbo) <= reinit_metadata.conv_threshold:  # if ELBO fails to significantly improve.
+#             break
+#         elif outer_iters == 0:  # it is likely that M is too low, and we will not further converge.
+#             if reinit_metadata.conv_threshold > 0:
+#                 print("PGPR-SVGP ELBO failed to converge: prev {}, next {}.".format(prev_elbo, next_elbo))
+#             break
+#         prev_elbo = next_elbo
+#
+#     if return_metrics:
+#         return pgpr_svgp, np.max(results.results)   # return the metrics with the highest ELBO
+#     else:
+#         return pgpr_svgp, np.max(elbos)   # return the highest ELBO
