@@ -27,8 +27,8 @@ class SparsityMetaDataset:
     M_array: np.ndarray
 
 
-# TODO: When plotting these, show the curve as it clearly approaches convergence
-#       We care about how the methods achieve convergence, not the extreme cases
+# TODO: When plotting these, show the curve as it clearly approaches convergence.
+#       We care about how the methods achieve convergence, not the extreme cases.
 
 """ Banana with Exp kernel - np.arange(5, 51, 5):
 results_uniform = [-252.13643516, -208.20541972, -157.02072046, -140.62518881, -131.01991315, -126.45785361,
