@@ -161,40 +161,17 @@ class PimaMetricsMetaDataset(PimaDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
-ELBO - max: -3525.264918, min: -4500.681519, median: -4460.407540, mean: -4194.907578, std: 425.883111.
-ACC  - max: 0.974324, min: 0.936486, median: 0.961486, mean: 0.959459, std: 0.012834.
-NLL  - max: 0.671031, min: 0.397189, median: 0.662346, mean: 0.595052, std: 0.108684.
+ELBO - max: -440.252890, min: -4480.603436, median: -4454.929089, mean: -3581.029505, std: 1314.972465.
+ACC  - max: 0.982432, min: 0.810811, median: 0.968243, mean: 0.943649, std: 0.057986.
+NLL  - max: 0.667848, min: 0.054345, median: 0.663046, mean: 0.516713, std: 0.204524.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
 ELBO - max: -441.419710, min: -464.018613, median: -452.083285, mean: -451.609530, std: 7.613344.
-ACC  - max: 0.985135, min: 0.972973, median: 0.975676, mean: 0.977838, std: 0.004196.
-NLL  - max: 0.077174, min: 0.046878, median: 0.062856, mean: 0.063841, std: 0.010713.
+ACC  - max: 0.986486, min: 0.972973, median: 0.979730, mean: 0.979324, std: 0.004799.
+NLL  - max: 0.075884, min: 0.043305, median: 0.052011, mean: 0.054395, std: 0.010713.
 """
 
-# (10, 300, 500, 10, 250, 10)
-# SVGP: ELBO = -4434.778278, ACC = 0.972973, NLL = 0.657662. # 1
-# PGPR: ELBO = -452.927107, ACC = 0.974324, NLL = 0.062034.
-# SVGP: ELBO = -3579.396447, ACC = 0.936486, NLL = 0.397189. # 2
-# PGPR: ELBO = -458.741920, ACC = 0.982432, NLL = 0.053706.
-# SVGP: ELBO = -4463.158650, ACC = 0.964865, NLL = 0.663630. # 3
-# PGPR: ELBO = -444.264951, ACC = 0.974324, NLL = 0.075936.
-# SVGP: ELBO = -4473.513536, ACC = 0.958108, NLL = 0.666257. # 4
-# PGPR: ELBO = -459.084314, ACC = 0.982432, NLL = 0.053327.
-# SVGP: ELBO = -4482.821112, ACC = 0.956757, NLL = 0.669868. # 5
-# PGPR: ELBO = -441.419710, ACC = 0.975676, NLL = 0.077174.
-# SVGP: ELBO = -4500.681519, ACC = 0.937838, NLL = 0.671031. # 6
-# PGPR: ELBO = -445.391294, ACC = 0.975676, NLL = 0.073069.
-# SVGP: ELBO = -4457.656429, ACC = 0.974324, NLL = 0.661061. # 7
-# PGPR: ELBO = -456.977911, ACC = 0.985135, NLL = 0.055768.
-# SVGP: ELBO = -4500.596467, ACC = 0.955405, NLL = 0.670082. # 8
-# PGPR: ELBO = -442.030012, ACC = 0.974324, NLL = 0.076842.
-# SVGP: ELBO = -3531.208425, ACC = 0.966216, NLL = 0.445102. # 9
-# PGPR: ELBO = -464.018613, ACC = 0.981081, NLL = 0.046878.
-# SVGP: ELBO = -3525.264918, ACC = 0.971622, NLL = 0.448636. # 10
-# PGPR: ELBO = -451.239463, ACC = 0.972973, NLL = 0.063677.
 
-
-# TODO: Try smaller after sparsity test???
 class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
     def __init__(self):
         TwonormDataset.__init__(self)
@@ -203,37 +180,15 @@ class TwonormMetricsMetaDataset(TwonormDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
-ELBO - max: -760.377360, min: -3527.675610, median: -2422.280729, mean: -2111.355175, std: 1037.510762.
-ACC  - max: 0.983784, min: 0.493243, median: 0.912162, mean: 0.857703, std: 0.156352.
-NLL  - max: 0.512994, min: 0.046621, median: 0.238337, mean: 0.239820, std: 0.168667.
+ELBO - max: -768.285139, min: -4332.227797, median: -2597.246881, mean: -2260.877601, std: 1301.823368.
+ACC  - max: 0.979730, min: 0.495946, median: 0.871622, mean: 0.803243, std: 0.183625.
+NLL  - max: 0.646989, min: 0.043059, median: 0.315875, mean: 0.290692, std: 0.209444.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
-ELBO - max: -948.141417, min: -4616.360228, median: -959.493653, mean: -1688.341512, std: 1464.016603.
-ACC  - max: 0.985135, min: 0.877027, median: 0.980405, mean: 0.959595, std: 0.041208.
-NLL  - max: 0.693147, min: 0.046114, median: 0.054798, mean: 0.183520, std: 0.254989.
+ELBO - max: -933.852979, min: -967.672191, median: -952.890675, mean: -953.277250, std: 9.537135.
+ACC  - max: 0.989189, min: 0.964865, median: 0.980405, mean: 0.976622, std: 0.007023.
+NLL  - max: 0.097374, min: 0.037707, median: 0.054798, mean: 0.062037, std: 0.015969.
 """
-
-# (10, 300, 500, 10, 250, 10)
-# SVGP: ELBO = -2701.769081, ACC = 0.874324, NLL = 0.315759. # 1
-# PGPR: ELBO = -963.796712, ACC = 0.981081, NLL = 0.048220.
-# SVGP: ELBO = -3527.675610, ACC = 0.493243, NLL = 0.512994. # 2
-# PGPR: ELBO = -4616.360228, ACC = 0.878378, NLL = 0.693147.
-# SVGP: ELBO = -1325.857785, ACC = 0.981081, NLL = 0.077672. # 3
-# PGPR: ELBO = -960.825776, ACC = 0.983784, NLL = 0.046114.
-# SVGP: ELBO = -801.330255, ACC = 0.983784, NLL = 0.046621.  # 4
-# PGPR: ELBO = -960.507233, ACC = 0.985135, NLL = 0.047909.
-# SVGP: ELBO = -2142.792377, ACC = 0.950000, NLL = 0.160916. # 5
-# PGPR: ELBO = -953.951669, ACC = 0.985135, NLL = 0.053338.
-# SVGP: ELBO = -3120.459927, ACC = 0.660811, NLL = 0.440570. # 6
-# PGPR: ELBO = -4616.360228, ACC = 0.877027, NLL = 0.693147.
-# SVGP: ELBO = -3039.894458, ACC = 0.801351, NLL = 0.366579. # 7
-# PGPR: ELBO = -954.944517, ACC = 0.982432, NLL = 0.056259.
-# SVGP: ELBO = -760.377360, ACC = 0.974324, NLL = 0.073831.  # 8
-# PGPR: ELBO = -950.047262, ACC = 0.971622, NLL = 0.075348.
-# SVGP: ELBO = -2902.601762, ACC = 0.874324, NLL = 0.355600. # 9
-# PGPR: ELBO = -948.141417, ACC = 0.971622, NLL = 0.071920.
-# SVGP: ELBO = -790.793133, ACC = 0.983784, NLL = 0.047664.  # 10
-# PGPR: ELBO = -958.480074, ACC = 0.979730, NLL = 0.049802.
 
 
 class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
@@ -248,11 +203,10 @@ SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
 """
 
-# (10, 500, 500, 20, 500, 20)
-# ...
-
 
 # TODO: Doesn't fit in memory -> crashes
+# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
+#       This is why it won't fit in memory???
 # This experiment was run on a GPU so is not reproducable on CPU.
 class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
     def __init__(self):
@@ -266,11 +220,10 @@ SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
 PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
 """
 
-# (10, 300, 500, 20, 500, 20)
-# ...
-
 
 # TODO: Doesn't fit in memory -> crashes
+# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
+#       This is why it won't fit in memory???
 # This experiment was run on a GPU so is not reproducable on CPU.
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):

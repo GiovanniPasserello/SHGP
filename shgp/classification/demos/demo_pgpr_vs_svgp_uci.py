@@ -5,9 +5,7 @@ np.random.seed(0)
 tf.random.set_seed(0)
 
 
-# TODO: Add experiment contrasting PGPR HGV to PGPR GO initialised at HGV - how much performance are we missing?
-
-
+# TODO: Run fertility metric experiment
 def load_fertility():
     # https://archive.ics.uci.edu/ml/datasets/Fertility
     dataset = "../../data/fertility.txt"
@@ -24,22 +22,8 @@ def load_fertility():
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
 
 
-def load_magic():
-    # https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
-    dataset = "../../data/magic.txt"
-
-    data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1)
-
-    NUM_INDUCING = 100  # 200
-    BERN_ITERS = 200  # 100
-    PGPR_ITERS = (5, 25, 10)  # This slightly benefits from being larger than this, but becomes slow
-    GREEDY_THRESHOLD = 0  # 100
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
+# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
+#       This is why it won't fit in memory???
 def load_electricity():
     # https://datahub.io/machine-learning/electricity
     dataset = "../../data/electricity.csv"
@@ -56,8 +40,5 @@ def load_electricity():
     # 200 - very close performance
     # bernoulli: ELBO=-20638.401637, ACC=0.795043, NLL=0.441826, TIME=213.12
     # pgpr: ELBO=-20646.108759, ACC=0.791159, NLL=0.444059, TIME=764.12 (but this cycled - converged ~150 seconds)
-    # 10 - worse performance
-    # bernoulli: ELBO=-21872.580557, ACC=0.778469, NLL=0.467994, TIME=25.71
-    # pgpr: ELBO=-22990.888027, ACC=0.755032, NLL=0.505194, TIME=51.28 (this cycled - converged ~15 seconds)
 
     return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
