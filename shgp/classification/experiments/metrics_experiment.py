@@ -19,6 +19,8 @@ A comparison of PGPR with heteroscedastic greedy variance reinitialisation and S
 likelihood and fixed inducing points initialised with kmeans. 
 These are the 'best' case scenarios of best method used for a thorough evaluation of PGPR vs SVGP. 
 In particular we evaluate the performance of very sparse models to see whether HGV is beneficial.
+
+Please note that many of the experiments were run on a GPU so are not entirely reproducible on CPU.
 """
 
 
@@ -92,4 +94,4 @@ def run_iteration(metadata, X, Y, X_test, Y_test):
 
 
 if __name__ == '__main__':
-    run_metrics_experiment(TwonormMetricsMetaDataset())
+    run_metrics_experiment(MagicMetricsMetaDataset())

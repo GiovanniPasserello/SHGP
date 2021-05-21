@@ -43,7 +43,7 @@ def k_means(training_inputs: np.ndarray, M: int):
 
     # If N is large, take a uniform subset
     if N > 20000:
-        training_inputs, _ = uniform_subsample(training_inputs, 20000)
+        training_inputs = uniform_subsample(training_inputs, 20000)
 
     # Scipy k-means++
     centroids, _ = scipy.cluster.vq.kmeans(training_inputs, M)

@@ -26,9 +26,6 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# TODO: Fertility experiment?
-
-
 """
 SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default)
 ELBO - max: -89.519647, min: -103.250001, median: -98.954888, mean: -98.629271, std: 3.787107.
@@ -198,34 +195,30 @@ class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
 
 
 """
-SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=500)
 
-PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=500)
 """
 
 
-# TODO: Doesn't fit in memory -> crashes
-# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
-#       This is why it won't fit in memory???
-# This experiment was run on a GPU so is not reproducable on CPU.
+# TODO: Run experiment
+# TODO: M=300?
 class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
     def __init__(self):
         MagicDataset.__init__(self)
-        MetricsMetaDataset.__init__(self, 10, 200, 500, 20, 500, 20)
+        MetricsMetaDataset.__init__(self, 10, 500, 500, 10, 250, 10)
 
 
 """
-SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=300)
+SVGP Distribution: (kmeans++, no grad-optim, with unconstrained/default, M=500)
 
-PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=300)
+PGPR Distribution: (hetero greedy var, no grad-optim, with unconstrained/default, M=500)
 """
 
 
-# TODO: Doesn't fit in memory -> crashes
-# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
-#       This is why it won't fit in memory???
-# This experiment was run on a GPU so is not reproducable on CPU.
+# TODO: Run experiment
+# TODO: M=300?
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):
         ElectricityDataset.__init__(self)
-        MetricsMetaDataset.__init__(self, 10, 300, 500, 10, 250, 10)
+        MetricsMetaDataset.__init__(self, 10, 500, 500, 10, 250, 10)
