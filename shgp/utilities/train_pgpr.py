@@ -118,7 +118,7 @@ def _train_sparse_reinit_pgpr(model, inner_iters, opt_iters, ci_iters, M, reinit
     For example: greedy_variance() or h_greedy_variance().
     """
     opt = gpflow.optimizers.Scipy()
-    prev_elbo, elbos = model.elbo(), []
+    prev_elbo, elbos = -float("inf"), []
     outer_iters = reinit_metadata.outer_iters
 
     return_metrics = X_test is not None

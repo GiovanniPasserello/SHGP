@@ -5,25 +5,6 @@ np.random.seed(0)
 tf.random.set_seed(0)
 
 
-# TODO: Run fertility metric experiment
-def load_fertility():
-    # https://archive.ics.uci.edu/ml/datasets/Fertility
-    dataset = "../../data/fertility.txt"
-
-    data = np.loadtxt(dataset, delimiter=",")
-    X = data[:, :-1]
-    Y = data[:, -1].reshape(-1, 1)
-
-    NUM_INDUCING = 100  # quicker with 100 than with 9
-    BERN_ITERS = 500  # best with 100: -38.982949 (with 9: -38.991571)
-    PGPR_ITERS = (5, 25, 5)  # best with 100: -39.354674
-    GREEDY_THRESHOLD = 1e-6  # (early stops at 9): -39.354684
-
-    return X, Y, NUM_INDUCING, BERN_ITERS, PGPR_ITERS, GREEDY_THRESHOLD
-
-
-# TODO: Try fix memory errors (maybe I can run PGPR, but not svgp?)
-#       This is why it won't fit in memory???
 def load_electricity():
     # https://datahub.io/machine-learning/electricity
     dataset = "../../data/electricity.csv"
