@@ -325,8 +325,14 @@ ACC  - max: 0.986486, min: 0.967568, median: 0.977703, mean: 0.978243, std: 0.00
 NLL  - max: 0.091879, min: 0.044205, median: 0.060318, mean: 0.060964, std: 0.012168.
 
 PGPR Distribution: (greedy var, no grad-optim, M=300)
+ELBO - max: -444.943399, min: -465.351050, median: -458.610668, mean: -457.373139, std: 6.188278.
+ACC  - max: 0.983784, min: 0.972973, median: 0.978378, mean: 0.977703, std: 0.003928.
+NLL  - max: 0.073826, min: 0.045847, median: 0.054184, mean: 0.056054, std: 0.008707.
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
+ELBO - max: -444.979294, min: -464.877358, median: -458.634332, mean: -457.330837, std: 6.124120.
+ACC  - max: 0.983784, min: 0.972973, median: 0.978378, mean: 0.977703, std: 0.003928.
+NLL  - max: 0.073811, min: 0.045877, median: 0.054185, mean: 0.056056, std: 0.008700.
 """
 
 
@@ -363,8 +369,14 @@ ACC  - max: 0.987838, min: 0.968919, median: 0.975676, mean: 0.977162, std: 0.00
 NLL  - max: 0.082839, min: 0.048921, median: 0.070721, mean: 0.067049, std: 0.011971.
 
 PGPR Distribution: (greedy var, no grad-optim, M=300)
+ELBO - max: -926.199076, min: -4616.360228, median: -965.481081, mean: -1685.342074, std: 1465.640732.
+ACC  - max: 0.981081, min: 0.795946, median: 0.975000, mean: 0.947703, std: 0.058375.
+NLL  - max: 0.693147, min: 0.050673, median: 0.071076, mean: 0.191241, std: 0.251122.
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
+ELBO - max: -904.414564, min: -4616.360228, median: -922.584130, mean: -1657.752554, std: 1479.318193.
+ACC  - max: 0.979730, min: 0.498649, median: 0.975000, mean: 0.916892, std: 0.143329.
+NLL  - max: 0.693147, min: 0.049834, median: 0.069067, mean: 0.189993, std: 0.251775.
 """
 
 
