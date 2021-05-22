@@ -26,13 +26,10 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# TODO: Get metrics results for (PGPR hgv, rerun) and (SVGP kmeans with optim)
-#       Running locally...
-# TODO: Get metrics results for PGPR uniform, k_means on Magic and Electricity
-# TODO: Get metrics results for PGPR greedy var (non-hetero)
-# TODO: Get metrics results for PGPR gradient optim (initialised at hgv)
+# TODO: Get metrics results for PGPR greedy var (non-hetero) and HGV gradient optim
+#       To run on twonorm and ringnorm (joint)
 #   This is the best way to phrase it (grad optim, intitialsed at hgv)
-#   Run on twonorm, ringnorm, magic and electricity
+# TODO: Get metrics results for PGPR uniform, k_means on Magic and Electricity?
 # TODO: Check that the Ms used below correspond to the convergent M achieved in sparsity plots!
 
 
@@ -308,7 +305,9 @@ ACC  - max: 0.982432, min: 0.810811, median: 0.968243, mean: 0.943649, std: 0.05
 NLL  - max: 0.667848, min: 0.054345, median: 0.663046, mean: 0.516713, std: 0.204524.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
-
+ELBO - max: -3706.290435, min: -4527.708744, median: -4466.294742, mean: -4362.042284, std: 230.266477.
+ACC  - max: 0.968919, min: 0.689189, median: 0.922297, mean: 0.893108, std: 0.081363.
+NLL  - max: 0.673092, min: 0.489449, median: 0.665749, mean: 0.631629, std: 0.055333.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, M=300)
 ELBO - max: -441.419710, min: -464.018613, median: -452.083285, mean: -451.609530, std: 7.613344.
@@ -344,7 +343,9 @@ ACC  - max: 0.979730, min: 0.495946, median: 0.871622, mean: 0.803243, std: 0.18
 NLL  - max: 0.646989, min: 0.043059, median: 0.315875, mean: 0.290692, std: 0.209444.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
-
+ELBO - max: -745.050897, min: -4013.076913, median: -768.661123, mean: -1675.260796, std: 1401.709263.
+ACC  - max: 0.987838, min: 0.493243, median: 0.975676, mean: 0.840946, std: 0.213598.
+NLL  - max: 0.590866, min: 0.041503, median: 0.070809, mean: 0.207506, std: 0.229643.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, M=300)
 ELBO - max: -933.852979, min: -967.672191, median: -952.890675, mean: -953.277250, std: 9.537135.
@@ -423,7 +424,7 @@ PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
 
 """
 
-# TODO: Find results
+# TODO: Compute results
 # 10, 300, 500, 10, 250, 10
 # Beginning cycle 1...
 # PGPR ELBO failed to converge: prev -18415.408450099414, next -18396.388646198277.
@@ -492,6 +493,7 @@ PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
 # SVGP: ELBO = -18092.365786, ACC = 0.790159, NLL = 0.439643.
 # PGPR: ELBO = -18283.042503, ACC = 0.791041, NLL = 0.445399.
 # Beginning cycle 10...
+
 
 # TODO: Run experiment on Colab
 # TODO: Perhaps performance is worse for HGV than k-means as M isn't large enough
