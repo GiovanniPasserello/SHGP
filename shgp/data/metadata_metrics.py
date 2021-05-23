@@ -393,26 +393,37 @@ ACC  - max: 0.885910, min: 0.862776, median: 0.870925, mean: 0.871293, std: 0.00
 NLL  - max: 0.331892, min: 0.293679, median: 0.316215, mean: 0.316249, std: 0.010425.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
-
+ELBO - max: -5597.220172, min: -5693.735641, median: -5627.093665, mean: -5634.555268, std: 31.111207.
+ACC  - max: 0.889064, min: 0.863828, median: 0.871714, mean: 0.872555, std: 0.007358.
+NLL  - max: 0.329261, min: 0.287862, median: 0.311401, mean: 0.311482, std: 0.013044.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, M=300)
-ELBO - max: -5807.941402, min: -5868.467288, median: -5828.071268, mean: -5834.611281, std: 19.699746.
-ACC  - max: 0.882229, min: 0.860147, median: 0.868822, mean: 0.869401, std: 0.006055.
-NLL  - max: 0.368359, min: 0.300778, median: 0.324061, mean: 0.324389, std: 0.017964.
+ELBO - max: -5801.452425, min: -5868.467288, median: -5828.071268, mean: -5831.008173, std: 19.699746.
+ACC  - max: 0.882229, min: 0.862250, median: 0.873800, mean: 0.872347, std: 0.005634.
+NLL  - max: 0.353511, min: 0.300778, median: 0.324061, mean: 0.324389, std: 0.013510.
 
 PGPR Distribution: (uniform subsample, no grad-optim, M=300)
+ELBO - max: -5907.587163, min: -5980.157311, median: -5935.344158, mean: -5936.948171, std: 24.630645.
+ACC  - max: 0.876972, min: 0.860147, median: 0.867508, mean: 0.867666, std: 0.005520.
+NLL  - max: 0.339632, min: 0.300164, median: 0.330803, mean: 0.326025, std: 0.013762.
 
 PGPR Distribution: (k_means, no grad-optim, M=300)
+ELBO - max: -5835.694997, min: -5895.958561, median: -5845.246655, mean: -5854.735864, std: 21.176794.
+ACC  - max: 0.876972, min: 0.856993, median: 0.869348, mean: 0.868980, std: 0.005971.
+NLL  - max: 0.335551, min: 0.299321, median: 0.326909, mean: 0.322658, std: 0.012951.
 
 PGPR Distribution: (greedy var, no grad-optim, M=300)
+ELBO - max: -5839.504091, min: -5894.213351, median: -5859.701456, mean: -5864.279534, std: 17.867179.
+ACC  - max: 0.877497, min: 0.864879, median: 0.869085, mean: 0.870137, std: 0.003948.
+NLL  - max: 0.346354, min: 0.309627, median: 0.331679, mean: 0.328185, std: 0.011733.
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
-
+ELBO - max: -5728.099434, min: -5777.925343, median: -5752.952196, mean: -5754.214480, std: 15.337549.
+ACC  - max: 0.881703, min: 0.865405, median: 0.871451, mean: 0.872555, std: 0.004961.
+NLL  - max: 0.333932, min: 0.301704, median: 0.323919, mean: 0.327123, std: 0.013213.
 """
 
 
-# TODO: Run experiment on Colab
-# TODO: Perhaps performance is worse for HGV than k-means as M isn't large enough
 class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
     def __init__(self):
         MagicDataset.__init__(self)
@@ -421,10 +432,16 @@ class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim, M=300)
+ELBO - max: -18039.079090, min: -18152.600065, median: -18109.426343, mean: -18106.271200, std: 37.490670
+ACC  - max: 0.813548, min: 0.800309, median: 0.806928, mean: 0.806561, std: 0.004685.
+NLL  - max: 0.435286, min: 0.416427, median: 0.421902, mean: 0.423883, std: 0.006529.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
 
 PGPR Distribution: (hetero greedy var, no grad-optim, M=300)
+ELBO - max: -18308.170504, min: -18394.747920, median: -18357.596046, mean: -18356.855284, std: 29.821048
+ACC  - max: 0.806267, min: 0.793689, median: 0.803949, mean: 0.802111, std: 0.004401.
+NLL  - max: 0.451750, min: 0.425104, median: 0.429982, mean: 0.433322, std: 0.009202.
 
 PGPR Distribution: (uniform subsample, no grad-optim, M=300)
 
@@ -433,82 +450,10 @@ PGPR Distribution: (k_means, no grad-optim, M=300)
 PGPR Distribution: (greedy var, no grad-optim, M=300)
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
-
 """
-
-# TODO: Compute results
-# 10, 300, 500, 10, 250, 10
-# Beginning cycle 1...
-# PGPR ELBO failed to converge: prev -18415.408450099414, next -18396.388646198277.
-# SVGP: ELBO = -18101.636126, ACC = 0.810238, NLL = 0.420085.
-# PGPR: ELBO = -18383.393121, ACC = 0.803398, NLL = 0.427922.
-# Beginning cycle 2...
-# PGPR ELBO failed to converge: prev -18358.49135184391, next -18339.628066297373.
-# SVGP: ELBO = -18085.934464, ACC = 0.800309, NLL = 0.429165.
-# PGPR: ELBO = -18339.628066, ACC = 0.793689, NLL = 0.437207.
-# Beginning cycle 3...
-# PGPR ELBO failed to converge: prev -18308.17050435062, next -18311.187940974338.
-# SVGP: ELBO = -18039.079090, ACC = 0.801412, NLL = 0.435286.
-# PGPR: ELBO = -18308.170504, ACC = 0.799206, NLL = 0.451750.
-# Beginning cycle 4...
-# Cholesky failed with maximum jitter.
-# Cholesky error caught, retrying...
-# PGPR ELBO failed to converge: prev -18408.913979693327, next -18378.57118006317.
-# SVGP: ELBO = -18141.160896, ACC = 0.808252, NLL = 0.423720.
-# PGPR: ELBO = -18373.837635, ACC = 0.806267, NLL = 0.432042.
-# Beginning cycle 5...
-# PGPR ELBO failed to converge: prev -18360.466179625975, next -18341.354457487796.
-# SVGP: ELBO = -18152.600065, ACC = 0.813548, NLL = 0.416427.
-# PGPR: ELBO = -18341.354457, ACC = 0.805605, NLL = 0.425906.
-# Beginning cycle 6...
-# PGPR ELBO failed to converge: prev -18394.74792047306, next -18408.51579684986.
-# SVGP: ELBO = -18117.216560, ACC = 0.805605, NLL = 0.418614.
-# PGPR: ELBO = -18394.747920, ACC = 0.804501, NLL = 0.425104.
-# Beginning cycle 7...
-
-# Beginning cycle 1...
-# Cholesky failed with maximum jitter.
-# Cholesky error caught, retrying...
-# PGPR ELBO failed to converge: prev -18379.659842897516, next -18330.932710341793.
-# SVGP: ELBO = -18100.133043, ACC = 0.800750, NLL = 0.428685.
-# PGPR: ELBO = -18330.932710, ACC = 0.796558, NLL = 0.435063.
-# Beginning cycle 2...
-# PGPR ELBO failed to converge: prev -18365.08189566786, next -18335.47831834503.
-# SVGP: ELBO = -18164.863439, ACC = 0.805384, NLL = 0.422066.
-# PGPR: ELBO = -18335.478318, ACC = 0.803839, NLL = 0.427654.
-# Beginning cycle 3...
-# PGPR ELBO failed to converge: prev -18344.000485800905, next -18338.904702654185.
-# SVGP: ELBO = -18113.853773, ACC = 0.803398, NLL = 0.424619.
-# PGPR: ELBO = -18338.904703, ACC = 0.801412, NLL = 0.430044.
-# Beginning cycle 4...
-# PGPR ELBO failed to converge: prev -18325.330732839262, next -18296.95940539742.
-# SVGP: ELBO = -18082.869820, ACC = 0.799426, NLL = 0.434670.
-# PGPR: ELBO = -18292.692873, ACC = 0.798985, NLL = 0.440920.
-# Beginning cycle 5...
-# PGPR ELBO failed to converge: prev -18408.03723792868, next -18383.60226338658.
-# SVGP: ELBO = -18150.090232, ACC = 0.801412, NLL = 0.421257.
-# PGPR: ELBO = -18383.602263, ACC = 0.802957, NLL = 0.424809.
-# Beginning cycle 6...
-# PGPR ELBO failed to converge: prev -18398.355014462602, next -18392.530243766036.
-# SVGP: ELBO = -18111.560910, ACC = 0.808914, NLL = 0.419617.
-# PGPR: ELBO = -18387.196726, ACC = 0.801192, NLL = 0.429616.
-# Beginning cycle 7...
-# PGPR ELBO failed to converge: prev -18380.56610272094, next -18377.507000804017.
-# SVGP: ELBO = -18134.107411, ACC = 0.808032, NLL = 0.422314.
-# PGPR: ELBO = -18354.383904, ACC = 0.800750, NLL = 0.430153.
-# Beginning cycle 8...
-# PGPR ELBO failed to converge: prev -18386.52170452088, next -18399.379634296027.
-# SVGP: ELBO = -18100.638620, ACC = 0.809356, NLL = 0.419212.
-# PGPR: ELBO = -18355.680738, ACC = 0.804943, NLL = 0.427674.
-# Beginning cycle 9...
-# PGPR ELBO failed to converge: prev -18303.571028784576, next -18283.04250305434.
-# SVGP: ELBO = -18092.365786, ACC = 0.790159, NLL = 0.439643.
-# PGPR: ELBO = -18283.042503, ACC = 0.791041, NLL = 0.445399.
-# Beginning cycle 10...
 
 
 # TODO: Run experiment on Colab
-# TODO: Perhaps performance is worse for HGV than k-means as M isn't large enough
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):
         ElectricityDataset.__init__(self)
