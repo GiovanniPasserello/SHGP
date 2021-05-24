@@ -441,13 +441,27 @@ ACC  - max: 0.806267, min: 0.793689, median: 0.803949, mean: 0.802111, std: 0.00
 NLL  - max: 0.451750, min: 0.425104, median: 0.429982, mean: 0.433322, std: 0.009202.
 
 PGPR Distribution: (uniform subsample, no grad-optim, M=300)
+ELBO - max: -18284.592037, min: -18401.895847, median: -18336.620948, mean: -18341.835006, std: 38.983403.
+ACC  - max: 0.805605, min: 0.796558, median: 0.799426, mean: 0.800044, std: 0.002973.
+NLL  - max: 0.444850, min: 0.424833, median: 0.435564, mean: 0.434925, std: 0.005099.
 
 PGPR Distribution: (k_means, no grad-optim, M=300)
+ELBO - max: -18149.154007, min: -18284.339341, median: -18208.751162, mean: -18208.193579, std: 36.173418.
+ACC  - max: 0.809576, min: 0.795455, median: 0.800971, mean: 0.801324, std: 0.004084.
+NLL  - max: 0.442121, min: 0.423484, median: 0.433032, mean: 0.431940, std: 0.004992.
 
 PGPR Distribution: (greedy var, no grad-optim, M=300)
+ELBO - max: -18282.290839, min: -18422.084934, median: -18389.020222, mean: -18372.674480, std: 44.600077.
+ACC  - max: 0.803177, min: 0.785525, median: 0.793358, mean: 0.794219, std: 0.004900.
+NLL  - max: 0.455802, min: 0.434493, median: 0.441399, mean: 0.442115, std: 0.006935.
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
 """
+
+# TODO: Alternative HGV
+# ELBO - max: -18233.719976, min: -18350.846772, median: -18302.404202, mean: -18302.114337, std: 38.769850.
+# ACC  - max: 0.804281, min: 0.788394, median: 0.796999, mean: 0.796756, std: 0.004902.
+# NLL  - max: 0.455143, min: 0.430566, median: 0.438212, mean: 0.439653, std: 0.007801.
 
 
 # TODO: Run experiment on Colab
