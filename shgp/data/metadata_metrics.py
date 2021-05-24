@@ -26,10 +26,7 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# TODO: Get metrics results for PGPR greedy var (non-hetero) and HGV gradient optim
-#       To run on twonorm and ringnorm (joint)
-#   This is the best way to phrase it (grad optim, intitialsed at hgv)
-# TODO: Get metrics results for PGPR uniform, k_means on Magic and Electricity?
+# TODO: Get metrics results for Electricity?
 # TODO: Check that the Ms used below correspond to the convergent M achieved in sparsity plots!
 
 
@@ -89,9 +86,9 @@ ACC  - max: 1.000000, min: 1.000000, median: 1.000000, mean: 1.000000, std: 0.00
 NLL  - max: 0.096502, min: 0.031684, median: 0.056493, mean: 0.058082, std: 0.021037.
 
 PGPR Distribution: (hetero greedy var, no grad-optim)
-ELBO - max: -29.459306, min: -30.159630, median: -29.961047, mean: -29.885057, std: 0.197002.
+ELBO - max: -29.459306, min: -30.109630, median: -29.961047, mean: -29.885057, std: 0.197002.
 ACC  - max: 1.000000, min: 1.000000, median: 1.000000, mean: 1.000000, std: 0.000000.
-NLL  - max: 0.027977, min: 0.002512, median: 0.004539, mean: 0.010042, std: 0.008899.
+NLL  - max: 0.027977, min: 0.002512, median: 0.004539, mean: 0.007942, std: 0.008899.
 
 PGPR Distribution: (uniform subsample, no grad-optim)
 ELBO - max: -30.102250, min: -30.634909, median: -30.341378, mean: -30.322743, std: 0.160593.
@@ -168,9 +165,9 @@ class HeartMetricsMetaDataset(HeartDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim)
-ELBO - max: -102.320602, min: -111.255612, median: -107.341194, mean: -107.392428, std: 2.878623.
-ACC  - max: 0.972222, min: 0.861111, median: 0.888889, mean: 0.911111, std: 0.042673.
-NLL  - max: 0.539788, min: 0.087637, median: 0.269310, mean: 0.276174, std: 0.127492.
+ELBO - max: -103.563473, min: -112.047841, median: -107.209806, mean: -106.996660, std: 2.520888.
+ACC  - max: 0.944444, min: 0.833333, median: 0.902778, mean: 0.891667, std: 0.033907.
+NLL  - max: 0.444872, min: 0.204699, median: 0.290666, mean: 0.298987, std: 0.081673.
 
 SVGP Distribution: (kmeans++, *with* grad-optim)
 ELBO - max: -93.940266, min: -101.288614, median: -98.460579, mean: -97.753783, std: 2.390541.
@@ -178,9 +175,9 @@ ACC  - max: 1.000000, min: 0.888889, median: 0.944444, mean: 0.936111, std: 0.03
 NLL  - max: 0.345818, min: 0.061877, median: 0.186034, mean: 0.205206, std: 0.089058.
 
 PGPR Distribution: (hetero greedy var, no grad-optim)
-ELBO - max: -116.037903, min: -125.215633, median: -120.372931, mean: -120.675359, std: 2.760629.
-ACC  - max: 0.972222, min: 0.833333, median: 0.861111, mean: 0.886111, std: 0.042035.
-NLL  - max: 0.502648, min: 0.121410, median: 0.301423, mean: 0.307200, std: 0.112117.
+ELBO - max: -116.201476, min: -123.996954, median: -120.696971, mean: -120.516805, std: 2.243119.
+ACC  - max: 0.944444, min: 0.861111, median: 0.902778, mean: 0.894444, std: 0.029918.
+NLL  - max: 0.443399, min: 0.226932, median: 0.299854, mean: 0.312216, std: 0.076521.
 
 PGPR Distribution: (uniform subsample, no grad-optim)
 ELBO - max: -116.084780, min: -122.249368, median: -119.974776, mean: -119.350842, std: 2.225078.
@@ -222,9 +219,9 @@ ACC  - max: 1.000000, min: 0.947368, median: 0.982456, mean: 0.977193, std: 0.01
 NLL  - max: 0.226910, min: 0.014528, median: 0.074933, mean: 0.093823, std: 0.061250.
 
 PGPR Distribution: (hetero greedy var, no grad-optim)
-ELBO - max: -65.263036, min: -71.668893, median: -69.381602, mean: -69.548874, std: 1.810755.
+ELBO - max: -65.063036, min: -71.668893, median: -69.381602, mean: -69.548874, std: 1.810755.
 ACC  - max: 1.000000, min: 0.947368, median: 0.982456, mean: 0.980702, std: 0.014573.
-NLL  - max: 0.156879, min: 0.037506, median: 0.085697, mean: 0.082185, std: 0.033648.
+NLL  - max: 0.156879, min: 0.022692, median: 0.085697, mean: 0.082185, std: 0.033648.
 
 PGPR Distribution: (uniform subsample, no grad-optim)
 ELBO - max: -63.706091, min: -73.053283, median: -69.586676, mean: -68.642236, std: 3.426317.
@@ -244,7 +241,7 @@ NLL  - max: 0.174146, min: 0.024167, median: 0.047871, mean: 0.068991, std: 0.04
 PGPR Distribution: (hetero greedy var, *with* grad-optim)
 ELBO - max: -64.919496, min: -72.588883, median: -71.218075, mean: -70.205327, std: 2.433261.
 ACC  - max: 1.000000, min: 0.964912, median: 0.982456, mean: 0.984211, std: 0.014573.
-NLL  - max: 0.173942, min: 0.023864, median: 0.048304, mean: 0.068886, std: 0.048026.
+NLL  - max: 0.173942, min: 0.022364, median: 0.048304, mean: 0.068886, std: 0.048026.
 """
 
 
@@ -361,7 +358,7 @@ NLL  - max: 0.097374, min: 0.037707, median: 0.054798, mean: 0.062037, std: 0.01
 PGPR Distribution: (uniform subsample, no grad-optim, M=300)
 ELBO - max: -932.467899, min: -980.560829, median: -960.690189, mean: -959.429487, std: 15.226527.
 ACC  - max: 0.987838, min: 0.967568, median: 0.975676, mean: 0.977162, std: 0.005935.
-NLL  - max: 0.082750, min: 0.048434, median: 0.070451, mean: 0.066714, std: 0.012016.
+NLL  - max: 0.082345, min: 0.048434, median: 0.070451, mean: 0.066714, std: 0.012016.
 
 PGPR Distribution: (k_means, no grad-optim, M=300)
 ELBO - max: -933.976157, min: -971.332302, median: -954.930721, mean: -956.432142, std: 10.902029.
