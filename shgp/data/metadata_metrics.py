@@ -26,7 +26,6 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# TODO: Get metrics results for Electricity?
 # TODO: Check that the Ms used below correspond to the convergent M achieved in sparsity plots!
 
 
@@ -463,8 +462,39 @@ PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
 # ACC  - max: 0.804281, min: 0.788394, median: 0.796999, mean: 0.796756, std: 0.004902.
 # NLL  - max: 0.455143, min: 0.430566, median: 0.438212, mean: 0.439653, std: 0.007801.
 
+# TODO: Results from SVGP kmeans optim vs PGPR hgv optim (find distribution)
+# Beginning cycle 1...
+# PGPR ELBO failed to converge: prev -18415.408450099414, next -18396.388646198277.
+# SVGP: ELBO = -17774.267290, ACC = 0.812665, NLL = 0.407492.
+# PGPR: ELBO = -17879.452103, ACC = 0.813327, NLL = 0.408135.
+# Beginning cycle 2...
+# PGPR ELBO failed to converge: prev -18358.49135184391, next -18339.628066297373.
+# SVGP: ELBO = -17678.998985, ACC = 0.809356, NLL = 0.411276.
+# PGPR: ELBO = -17838.789464, ACC = 0.806929, NLL = 0.415546.
+# Beginning cycle 3...
+# PGPR ELBO failed to converge: prev -18308.17050435062, next -18311.187940974338.
+# SVGP: ELBO = -17628.645765, ACC = 0.812665, NLL = 0.415402.
+# PGPR: ELBO = -17807.738103, ACC = 0.810680, NLL = 0.426408.
+# Beginning cycle 4...
+# Cholesky failed with maximum jitter.
+# Cholesky error caught, retrying...
+# PGPR ELBO failed to converge: prev -18408.913979693327, next -18378.57118006317.
+# SVGP: ELBO = -17799.802493, ACC = 0.818844, NLL = 0.406420.
+# PGPR: ELBO = -17883.002979, ACC = 0.815534, NLL = 0.413077.
+# Beginning cycle 5...
+# PGPR ELBO failed to converge: prev -18360.466179625975, next -18341.354457487796.
+# SVGP: ELBO = -17682.525534, ACC = 0.821271, NLL = 0.397659.
+# PGPR: ELBO = -17919.053683, ACC = 0.816417, NLL = 0.412807.
+# Beginning cycle 6...
+# PGPR ELBO failed to converge: prev -18394.74792047306, next -18408.51579684986.
+# SVGP: ELBO = -17722.608649, ACC = 0.813989, NLL = 0.400303.
+# PGPR: ELBO = -17890.734373, ACC = 0.812004, NLL = 0.404327.
+# Beginning cycle 7...
+# PGPR ELBO failed to converge: prev -18432.67174621006, next -18457.080305262774.
+# SVGP: ELBO = -17701.817493, ACC = 0.821050, NLL = 0.388518.
+# PGPR: ELBO = -17911.156375, ACC = 0.815975, NLL = 0.399454.
 
-# TODO: Run experiment on Colab
+
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
     def __init__(self):
         ElectricityDataset.__init__(self)
