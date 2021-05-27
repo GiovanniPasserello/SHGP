@@ -26,9 +26,6 @@ class MetricsMetaDataset:
     ci_iters: int
 
 
-# TODO: Check that the Ms used below correspond to the convergent M achieved in sparsity plots!
-
-
 """
 SVGP Distribution: (kmeans++, no grad-optim)
 ELBO - max: -89.519647, min: -103.250001, median: -98.954888, mean: -98.629271, std: 3.787107.
@@ -135,14 +132,14 @@ ACC  - max: 0.888889, min: 0.814815, median: 0.851852, mean: 0.844444, std: 0.02
 NLL  - max: 0.424670, min: 0.240716, median: 0.347886, mean: 0.347235, std: 0.050955.
 
 PGPR Distribution: (uniform subsample, no grad-optim)
-ELBO - max: -98.576805, min: -112.172565, median: -106.693834, mean: -105.828913, std: 4.080949.
-ACC  - max: 0.962963, min: 0.666667, median: 0.851852, mean: 0.833333, std: 0.086464.
-NLL  - max: 0.705459, min: 0.166910, median: 0.377869, mean: 0.408043, std: 0.164833.
+ELBO - max: -102.169119, min: -111.343948, median: -105.268686, mean: -106.147500, std: 2.976103.
+ACC  - max: 0.925926, min: 0.777778, median: 0.796296, mean: 0.825926, std: 0.057497.
+NLL  - max: 0.546463, min: 0.190650, median: 0.435317, mean: 0.395260, std: 0.114083.
 
 PGPR Distribution: (k_means, no grad-optim)
-ELBO - max: -98.474002, min: -112.002983, median: -106.549697, mean: -105.677156, std: 4.063422.
-ACC  - max: 0.962963, min: 0.666667, median: 0.851852, mean: 0.833333, std: 0.086464.
-NLL  - max: 0.705542, min: 0.166731, median: 0.377724, mean: 0.408234, std: 0.164898.
+ELBO - max: -102.079243, min: -111.201320, median: -105.027989, mean: -105.979876, std: 2.972753.
+ACC  - max: 0.925926, min: 0.777778, median: 0.796296, mean: 0.825926, std: 0.057497.
+NLL  - max: 0.546634, min: 0.190929, median: 0.434555, mean: 0.394946, std: 0.113989.
 
 PGPR Distribution: (greedy var, no grad-optim)
 ELBO - max: -100.655929, min: -108.262102, median: -106.784653, mean: -106.207520, std: 2.123873.
@@ -384,9 +381,9 @@ class RingnormMetricsMetaDataset(RingnormDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim, M=300)
-ELBO - max: -5697.229763, min: -5781.106789, median: -5725.451467, mean: -5731.254334, std: 22.866931.
-ACC  - max: 0.885910, min: 0.862776, median: 0.870925, mean: 0.871293, std: 0.005947.
-NLL  - max: 0.331892, min: 0.293679, median: 0.316215, mean: 0.316249, std: 0.010425.
+ELBO - max: -5699.377250, min: -5777.605244, median: -5737.342847, mean: -5736.178598, std: 24.040027.
+ACC  - max: 0.879075, min: 0.856467, median: 0.871188, mean: 0.869874, std: 0.006380.
+NLL  - max: 0.335494, min: 0.296170, median: 0.316794, mean: 0.319020, std: 0.010461.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
 ELBO - max: -5597.220172, min: -5693.735641, median: -5627.093665, mean: -5634.555268, std: 31.111207.
@@ -428,14 +425,17 @@ class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (kmeans++, no grad-optim, M=300)
-ELBO - max: -18039.079090, min: -18152.600065, median: -18109.426343, mean: -18106.271200, std: 37.490670
-ACC  - max: 0.813548, min: 0.800309, median: 0.806928, mean: 0.806561, std: 0.004685.
-NLL  - max: 0.435286, min: 0.416427, median: 0.421902, mean: 0.423883, std: 0.006529.
+ELBO - max: -18063.550467, min: -18178.405298, median: -18109.695571, mean: -18114.706985, std: 37.360415.
+ACC  - max: 0.813327, min: 0.793910, median: 0.805053, mean: 0.803928, std: 0.005759.
+NLL  - max: 0.440693, min: 0.413341, median: 0.422907, mean: 0.424236, std: 0.007474.
 
 SVGP Distribution: (kmeans++, *with* grad-optim, M=300)
+ELBO - max: -17628.645765, min: -17799.802493, median: -17701.817493, mean: -17712.666601, std: 54.386644.
+ACC  - max: 0.821271, min: 0.809356, median: 0.813989, mean: 0.815691, std: 0.004328.
+NLL  - max: 0.415402, min: 0.388518, median: 0.406420, mean: 0.403867, std: 0.008404.
 
 PGPR Distribution: (hetero greedy var, no grad-optim, M=300)
-ELBO - max: -18308.170504, min: -18394.747920, median: -18357.596046, mean: -18356.855284, std: 29.821048
+ELBO - max: -18308.170504, min: -18394.747920, median: -18357.596046, mean: -18356.855284, std: 29.821048.
 ACC  - max: 0.806267, min: 0.793689, median: 0.803949, mean: 0.802111, std: 0.004401.
 NLL  - max: 0.451750, min: 0.425104, median: 0.429982, mean: 0.433322, std: 0.009202.
 
@@ -455,44 +455,10 @@ ACC  - max: 0.803177, min: 0.785525, median: 0.793358, mean: 0.794219, std: 0.00
 NLL  - max: 0.455802, min: 0.434493, median: 0.441399, mean: 0.442115, std: 0.006935.
 
 PGPR Distribution: (hetero greedy var, *with* grad-optim, M=300)
+ELBO - max: -17807.738103, min: -17919.053683, median: -17883.002979, mean: -17875.703869, std: 36.667127.
+ACC  - max: 0.816417, min: 0.806929, median: 0.813327, mean: 0.812981, std: 0.003169.
+NLL  - max: 0.426408, min: 0.399454, median: 0.412807, mean: 0.411393, std: 0.008023.
 """
-
-# TODO: Alternative HGV
-# ELBO - max: -18233.719976, min: -18350.846772, median: -18302.404202, mean: -18302.114337, std: 38.769850.
-# ACC  - max: 0.804281, min: 0.788394, median: 0.796999, mean: 0.796756, std: 0.004902.
-# NLL  - max: 0.455143, min: 0.430566, median: 0.438212, mean: 0.439653, std: 0.007801.
-
-# TODO: Results from SVGP kmeans optim vs PGPR hgv optim (find distribution)
-# Beginning cycle 1...
-# PGPR ELBO failed to converge: prev -18415.408450099414, next -18396.388646198277.
-# SVGP: ELBO = -17774.267290, ACC = 0.812665, NLL = 0.407492.
-# PGPR: ELBO = -17879.452103, ACC = 0.813327, NLL = 0.408135.
-# Beginning cycle 2...
-# PGPR ELBO failed to converge: prev -18358.49135184391, next -18339.628066297373.
-# SVGP: ELBO = -17678.998985, ACC = 0.809356, NLL = 0.411276.
-# PGPR: ELBO = -17838.789464, ACC = 0.806929, NLL = 0.415546.
-# Beginning cycle 3...
-# PGPR ELBO failed to converge: prev -18308.17050435062, next -18311.187940974338.
-# SVGP: ELBO = -17628.645765, ACC = 0.812665, NLL = 0.415402.
-# PGPR: ELBO = -17807.738103, ACC = 0.810680, NLL = 0.426408.
-# Beginning cycle 4...
-# Cholesky failed with maximum jitter.
-# Cholesky error caught, retrying...
-# PGPR ELBO failed to converge: prev -18408.913979693327, next -18378.57118006317.
-# SVGP: ELBO = -17799.802493, ACC = 0.818844, NLL = 0.406420.
-# PGPR: ELBO = -17883.002979, ACC = 0.815534, NLL = 0.413077.
-# Beginning cycle 5...
-# PGPR ELBO failed to converge: prev -18360.466179625975, next -18341.354457487796.
-# SVGP: ELBO = -17682.525534, ACC = 0.821271, NLL = 0.397659.
-# PGPR: ELBO = -17919.053683, ACC = 0.816417, NLL = 0.412807.
-# Beginning cycle 6...
-# PGPR ELBO failed to converge: prev -18394.74792047306, next -18408.51579684986.
-# SVGP: ELBO = -17722.608649, ACC = 0.813989, NLL = 0.400303.
-# PGPR: ELBO = -17890.734373, ACC = 0.812004, NLL = 0.404327.
-# Beginning cycle 7...
-# PGPR ELBO failed to converge: prev -18432.67174621006, next -18457.080305262774.
-# SVGP: ELBO = -17701.817493, ACC = 0.821050, NLL = 0.388518.
-# PGPR: ELBO = -17911.156375, ACC = 0.815975, NLL = 0.399454.
 
 
 class ElectricityMetricsMetaDataset(ElectricityDataset, MetricsMetaDataset):
