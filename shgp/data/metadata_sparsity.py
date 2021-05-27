@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from shgp.data.dataset import BananaDataset, BreastCancerDataset, CrabsDataset, FertilityDataset, HeartDataset, \
-    IonosphereDataset, MagicDataset, PimaDataset, RingnormDataset, TwonormDataset
+from shgp.data.dataset import BananaDataset, BreastCancerDataset, CrabsDataset, HeartDataset, IonosphereDataset, \
+    MagicDataset, PimaDataset, RingnormDataset, TwonormDataset
 
 
 @dataclass
@@ -27,9 +27,6 @@ class SparsityMetaDataset:
     M_array: np.ndarray
 
 
-# TODO: When plotting these, show the curve as it clearly approaches convergence.
-#       We care about how the methods achieve convergence, not the extreme cases.
-
 """ Banana with Exp kernel - np.arange(5, 51, 5):
 results_uniform = [-252.13643516, -208.20541972, -157.02072046, -140.62518881, -131.01991315, -126.45785361,
                    -125.58773707, -123.02937557, -122.18254487, -121.02846546]
@@ -51,63 +48,10 @@ optimal = -119.74156303725914
 """
 
 
-# TODO: Plot
 class BananaSparsityMetaDataset(BananaDataset, SparsityMetaDataset):
     def __init__(self):
         BananaDataset.__init__(self)
         SparsityMetaDataset.__init__(self, 5, 10, 250, 10, np.arange(5, 51, 5))
-
-
-""" Fertility with Exp kernel - np.arange(1, 31):
-results_uniform = [-45.34666016, -39.35464394, -39.35464209, -39.35464442, -39.35464312,
-                   -39.35464272, -39.35464202, -39.35464229, -39.35464274, -39.35464186,
-                   -39.35464128, -39.35464191, -39.35464173, -39.35464241, -39.35464358,
-                   -39.3546416,  -39.35464298, -39.35464156, -39.35464549, -39.3546475,
-                   -39.35464692, -39.35464528, -39.35464175, -39.35464522, -39.35464456,
-                   -39.35464439, -39.35464208, -39.35464906, -39.35464219, -39.35465084]
-results_kmeans = [-39.35464118, -39.35464133, -39.35464219, -39.35464229, -39.35464157,
-                  -39.35464161, -39.35464197, -39.35464189, -39.35464274, -39.35464231,
-                  -39.35464227, -39.35464261, -39.35464233, -39.35464184, -39.35464243,
-                  -39.35464234, -39.35464168, -39.35464155, -39.35464159, -39.3546415,
-                  -39.35464151, -39.35464227, -39.3546419,  -39.35464207, -39.35464247,
-                  -39.35464173, -39.35464147, -39.35464228, -39.35464153, -39.3546423]
-results_gv = [-42.35065142, -39.35464259, -39.35464426, -39.35464209, -39.35464269,
-              -42.35065107, -39.3546428,  -39.35464179, -39.35464195, -39.35464215,
-              -39.35464229, -39.35464224, -39.35464236, -39.35464212, -39.35464417,
-              -39.35464205, -39.35464209, -39.35464192, -39.35464212, -39.35464186,
-              -39.35464263, -39.35464141, -39.35464136, -39.35464229, -39.35464584,
-              -39.35464628, -39.35464198, -39.3546423,  -39.35464183, -39.3546425]
-results_hgv = [-45.34665907, -42.35065092, -42.35065219, -42.35064986, -39.35464339,
-               -42.35065014, -39.35464253, -39.35464164, -39.35464411, -39.35464301,
-               -39.35464248, -39.3546429,  -39.35464322, -39.35464222, -39.35464381,
-               -39.35464179, -39.35464291, -39.35464257, -39.35464213, -39.35464161,
-               -39.35464247, -39.3546422,  -39.35464183, -39.35464139, -39.35464259,
-               -39.3546423,  -39.35464138, -39.35464166, -39.35464215, -39.35464218]
-optimal = -39.35464385423624
-"""
-
-""" Fertility with Exp kernel - np.arange(1, 31):
-results_hgv = [-51.33867501 -45.34666055 -39.35464361 -42.3506516  -39.35464283
- -39.35464206 -39.35464241 -39.35464186 -39.35464319 -39.35464326
- -39.35464316 -39.35464293 -39.3546419  -39.35464249 -39.35464234
- -39.35464189 -39.35464184 -39.35464278 -39.3546421  -39.35464181
- -39.35464253 -39.3546418  -39.35464226 -39.35464168 -39.35464247
- -39.35464186 -39.35464306 -39.35464413 -39.35464235 -39.35464188]
-results_hgv_then_optimise = [-42.3506507  -54.33468666 -39.35464292 -39.35464409 -42.35064979
- -39.35464194 -39.35464376 -39.35464256 -39.35464417 -39.35464362
- -39.35464186 -39.35464234 -39.35464259 -39.35464232 -39.35464194
- -39.35464245 -39.35464207 -39.35464162 -39.35464251 -39.35464197
- -39.35464186 -39.35464162 -39.3546426  -39.35464362 -39.35464131
- -39.35464152 -39.35464332 -39.35464181 -39.35464562 -39.35464186]
-optimal = -39.354643854237516
-"""
-
-
-# TODO: Plot (very unstable / noisy for all four)
-class FertilitySparsityMetaDataset(FertilityDataset, SparsityMetaDataset):
-    def __init__(self):
-        FertilityDataset.__init__(self)
-        SparsityMetaDataset.__init__(self, 10, 10, 250, 10, np.arange(1, 31))
 
 
 """ Crabs with Exp kernel - np.arange(5, 20):
@@ -137,7 +81,7 @@ optimal = -30.17694684298644
 """
 
 
-# TODO: Plot (start plot from M=6 or M=7 - or set y-axis limits to -37.5)
+# (start plot from M=7 for clarity)
 class CrabsSparsityMetaDataset(CrabsDataset, SparsityMetaDataset):
     def __init__(self):
         CrabsDataset.__init__(self)
@@ -165,7 +109,6 @@ optimal = -116.39046838357692
 """
 
 
-# TODO: Plot
 class HeartSparsityMetaDataset(HeartDataset, SparsityMetaDataset):
     def __init__(self):
         HeartDataset.__init__(self)
@@ -206,7 +149,6 @@ optimal = -127.00553397076634
 """
 
 
-# TODO: Plot
 class IonosphereSparsityMetaDataset(IonosphereDataset, SparsityMetaDataset):
     def __init__(self):
         IonosphereDataset.__init__(self)
@@ -246,7 +188,7 @@ optimal = -75.02901627637823
 """
 
 
-# TODO: Plot (start plot from M=20 for stability at convergence)
+# (start plot from M=20 for clarity)
 class BreastCancerSparsityMetaDataset(BreastCancerDataset, SparsityMetaDataset):
     def __init__(self):
         BreastCancerDataset.__init__(self)
@@ -257,19 +199,27 @@ class BreastCancerSparsityMetaDataset(BreastCancerDataset, SparsityMetaDataset):
 results_uniform = [-444.77996138, -386.91316907, -386.02783327, -385.31543353, -384.54316826,
                    -383.67183261, -382.85791003, -382.46500407, -381.84566833, -380.99304483,
                    -380.63460644, -380.55328098, -380.27110464, -379.96738077, -379.8475552,
-                   -379.90802159, -379.40674155, -379.26510242, -379.15252496, -379.1945228]
+                   -379.90802159, -379.40674155, -379.26510242, -379.15252496, -379.1945228,
+                   -379.04461289, -379.1288633, -378.97580987, -378.85781204, -378.83165375,
+                   -378.77207542, -378.71204709, -378.62128625, -378.41665454, -378.53594639]
 results_kmeans = [-412.01661822, -385.87567976, -385.15533115, -384.31392658, -383.22495125,
                   -382.52105175, -381.99257373, -380.89674274, -380.75191388, -380.17271875,
                   -379.39160705, -379.47724897, -379.35385998, -379.1131317,  -378.93623123,
-                  -378.8262073,  -378.64420163, -378.6724664,  -378.52242826, -378.45192916]
+                  -378.8262073,  -378.64420163, -378.6724664,  -378.52242826, -378.45192916,
+                  -378.30231571, -378.35490827, -378.19587052, -378.2522335, -378.20945799,
+                  -378.21006778, -378.0734994, -378.05026178, -378.01002372, -377.99380257]
 results_gv = [-423.64588235, -386.59501815, -386.17788556, -385.68507796, -384.89533349,
               -383.84076949, -382.54249711, -381.6088387,  -381.27863342, -380.61205978,
               -380.16222904, -379.75945861, -379.48135565, -379.35240091, -378.95491056,
-              -378.80356969, -378.65048198, -378.5303823,  -378.40855262, -378.3538156]
+              -378.80356969, -378.65048198, -378.5303823,  -378.40855262, -378.3538156,
+              -378.2628084, -378.16800592, -378.07626095, -378.03704864, -377.94699722,
+              -377.9417581, -377.87207947, -377.85919065, -377.80839534, -377.82408316]
 results_hgv = [-420.21889021, -386.66910472, -386.27469259, -385.7520532,  -385.11243869,
                -383.90052552, -382.9113214,  -382.01660468, -381.17262278, -380.69372039,
                -380.22351617, -379.7882304,  -379.40044747, -379.2088569,  -379.02888323,
-               -378.88890559, -378.65256517, -378.48233193, -378.40623597, -378.34645726]
+               -378.88890559, -378.65256517, -378.48233193, -378.40623597, -378.34645726,
+               -378.22606101, -378.17310304, -378.11322305, -378.05940044, -377.96486717,
+               -377.93209324, -377.91239849, -377.86808434, -377.82296594, -377.80904598]
 optimal = -377.60474770202654
 """
 
@@ -286,11 +236,11 @@ optimal = -377.6047477020269
 """
 
 
-# TODO: Plot (start plot from M=10)
+# (start plot from M=10 for clarity)
 class PimaSparsityMetaDataset(PimaDataset, SparsityMetaDataset):
     def __init__(self):
         PimaDataset.__init__(self)
-        SparsityMetaDataset.__init__(self, 5, 10, 100, 10, np.arange(5, 101, 5))
+        SparsityMetaDataset.__init__(self, 5, 10, 100, 10, np.arange(5, 151, 5))
 
 
 """ MAGIC with Exp kernel - np.arange(5, 306, 10):
@@ -350,7 +300,7 @@ optimal = -1702.8659218764612
 """
 
 
-# TODO: Plot (start from M=15 and make xticks sparser - e.g., [50, 100, 150, 200, 250, 300])
+# (start from M=15 and make xticks sparser - e.g., [50, 100, 150, 200, 250, 300])
 class MagicSparsityMetaDataset(MagicDataset, SparsityMetaDataset):
     def __init__(self):
         MagicDataset.__init__(self)
@@ -380,7 +330,7 @@ results_hgv = [-1352.40125219, -872.77578924, -776.43254085, -587.7131583,
 optimal = -498.60123103 (infeasible, so we take the max value achieved from any iteration)
 """
 
-# TODO: ? -> cholesky erroring during optimisation
+# unstable - continual cholesky errors during optimisation
 """ Twonorm with Exp kernel - np.arange(5, 51, 5):
 results_hgv = ...
 results_hgv_then_optimise = ...
@@ -388,7 +338,7 @@ optimal = ...
 """
 
 
-# TODO: Plot (start at M=10)
+# (start plot from M=10 for clarity)
 class TwonormSparsityMetaDataset(TwonormDataset, SparsityMetaDataset):
     # Converges at a surprisingly sparse M=25, as opposed to Ringnorm which requires ~250
     def __init__(self):
@@ -432,7 +382,7 @@ results_hgv = [-3957.46327061, -3889.61729723, -3839.42069026, -3293.78296912,
 optimal = -968.12391203 (infeasible, so we take the max value achieved from any iteration)
 """
 
-# TODO: ? -> cholesky erroring during optimisation
+# unstable - continual cholesky errors during optimisation
 """ Ringnorm with Exp kernel - np.arange(5, 306, 10):
 results_hgv = ...
 results_hgv_then_optimise = ...
@@ -440,8 +390,7 @@ optimal = ...
 """
 
 
-# TODO: Plot
-# TODO: Just graph results from 105 to 305? -> more stable
+# (start plot from M=35 for clarity)
 class RingnormSparsityMetaDataset(RingnormDataset, SparsityMetaDataset):
     def __init__(self):
         RingnormDataset.__init__(self)

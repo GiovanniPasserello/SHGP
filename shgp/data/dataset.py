@@ -109,18 +109,6 @@ Real Datasets
 """
 
 
-class FertilityDataset(Dataset):
-    # https://archive.ics.uci.edu/ml/datasets/Fertility
-    # N=100, D=9, C=2
-
-    def __init__(self):
-        super().__init__(
-            name='Fertility',
-            filename='fertility.txt',
-            delimiter=','
-        )
-
-
 class CrabsDataset(Dataset):
     # https://datarepository.wolframcloud.com/resources/Sample-Data-Crab-Measures
     # N=200, D=6, C=2
