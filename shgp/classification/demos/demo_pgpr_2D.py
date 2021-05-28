@@ -62,7 +62,7 @@ def classification_demo():
     )
 
     ax1.set_title('PGPR Classification Boundaries')
-    ax2.set_title('Polya-Gamma Variance Contours')
+    ax2.set_title('PGPR Variance Contours')
 
     plt.show()
 
