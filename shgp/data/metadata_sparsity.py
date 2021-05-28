@@ -440,6 +440,7 @@ optimal = ...
 """
 
 
+# (start from M=25 and make xticks sparser - e.g., [50, 100, 150, 200, 250, 300])
 class ElectricitySparsityMetaDataset(ElectricityDataset, SparsityMetaDataset):
     def __init__(self):
         ElectricityDataset.__init__(self)
