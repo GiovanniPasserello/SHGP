@@ -115,7 +115,7 @@ def _try_train_pgpr_svgp(X, Y, M, opt_iters, kernel_type, init_method, reinit_me
 #     return result(svgp, svgp.elbo((X, Y)), X_test, Y_test)
 
 
-# TODO: Interleaved training (good, but slow and *very* non-monotonic unreliable)
+# Interleaved training (good, but slow and *very* non-monotonic unreliable)
 # def _train_sparse_pgpr_svgp(X, Y, M, opt_iters, kernel_type, reinit_method, reinit_metadata, optimise_Z, X_test, Y_test):
 #     """
 #     Train a sparse PGPR-SVGP model with a given reinitialisation method.
@@ -197,7 +197,7 @@ def _try_train_pgpr_svgp(X, Y, M, opt_iters, kernel_type, init_method, reinit_me
 #         return pgpr_svgp, np.max(elbos)   # return the highest ELBO
 
 
-# TODO: With greedy variance reinit (no PGPR)
+# With greedy variance reinit (no PGPR)
 def _train_sparse_pgpr_svgp(X, Y, M, opt_iters, kernel_type, reinit_method, reinit_metadata, optimise_Z, X_test, Y_test):
     """
     Train a sparse PGPR-SVGP model with a given reinitialisation method.

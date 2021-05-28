@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.dataset import PlatformDataset
-from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
@@ -18,24 +17,20 @@ def model_comparison():
     # Model Optimisation #
     ######################
 
-    num_inducing = 10
-
     # PGPR
     pgpr, pgpr_elbo = train_pgpr(
         X, Y,
-        10, 1000, 10,
-        kernel_type=gpflow.kernels.Matern52,
-        M=num_inducing,
-        init_method=uniform_subsample
+        20, 2000, 20,
+        kernel_type=gpflow.kernels.SquaredExponential
     )
     print("pgpr trained")
 
     # TODO: This comparison of Bernoulli vs PG is worth showing in `Evaluation'.
     # SVGP (choose Bernoulli or PG likelihood for comparison)
-    # likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
-    likelihood = PolyaGammaBernoulli()
+    likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
+    #likelihood = PolyaGammaBernoulli()
     svgp = gpflow.models.SVGP(
-        kernel=gpflow.kernels.Matern52(),
+        kernel=gpflow.kernels.SquaredExponential(),
         likelihood=likelihood,
         inducing_variable=pgpr.inducing_variable.Z
     )
@@ -72,7 +67,10 @@ def model_comparison():
     # Meta
     plt.title('PGPR vs SVGP - Platform Dataset')
     plt.xlim((-2, 2))
+    plt.xlabel('x')
     plt.ylim((-0.5, 1.5))
+    plt.yticks([0, 0.5, 1])
+    plt.ylabel('p( y=1 | x )')
 
     # Display
     plt.legend(loc='upper right')

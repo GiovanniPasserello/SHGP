@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.dataset import BananaDataset
-from shgp.inducing.initialisation_methods import uniform_subsample
 from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
@@ -18,22 +17,18 @@ def model_comparison():
     # Model Optimisation #
     ######################
 
-    num_inducing = 20
-
     # PGPR
     pgpr, pgpr_elbo = train_pgpr(
         X, Y,
-        20, 250, 10,
-        kernel_type=gpflow.kernels.SquaredExponential,
-        M=num_inducing,
-        init_method=uniform_subsample
+        20, 2000, 20,
+        kernel_type=gpflow.kernels.SquaredExponential
     )
     print("pgpr trained")
 
     # TODO: This comparison of Bernoulli vs PG is worth showing in `Evaluation'.
     # SVGP (choose Bernoulli or PG likelihood for comparison)
-    # likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
-    likelihood = PolyaGammaBernoulli()
+    likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
+    # likelihood = PolyaGammaBernoulli()
     svgp = gpflow.models.SVGP(
         kernel=gpflow.kernels.SquaredExponential(),
         likelihood=likelihood,
@@ -87,6 +82,8 @@ def model_comparison():
     c1.collections[0].set_label('PGPR ({:.2f})'.format(pgpr_elbo))
     c2.collections[0].set_label('SVGP ({:.2f})'.format(svgp_elbo))
 
+    plt.xlabel('x1')
+    plt.ylabel('x2', rotation=1)
     plt.title('PGPR vs SVGP - Banana Dataset')
     plt.legend(loc='upper left')
     plt.show()
