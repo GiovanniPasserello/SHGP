@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Uniform subsampling with gradient-based optimisation
     likelihood1 = HeteroscedasticPolynomial(degree=2)
     kernel1 = gpflow.kernels.SquaredExponential()
-    inducing_vars1, induing_idx1 = uniform_subsample(X, num_inducing)
+    inducing_vars1 = uniform_subsample(X, num_inducing)
     model1 = HGPR((X, Y), kernel=kernel1, inducing_variable=inducing_vars1, likelihood=likelihood1)
     gpflow.optimizers.Scipy().minimize(model1.training_loss, variables=model1.trainable_variables)
     mu1, var1 = model1.predict_f(xx)

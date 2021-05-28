@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from shgp.data.dataset import PlatformDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, uniform_subsample
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, k_means
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -20,9 +20,9 @@ def inducing_demo():
     model1, elbo1 = train_pgpr(
         X, Y,
         inner_iters, opt_iters, ci_iters,
-        kernel_type=gpflow.kernels.Matern52,
+        kernel_type=gpflow.kernels.SquaredExponential,
         M=num_inducing,
-        init_method=uniform_subsample,
+        init_method=k_means,
         optimise_Z=True
     )
 
@@ -30,10 +30,10 @@ def inducing_demo():
     model2, _ = train_pgpr(
         X, Y,
         inner_iters, opt_iters, ci_iters,
-        kernel_type=gpflow.kernels.Matern52,
+        kernel_type=gpflow.kernels.SquaredExponential,
         M=num_inducing,
         init_method=h_reinitialise_PGPR,
-        reinit_metadata=ReinitMetaDataset(10, 1e-1)
+        reinit_metadata=ReinitMetaDataset()
     )
     elbo2 = model2.elbo()
 

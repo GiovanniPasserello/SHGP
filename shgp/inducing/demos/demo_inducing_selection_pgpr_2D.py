@@ -38,7 +38,7 @@ def inducing_demo():
         inner_iters, opt_iters, ci_iters,
         M=num_inducing,
         init_method=h_reinitialise_PGPR,
-        reinit_metadata=ReinitMetaDataset(10, 1e-6)
+        reinit_metadata=ReinitMetaDataset()
     )
     elbo2 = model2.elbo()
 
