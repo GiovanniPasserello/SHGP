@@ -442,10 +442,14 @@ NLL  - max: 0.346354, min: 0.309627, median: 0.331679, mean: 0.328185, std: 0.01
 ###################################
 
 SVGP Distribution: (k_means, *with* grad-optim)
-...
+ELBO - max: -5579.404922, min: -5667.297976, median: -5649.149516, mean: -5639.904014, std: 28.982958.
+ACC  - max: 0.881178, min: 0.859096, median: 0.873291, mean: 0.872660, std: 0.006562.
+NLL  - max: 0.343433, min: 0.286423, median: 0.310230, mean: 0.310331, std: 0.014351.
 
 PGPR Distribution: (k_means, *with* grad-optim)
-...
+ELBO - max: -5716.895762, min: -5825.833841, median: -5776.894541, mean: -5780.078695, std: 28.367798.
+ACC  - max: 0.880126, min: 0.856467, median: 0.872240, mean: 0.871083, std: 0.007010.
+NLL  - max: 0.347871, min: 0.290294, median: 0.314620, mean: 0.314655, std: 0.014028.
 """
 
 
