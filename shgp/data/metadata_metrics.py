@@ -461,14 +461,14 @@ class MagicMetricsMetaDataset(MagicDataset, MetricsMetaDataset):
 
 """
 SVGP Distribution: (k_means, no grad-optim)
-ELBO - max: -18063.550467, min: -18178.405298, median: -18109.695571, mean: -18114.706985, std: 37.360415.
-ACC  - max: 0.813327, min: 0.793910, median: 0.805053, mean: 0.803928, std: 0.005759.
-NLL  - max: 0.440693, min: 0.413341, median: 0.422907, mean: 0.424236, std: 0.007474.
+ELBO - max: -17992.063854, min: -18166.399896, median: -18105.391728, mean: -18098.560643, std: 44.834156.
+ACC  - max: 0.813327, min: 0.791924, median: 0.803619, mean: 0.803685, std: 0.005967.
+NLL  - max: 0.444873, min: 0.419956, median: 0.424879, mean: 0.427145, std: 0.007527.
 
 PGPR Distribution: (hetero greedy var, no grad-optim)
-ELBO - max: -18308.170504, min: -18394.747920, median: -18357.596046, mean: -18356.855284, std: 29.821048.
-ACC  - max: 0.806267, min: 0.793689, median: 0.803949, mean: 0.802111, std: 0.004401.
-NLL  - max: 0.451750, min: 0.425104, median: 0.429982, mean: 0.433322, std: 0.009202.
+ELBO - max: -18289.505702, min: -18389.788866, median: -18347.524553, mean: -18341.628110, std: 33.787097.
+ACC  - max: 0.815534, min: 0.790159, median: 0.804170, mean: 0.802030, std: 0.007131.
+NLL  - max: 0.451420, min: 0.421719, median: 0.423484, mean: 0.432218, std: 0.008057.
 
 PGPR Distribution: (uniform subsample, no grad-optim)
 ELBO - max: -18284.592037, min: -18401.895847, median: -18336.620948, mean: -18341.835006, std: 38.983403.
