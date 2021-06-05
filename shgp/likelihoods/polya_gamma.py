@@ -31,10 +31,11 @@ class PolyaGammaLikelihood(Likelihood):
 
     def noise_variance(self, Fmu, Fvar):
         """
-            Computes the noise (theta^-1) of datapoints corresponding to predicted mean and variance.
-            :param Fmu: a 1D NumPy array containing the mean values of q(f).
-            :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
-            :return: array of noise values.
+        Computes the noise (theta^-1) of datapoints corresponding to the predicted mean and variance.
+
+        :param Fmu: a 1D NumPy array containing the mean values of q(f).
+        :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
+        :return: array of noise values.
         """
         c_i = PolyaGammaLikelihood.compute_c_i(Fmu, Fvar)
         theta = self.compute_theta(c_i)
@@ -47,18 +48,20 @@ class PolyaGammaLikelihood(Likelihood):
     @staticmethod
     def compute_c_i(Fmu, Fvar):
         """
-            Computes the optimal c_i in closed form.
-            :param Fmu: a 1D NumPy array containing the mean values of q(f).
-            :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
-            :return: array of c_i values.
+        Computes the optimal c_i in closed form.
+
+        :param Fmu: a 1D NumPy array containing the mean values of q(f).
+        :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
+        :return: array of c_i values.
         """
         return tf.math.sqrt(tf.math.square(Fmu) + Fvar)
 
     def compute_theta(self, c_i=None):
         """
-            Calculates Θ = diag(1/(2c_i) * tanh(c_i/2)).
-            :param c_i: an optional 1D NumPy array containing the Polya-Gamma random variables.
-            :return: a 1D NumPy array of theta values.
+        Calculates Θ = diag(1/(2c_i) * tanh(c_i/2)).
+
+        :param c_i: an optional 1D NumPy array containing the Polya-Gamma random variables.
+        :return: a 1D NumPy array of theta values.
         """
         # if c_i not provided, use local variables
         if c_i is None:
@@ -67,8 +70,9 @@ class PolyaGammaLikelihood(Likelihood):
 
     def kl_term(self):
         """
-            Calculates KL[q(ω) || p(ω)] = KL[PG(1, c) || PG(1, 0)].
-            :return: the KL divergence.
+        Calculates KL[q(ω) || p(ω)] = KL[PG(1, c) || PG(1, 0)].
+
+        :return: the KL divergence.
         """
         half_c_i = 0.5 * self.c_i
         return tf.reduce_sum(tf.math.log(tf.cosh(half_c_i)) - 0.5 * half_c_i * tf.math.tanh(half_c_i))

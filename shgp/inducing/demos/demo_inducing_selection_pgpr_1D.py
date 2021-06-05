@@ -12,6 +12,11 @@ from shgp.utilities.train_pgpr import train_pgpr
 np.random.seed(0)
 tf.random.set_seed(0)
 
+"""
+A visual demonstration comparing optimised inducing points vs. HGV for PGPR on the 'platform' dataset.
+We plot the chosen inducing points as dark blue dots.
+"""
+
 
 def inducing_demo():
     num_inducing, inner_iters, opt_iters, ci_iters = 15, 5, 100, 10

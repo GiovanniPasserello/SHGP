@@ -53,7 +53,6 @@ class HeteroscedasticLikelihood(Likelihood, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-# Example noise model
 class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
     """
     The HeteroscedasticPolynomial likelihood is a simple heteroscedastic likelihood that assumes
@@ -81,12 +80,11 @@ class HeteroscedasticPolynomial(HeteroscedasticLikelihood):
         return tf.abs(var)
 
 
-# Example noise model
 class HeteroscedasticGP(HeteroscedasticLikelihood):
     """
     The HeteroscedasticGP likelihood is a heteroscedastic likelihood that models the
     heteroscedastic noise of a GP using another GP. Currently this only works if the
-    noise is known as is passed as the label variable in 'data'.
+    noise is known and is passed as the label variable in 'data'.
     """
 
     def __init__(

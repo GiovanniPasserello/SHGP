@@ -10,6 +10,10 @@ from shgp.robustness.linalg import robust_cholesky
 np.random.seed(42)
 tf.random.set_seed(42)
 
+"""
+Test suite to check the mathematical correctness of PGPR.
+"""
+
 
 def test_pgpr_qu():
     """

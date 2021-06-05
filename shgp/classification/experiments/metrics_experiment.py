@@ -15,8 +15,9 @@ tf.random.set_seed(42)
 """
 A comparison of PGPR with heteroscedastic greedy variance reinitialisation and SVGP with a Bernoulli
 likelihood and fixed inducing points initialised with kmeans. 
-These are the 'best' case scenarios of best method used for a thorough evaluation of PGPR vs SVGP. 
+These are the 'best' case scenarios for each model, used for a thorough evaluation of PGPR vs SVGP. 
 In particular we evaluate the performance of very sparse models to see whether HGV is beneficial.
+To evaluate other inducing point selection methods, change the model definitions below.
 
 Please note that many of the experiments were run on a GPU so are not entirely reproducible on CPU.
 """

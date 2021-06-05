@@ -67,7 +67,7 @@ def h_greedy_variance(
     threshold: Optional[float] = 0.0
 ):
     """
-    Heteroscedastic implementation of the greedy variance inducing point initialisation
+    Heteroscedastic extension of the greedy variance inducing point initialisation
     procedure suggested in https://jmlr.org/papers/volume21/19-1015/19-1015.pdf.
     Adapted from https://github.com/markvdw/RobustGP/blob/master/robustgp/init_methods/methods.py.
 
@@ -114,15 +114,9 @@ def h_greedy_variance(
 
         # Nystrom difference from di, heteroscedasticity from lmbda_inv
         criterion = lmbda_inv * di
-
-        # We could either select the next inducing point if the below convergence
-        # check fails, or we can accept it now.
-        # We might as well take one extra point with the knowledge we have.
         indices[m + 1] = np.argmax(criterion)  # select next point
 
         # terminate if tr(lambda^-1(Kff-Qff)) is small (implies posterior KL is small)
-        # criterion.sum() allows fewer points and works well in larger inducing point constraints (20-100s)
-        # di.sum() behaves more sensibly in low inducing point constraints (5-20)
         if np.clip(criterion, 0, None).sum() < threshold:
             index_M = m + 2
             indices = indices[:index_M]

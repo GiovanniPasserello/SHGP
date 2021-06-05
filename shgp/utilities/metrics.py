@@ -9,11 +9,11 @@ from shgp.utilities.general import invlink
 @dataclass
 class ExperimentResult:
     """
-        A dataclass to store a single set of metric results from an experiment iteration.
+    A dataclass to store a single set of metric results from an experiment iteration.
 
-        :param elbo: The variational lower bound on the train set (lower bound to log marginal likelihood).
-        :param accuracy: The accuracy on a held-out test set.
-        :param nll: The negative log likelihood on a held-out test set.
+    :param elbo: The variational lower bound on the train set (lower bound to log marginal likelihood).
+    :param accuracy: The accuracy on a held-out test set.
+    :param nll: The negative log likelihood on a held-out test set.
     """
     elbo: float
     accuracy: float
@@ -25,9 +25,9 @@ class ExperimentResult:
 
 class ExperimentResults:
     """
-        A dataclass to store a collection of metric results over multiple experiment iterations.
+    A dataclass to store a collection of metric results over multiple experiment iterations.
 
-        :param results: The collection of metric results.
+    :param results: The collection of metric results.
     """
     def __init__(self):
         self.results: List[ExperimentResult] = []
@@ -42,6 +42,11 @@ class ExperimentResults:
         return elbos, accs, nlls
 
     def compute_distribution(self):
+        """
+        Computes a distribution over the results of each metric over multiple experiment iterations.
+
+        :return: The results distribution.
+        """
         elbos, accs, nlls = self._extract_attributes()
         maximum = ExperimentResult(np.max(elbos), np.max(accs), np.max(nlls))
         minimum = ExperimentResult(np.min(elbos), np.min(accs), np.min(nlls))

@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-
 np.random.seed(42)
 tf.random.set_seed(0)
 
 
 """
-Used to generate a toy example image for my thesis.
+Generates a toy example image for my thesis, demonstrating what a Gaussian process is.
 """
 
 

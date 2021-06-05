@@ -10,6 +10,11 @@ from shgp.utilities.train_pgpr import train_pgpr
 np.random.seed(42)
 tf.random.set_seed(42)
 
+"""
+Demonstration of non-sparse PGPR on the 'platform' dataset.
+We plot the datapoints and the predictive decision boundaries.
+"""
+
 
 def classification_demo():
     # Train model
@@ -25,16 +30,6 @@ def classification_demo():
 
     # Plot mean prediction
     plt.plot(X_test, X_test_mean, "C0", lw=1)
-
-    # To inspect Polya-Gamma variance at boundaries
-    # from matplotlib import cm
-    # test_c_i = m.likelihood.compute_c_i(X_test_mean, X_test_var)
-    # test_theta = m.likelihood.compute_theta(test_c_i).numpy()
-    # polya_gamma_vars = np.reciprocal(test_theta).flatten()
-    # color_map = cm.hot(polya_gamma_vars / polya_gamma_vars.max())
-    # # Plot linked / 'squashed' predictions
-    # P_test = invlink(X_test_mean)
-    # plt.scatter(X_test, P_test, c=color_map)
 
     # Plot linked / 'squashed' predictions
     P_test = invlink(X_test_mean)

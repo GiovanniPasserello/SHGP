@@ -16,6 +16,7 @@ the effect of the number of inducing points on the ELBO. This allows us to analy
 which is afforded to us by the use of greedy variance / heteroscedastic greedy variance. It is important to 
 note that we do not compare to SVGP Bernoulli, here - what we care about is the sparsity of inducing point 
 selection (at what point does the ELBO converge). For comparisons against Bernoulli, see other experiments.
+To evaluate other inducing point selection methods, change the model definitions below.
 """
 
 

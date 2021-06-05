@@ -3,6 +3,10 @@ import tensorflow as tf
 
 from gpflow.likelihoods import Bernoulli
 
+"""
+For use in an SVGP model to make it equivalent to PGPR at convergence.
+"""
+
 
 class PolyaGammaBernoulli(Bernoulli):
     def __init__(self):
@@ -11,6 +15,7 @@ class PolyaGammaBernoulli(Bernoulli):
     def variational_expectations(self, Fmu, Fvar, Y):
         """
         Calculates the variational expectations used by an SVGP model.
+
         :param Fmu: a 1D NumPy array containing the mean values of q(f).
         :param Fvar: a 1D NumPy array containing the marginal variances of q(f).
         :param Y: array of ground truth labels.
@@ -32,6 +37,7 @@ class PolyaGammaBernoulli(Bernoulli):
     def kl_term(c_i):
         """
         Calculates KL[q(ω) || p(ω)] = KL[PG(1, c) || PG(1, 0)]
+
         :param c_i: array of values c
         :return: array of KL divergences
         """

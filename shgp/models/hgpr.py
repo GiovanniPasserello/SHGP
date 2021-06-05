@@ -30,6 +30,8 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
             pages={567--574},
             year={2009}
         }
+
+        For a derivation of the below operations, see the thesis appendices.
     """
 
     def __init__(
@@ -109,17 +111,16 @@ class HGPR(GPModel, InternalDataTrainingLossMixin):
     def upper_bound(self) -> tf.Tensor:
         """
         Computes an upper bound on the marginal likelihood of the heteroscedastic GP.
+        This upper bound was proposed in the thesis, as an extension of the homoscedastic case in
 
-        The key reference (for the homoscedastic case) is
-        ::
-          @misc{titsias_2014,
-            title={Variational Inference for Gaussian and Determinantal Point Processes},
-            url={http://www2.aueb.gr/users/mtitsias/papers/titsiasNipsVar14.pdf},
-            publisher={Workshop on Advances in Variational Inference (NIPS 2014)},
-            author={Titsias, Michalis K.},
-            year={2014},
-            month={Dec}
-          }
+        @misc{titsias_2014,
+          title={Variational Inference for Gaussian and Determinantal Point Processes},
+          url={http://www2.aueb.gr/users/mtitsias/papers/titsiasNipsVar14.pdf},
+          publisher={Workshop on Advances in Variational Inference (NIPS 2014)},
+          author={Titsias, Michalis K.},
+          year={2014},
+          month={Dec}
+        }
         """
         X_data, Y_data = self.data
 

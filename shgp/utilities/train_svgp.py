@@ -9,6 +9,10 @@ from gpflow.kernels.base import Kernel
 from shgp.inducing.initialisation_methods import k_means
 from shgp.utilities.train_pgpr import result
 
+"""
+Utilities for training SVGP models in a standard and extensible manner.
+"""
+
 
 def train_svgp(
     X: np.ndarray,
@@ -23,20 +27,20 @@ def train_svgp(
     Y_test: Optional[np.ndarray] = None
 ):
     """
-        Train an SVGP model with the following parameters.
-        This is the only function in this file that should be externally called.
+    Train an SVGP model with the following parameters.
+    This is the only function in this file that should be externally called.
 
-        :param X: [N,D], the training feature data.
-        :param Y: [N,1], the training label data.
-        :param M: The number of inducing points, if using a sparse model.
-        :param train_iters: The number of L-BFGS training iterations.
-        :param kernel_type: The covariance kernel type for the SVGP model. We use a type, instead of an object
-                            so that we can reinitialise in the case of an error.
-        :param init_method: The inducing point initialisation method, if using a sparse model.
-        :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
-        :param X_test: [N_test,D], the test feature data.
-        :param Y_test: [N_test,1], the test label data.
-        :return: The final model and best evidence lower bound (or full set of metrics).
+    :param X: [N,D], the training feature data.
+    :param Y: [N,1], the training label data.
+    :param M: The number of inducing points, if using a sparse model.
+    :param train_iters: The number of L-BFGS training iterations.
+    :param kernel_type: The covariance kernel type for the SVGP model. We use a type, instead of an object
+                        so that we can reinitialise in the case of an error.
+    :param init_method: The inducing point initialisation method, if using a sparse model.
+    :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
+    :param X_test: [N_test,D], the test feature data.
+    :param Y_test: [N_test,1], the test label data.
+    :return: The final model and best evidence lower bound (or full set of metrics).
     """
     return _try_train_svgp(X, Y, M, train_iters, kernel_type, init_method, optimise_Z, X_test, Y_test)
 

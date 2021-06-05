@@ -9,6 +9,10 @@ from shgp.models.hgpr import HGPR
 np.random.seed(42)
 tf.random.set_seed(42)
 
+"""
+Test suite to check the mathematical correctness of HGPR.
+"""
+
 
 def test_hgpr_qu():
     """

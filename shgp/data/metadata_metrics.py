@@ -6,17 +6,17 @@ from shgp.data.dataset import *
 @dataclass
 class MetricsMetaDataset:
     """
-        A dataset utilities class specifically for metrics experiments.
+    A dataset utilities class specifically for metrics experiments.
 
-        # Shared
-        :param num_cycles: The number of times to train a model and average results over.
-        :param M: The number of inducing points to use.
-        # SVGP
-        :param svgp_iters: The number of iterations to train the SVGP model for.
-        # PGPR
-        :param inner_iters: The number of iterations of the inner optimisation loop.
-        :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
-        :param ci_iters: The number of iterations of update for the local variational parameters.
+    # Shared
+    :param num_cycles: The number of times to train a model and average results over.
+    :param M: The number of inducing points to use.
+    # SVGP
+    :param svgp_iters: The number of iterations to train the SVGP model for.
+    # PGPR
+    :param inner_iters: The number of iterations of the inner optimisation loop.
+    :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
+    :param ci_iters: The number of iterations of update for the local variational parameters.
     """
     num_cycles: int
     M: int

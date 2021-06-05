@@ -10,6 +10,13 @@ from shgp.utilities.train_pgpr import train_pgpr
 np.random.seed(0)
 tf.random.set_seed(0)
 
+"""
+Demonstration of non-sparse PGPR on the 'banana' dataset.
+We plot the datapoints and the predictive decision boundaries on the left.
+We plot the Polya-Gamma variance as contours on the right and see that the
+variance is the lowest at the predictive boundaries.
+"""
+
 
 def classification_demo():
     # Train model

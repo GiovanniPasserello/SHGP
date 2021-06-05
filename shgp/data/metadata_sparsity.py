@@ -9,16 +9,16 @@ from shgp.data.dataset import BananaDataset, BreastCancerDataset, CrabsDataset, 
 @dataclass
 class SparsityMetaDataset:
     """
-        A dataset utilities class specifically for sparsity experiments.
-        The training hyperparameters typically need to be smaller for sparsity
-        experiments. For example, we use a smaller number of optimisation iterations
-        otherwise the experiments are computationally infeasible.
+    A dataset utilities class specifically for sparsity experiments.
+    The training hyperparameters typically need to be smaller for sparsity
+    experiments. For example, we use a smaller number of optimisation iterations,
+    otherwise the experiments are computationally infeasible.
 
-        :param num_cycles: The number of times to train a model and average results over.
-        :param inner_iters: The number of iterations of the inner optimisation loop.
-        :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
-        :param ci_iters: The number of iterations of update for the local variational parameters.
-        :param M_array: An array containing the number of inducing points to test.
+    :param num_cycles: The number of times to train a model and average results over.
+    :param inner_iters: The number of iterations of the inner optimisation loop.
+    :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
+    :param ci_iters: The number of iterations of update for the local variational parameters.
+    :param M_array: An array containing the number of inducing points to test.
     """
     num_cycles: int
     inner_iters: int
@@ -262,13 +262,6 @@ results_hgv = [-1352.40125219, -872.77578924, -776.43254085, -587.7131583,
 optimal = -498.60123103 (infeasible, so we take the max value achieved from any iteration)
 """
 
-# unstable - continual cholesky errors during optimisation
-""" Twonorm with Exp kernel - np.arange(5, 51, 5):
-results_hgv = ...
-results_hgv_then_optimise = ...
-optimal = ...
-"""
-
 
 # (start plot from M=10 for clarity)
 class TwonormSparsityMetaDataset(TwonormDataset, SparsityMetaDataset):
@@ -312,13 +305,6 @@ results_hgv = [-3957.46327061, -3889.61729723, -3839.42069026, -3293.78296912,
                -984.59579463,  -982.77330344,  -981.11920296,  -980.16404528,
                -978.95422732,  -978.28747759,  -977.49577389]
 optimal = -968.12391203 (infeasible, so we take the max value achieved from any iteration)
-"""
-
-# unstable - continual cholesky errors during optimisation
-""" Ringnorm with Exp kernel - np.arange(5, 306, 10):
-results_hgv = ...
-results_hgv_then_optimise = ...
-optimal = ...
 """
 
 
@@ -435,12 +421,6 @@ results_hgv = [-2375.48430446, -2268.88764642, -2249.84137989, -2204.23586135,
                -2148.05454939, -2147.48224222, -2146.73995041, -2145.87752558,
                -2145.56969468, -2145.06347565, -2144.63934169]
 optimal = -2131.794177611506
-"""
-
-""" Electricity with Exp kernel - np.arange(5, 306, 10):
-results_hgv = ...
-results_hgv_then_optimise = ...
-optimal = ...
 """
 
 

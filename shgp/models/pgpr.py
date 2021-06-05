@@ -22,18 +22,9 @@ tf.config.run_functions_eagerly(True)
 class PGPR(GPModel, InternalDataTrainingLossMixin):
     """
         Collapsed implementation of Polya-Gamma GPR, based on the heteroscedastic
-        implementation of SGPR with Polya-Gamma data augmentation. The key reference is
-
-        @article{Wenzel_Galy-Fajou_Donner_Kloft_Opper_2019,
-            title={Efficient Gaussian Process Classification Using Pólya-Gamma Data Augmentation},
-            author={Wenzel, Florian and Galy-Fajou, Théo and Donner, Christan and Kloft, Marius and Opper, Manfred},
-            journal={Proceedings of the AAAI Conference on Artificial Intelligence},
-            pages={5417-5424},
-            year={2019},
-        }
-
-        which is the SVGP building block for this work. This model is one of the key contributions
-        of this thesis.
+        implementation of SGPR with Polya-Gamma data augmentation.
+        This model is one of the key contributions of the thesis - for a derivation
+        of the below operations, see the thesis appendices.
     """
 
     def __init__(

@@ -33,8 +33,8 @@ class ConstrainedSigmoidSEKernel(SquaredExponential):
     An implementation of the SquaredExponential kernel, wherein the kernel
     parameters are constrained. This means that they cannot grow too large
     or too small which helps to avoid Cholesky errors. This sometimes does come
-    at the sacrifice of a small change in ELBO, but is better than errors!
-    It also generally helps models to converge slightly faster.
+    at the sacrifice of a small change in ELBO, but generally helps models
+    to converge slightly faster.
     """
 
     def __init__(

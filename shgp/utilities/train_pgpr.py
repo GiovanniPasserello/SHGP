@@ -12,6 +12,10 @@ from shgp.robustness.contrained_kernels import ConstrainedExpSEKernel
 from shgp.models.pgpr import PGPR
 from shgp.utilities.metrics import compute_test_metrics, ExperimentResults, ExperimentResult
 
+"""
+Utilities for training PGPR models in a standard and extensible manner.
+"""
+
 
 def train_pgpr(
     X: np.ndarray,
@@ -29,23 +33,23 @@ def train_pgpr(
     Y_test: Optional[np.ndarray] = None
 ):
     """
-        Train a PGPR model with the following parameters.
-        This is the only function in this file that should be externally called.
+    Train a PGPR model with the following parameters.
+    This is the only function in this file that should be externally called.
 
-        :param X: [N,D], the training feature data.
-        :param Y: [N,1], the training label data.
-        :param inner_iters: The number of iterations of the inner optimisation loop.
-        :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
-        :param ci_iters: The number of iterations of update for the local variational parameters.
-        :param kernel_type: The covariance kernel type for the PGPR model. We use a type, instead of an object
-                            so that we can reinitialise in the case of an error.
-        :param M: The number of inducing points, if using a sparse model.
-        :param init_method: The inducing point initialisation method, if using a sparse model.
-        :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
-        :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
-        :param X_test: [N_test,D], the test feature data.
-        :param Y_test: [N_test,1], the test label data.
-        :return: The final model and best evidence lower bound (or full set of metrics).
+    :param X: [N,D], the training feature data.
+    :param Y: [N,1], the training label data.
+    :param inner_iters: The number of iterations of the inner optimisation loop.
+    :param opt_iters: The number of iterations of gradient-based optimisation of the kernel hyperparameters.
+    :param ci_iters: The number of iterations of update for the local variational parameters.
+    :param kernel_type: The covariance kernel type for the PGPR model. We use a type, instead of an object
+                        so that we can reinitialise in the case of an error.
+    :param M: The number of inducing points, if using a sparse model.
+    :param init_method: The inducing point initialisation method, if using a sparse model.
+    :param reinit_metadata: A dataclass containing training hyperparameters, if using reinitialisation.
+    :param optimise_Z: Allow gradient-based optimisation of the inducing inputs, if using a sparse model.
+    :param X_test: [N_test,D], the test feature data.
+    :param Y_test: [N_test,1], the test label data.
+    :return: The final model and best evidence lower bound (or full set of metrics).
     """
     return _try_train_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kernel_type, M, init_method, reinit_metadata, optimise_Z, X_test, Y_test)
 

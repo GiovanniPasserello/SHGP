@@ -4,12 +4,17 @@ import numpy as np
 import tensorflow as tf
 
 from shgp.data.dataset import PlatformDataset
-from shgp.likelihoods.pg_bernoulli import PolyaGammaBernoulli
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
 np.random.seed(0)
 tf.random.set_seed(0)
+
+"""
+Comparison of non-sparse PGPR and SVGP on the 'platform' dataset.
+We plot the datapoints and the predictive decision boundaries.
+We denote the ELBOs achieved by each model in the legend.
+"""
 
 
 def model_comparison():
@@ -25,10 +30,8 @@ def model_comparison():
     )
     print("pgpr trained")
 
-    # TODO: This comparison of Bernoulli vs PG is worth showing in `Evaluation'.
-    # SVGP (choose Bernoulli or PG likelihood for comparison)
+    # SVGP
     likelihood = gpflow.likelihoods.Bernoulli(invlink=tf.sigmoid)
-    #likelihood = PolyaGammaBernoulli()
     svgp = gpflow.models.SVGP(
         kernel=gpflow.kernels.SquaredExponential(),
         likelihood=likelihood,

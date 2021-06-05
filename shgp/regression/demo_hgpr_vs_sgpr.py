@@ -9,6 +9,11 @@ from shgp.models.hgpr import HGPR
 
 np.random.seed(42)
 
+"""
+Visual comparison of the homoscedastic SGPR vs heteroscedastic HGPR on a toy dataset.
+We show that HGPR achieves a superior fit to heteroscedastic data, with a much higher ELBO.
+"""
+
 
 if __name__ == "__main__":
     NUM_DATA = 120

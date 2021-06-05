@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from shgp.data.dataset import BananaDataset
 from shgp.data.metadata_reinit import ReinitMetaDataset
-from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, uniform_subsample
+from shgp.inducing.initialisation_methods import h_reinitialise_PGPR, k_means
 from shgp.utilities.general import invlink
 from shgp.utilities.train_pgpr import train_pgpr
 
@@ -12,11 +12,9 @@ np.random.seed(0)
 tf.random.set_seed(0)
 
 """
-A comparison of greedy_variance vs h_greedy_variance:
-  greedy spreads mass, h_greedy places at boundaries (our hypothesis)
-  greedy performs better for very low number of inducing points
-  h_greedy performs better for larger number of inducing points
-  gradient-based optimisation better for very few points, but expensive for many points
+A visual demonstration comparing optimised inducing points vs. HGV for PGPR on the 'banana' dataset.
+We plot the chosen inducing points as dark blue dots, and see that HGV prefers to select points 
+closer to the predictive boundaries.
 """
 
 
@@ -28,7 +26,7 @@ def inducing_demo():
         X, Y,
         inner_iters, opt_iters, ci_iters,
         M=num_inducing,
-        init_method=uniform_subsample,
+        init_method=k_means,
         optimise_Z=True
     )
 

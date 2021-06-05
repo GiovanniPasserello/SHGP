@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
-
-np.random.seed(42)
-tf.random.set_seed(42)
 
 """
-A suite for plotting sparsity experiments from saved results.
+Used to collate and plot the results from multiple sparsity experiments.
+We evaluate the sparsity of PGPR with four different selection methods:
+    1. Uniform subsample
+    2. K-means(++)
+    3. Greedy variance reinitialisation
+    4. Heteroscedastic greedy variance reinitialisation
 """
 
 

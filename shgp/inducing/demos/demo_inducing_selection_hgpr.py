@@ -14,7 +14,8 @@ np.random.seed(42)
 
 
 """
-This class effectively implements SHGP/shgp/utilities/train_pgpr, but for HGPR.
+A demonstration showing inducing points selected by HGV for HGPR on a heteroscedastic dataset.
+This class effectively implements ~/shgp/utilities/train_pgpr, but for HGPR.
 """
 
 

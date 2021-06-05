@@ -7,13 +7,13 @@ import re
 from shgp.data.utils import standardise_features
 
 """
-General
+Utilities to store the metadata of datasets.
 """
 
 
 class Dataset:
     """
-        A dataset utilities class for loading data and storing metadata.
+    A dataset utilities class for loading data and storing metadata.
     """
 
     def __init__(
@@ -105,7 +105,7 @@ class BananaDataset(Dataset):
 
 
 """
-Real Datasets
+OpenML / UCI Datasets
 """
 
 
