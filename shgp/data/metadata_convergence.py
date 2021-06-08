@@ -31,7 +31,7 @@ class CrabsConvergenceMetaDataset(CrabsDataset, ConvergenceMetaDataset):
 class HeartConvergenceMetaDataset(HeartDataset, ConvergenceMetaDataset):
     def __init__(self):
         HeartDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 60, 100)
+        ConvergenceMetaDataset.__init__(self, 100, 100)
 
 
 class IonosphereConvergenceMetaDataset(IonosphereDataset, ConvergenceMetaDataset):
