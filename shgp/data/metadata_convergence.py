@@ -19,34 +19,34 @@ class ConvergenceMetaDataset:
 class BananaConvergenceMetaDataset(BananaDataset, ConvergenceMetaDataset):
     def __init__(self):
         BananaDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 40, 150)
+        ConvergenceMetaDataset.__init__(self, 80, 250)
 
 
 class CrabsConvergenceMetaDataset(CrabsDataset, ConvergenceMetaDataset):
     def __init__(self):
         CrabsDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 10, 200)
+        ConvergenceMetaDataset.__init__(self, 20, 1000)
 
 
 class HeartConvergenceMetaDataset(HeartDataset, ConvergenceMetaDataset):
     def __init__(self):
         HeartDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 35, 150)
+        ConvergenceMetaDataset.__init__(self, 60, 100)
 
 
 class IonosphereConvergenceMetaDataset(IonosphereDataset, ConvergenceMetaDataset):
     def __init__(self):
         IonosphereDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 80, 250)
+        ConvergenceMetaDataset.__init__(self, 150, 350)
 
 
 class BreastCancerConvergenceMetaDataset(BreastCancerDataset, ConvergenceMetaDataset):
     def __init__(self):
         BreastCancerDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 50, 150)
+        ConvergenceMetaDataset.__init__(self, 150, 250)
 
 
 class PimaConvergenceMetaDataset(PimaDataset, ConvergenceMetaDataset):
     def __init__(self):
         PimaDataset.__init__(self)
-        ConvergenceMetaDataset.__init__(self, 60, 150)
+        ConvergenceMetaDataset.__init__(self, 100, 150)
