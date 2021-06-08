@@ -69,7 +69,7 @@ def test_convergence(X, Y, inner_iters, opt_iters, ci_iters, hgv_Z, kmeans_Z):
     results_hgv_bfgs = train_convergence_pgpr(X, Y, inner_iters, opt_iters, ci_iters, hgv_Z, bfgs_opt)
     print("HGV BFGS trained: ELBO = {}".format(results_hgv_bfgs[-1]))
     print("Training HGV Adam...")
-    adam_opt = tf.optimizers.Adam()
+    adam_opt = tf.optimizers.Adam(beta_1=0.5, beta_2=0.5)
     results_hgv_adam = train_convergence_pgpr(X, Y, inner_iters, opt_iters, ci_iters, hgv_Z, adam_opt)
     print("HGV Adam trained: ELBO = {}".format(results_hgv_adam[-1]))
 
@@ -78,7 +78,7 @@ def test_convergence(X, Y, inner_iters, opt_iters, ci_iters, hgv_Z, kmeans_Z):
     results_kmeans_bfgs = train_convergence_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kmeans_Z, bfgs_opt)
     print("K-means BFGS trained: ELBO = {}".format(results_kmeans_bfgs[-1]))
     print("Training K-means BFGS...")
-    adam_opt = tf.optimizers.Adam()
+    adam_opt = tf.optimizers.Adam(beta_1=0.5, beta_2=0.5)
     results_kmeans_adam = train_convergence_pgpr(X, Y, inner_iters, opt_iters, ci_iters, kmeans_Z, adam_opt)
     print("K-means Adam trained: ELBO = {}".format(results_kmeans_adam[-1]))
 
