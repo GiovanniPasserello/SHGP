@@ -1,6 +1,6 @@
 # SHGP
 
-SHGP is a GPflow-based software package for Sparse Heteroscedastic Gaussian Processes. It was developed as an accompaniment to my final-year master's thesis at Imperial College London - 'Heteroscedastic Inducing Point Selection for Gaussian Process Classification'. The focus of this thesis is to compute an SGPR-style model for Gaussian process classification, in which gradient-based optimisation of the variational distribution over inducing points is not required. Further to this, we propose a method for the superior selection of inducing points for Gaussian process classification.
+SHGP is a GPflow-based software package for Sparse Heteroscedastic Gaussian Processes. It was developed as an accompaniment to my final-year master's thesis at Imperial College London - 'Heteroscedastic Inducing Point Selection for Sparse Gaussian Process Classification'. The focus of this thesis is to compute an SGPR-style model for Gaussian process classification, in which gradient-based optimisation of the variational distribution over inducing points is not required. Further to this, we propose a method for the superior selection of inducing points for Gaussian process classification.
 
 ### Contributions
 
