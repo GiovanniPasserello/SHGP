@@ -5,7 +5,7 @@ SHGP is a GPflow-based software package for Sparse Heteroscedastic Gaussian Proc
 ### Contributions
 
 * An implementation of a heteroscedastic Gaussian process regression model in which the variational distribution is analytically optimised. This is an extension of the collapsed model derived in [Titsias 2009].
-* An implementation of a novel heterscedastic Gaussian process classification model in which the variational distribution is analytically optimised. This model employs Pólya-Gamma data augmentation to form a conditionally conjugate lower bound to the likelihood. Importantly, the effective likelihood is an unnormalised Gaussian distribution with heteroscedastic variance.
+* An implementation of a novel heteroscedastic Gaussian process classification model in which the variational distribution is analytically optimised. This model employs Pólya-Gamma data augmentation to form a conditionally conjugate lower bound to the likelihood. Importantly, the effective likelihood is an unnormalised Gaussian distribution with heteroscedastic variance.
 * An implementation of a novel heteroscedastic inducing point selection method for both Gaussian process regression and classification.
 * A robust procedure for stable Cholesky decompositions with dynamic jitter selection.
 * Multiple experiments which investigate the benefits of the above contributions. In particular, we show that our collapsed Gaussian process classification model paired with our inducing point selection method permits much sparser models than alternative schemes. We also show that our selection method allows the number of inducing points required for a sufficiently accurate approximation to be automatically determined by the model.
